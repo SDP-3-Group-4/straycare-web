@@ -1,0 +1,183 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* ─────────────────────────────────────────────────────
+   StrayCare Design Tokens
+   Dark-mode ready: override --sc-* vars inside
+   [data-theme="dark"] when the time comes.
+   ───────────────────────────────────────────────────── */
+
+:root {
+  /* Brand palette */
+  --sc-brand-500: #772BFB;
+  --sc-brand-400: #8F4FFC;
+  --sc-brand-300: #A773FD;
+  --sc-brand-200: #C9A5FE;
+  --sc-brand-100: #EBD9FF;
+  --sc-brand-50:  #F7F0FF;
+  --sc-brand-600: #5E10E0;
+  --sc-brand-700: #4A0CB3;
+
+  --sc-secondary: #9274C7;
+  --sc-outline:   #D0D5DD;
+  --sc-on-color:  #FCFCFD;
+
+  /* Surfaces */
+  --sc-bg:          #FFFFFF;
+  --sc-bg-subtle:   #FAFAFE;
+  --sc-bg-panel:    #F7F0FF;
+  --sc-surface:     #FFFFFF;
+  --sc-surface-alt: #F9FAFB;
+
+  /* Text */
+  --sc-text-primary:   #18181B;
+  --sc-text-secondary: #52525B;
+  --sc-text-muted:     #A1A1AA;
+  --sc-text-on-brand:  #FCFCFD;
+
+  /* Borders & shadows */
+  --sc-border:        #E4E4E7;
+  --sc-border-focus:  var(--sc-brand-500);
+  --sc-ring:          rgba(119, 43, 251, 0.25);
+  --sc-shadow-sm:     0 1px 2px rgba(0, 0, 0, 0.05);
+  --sc-shadow-md:     0 4px 12px rgba(0, 0, 0, 0.08);
+  --sc-shadow-lg:     0 8px 24px rgba(0, 0, 0, 0.10);
+
+  /* Radii */
+  --sc-radius-sm: 8px;
+  --sc-radius-md: 12px;
+  --sc-radius-lg: 16px;
+  --sc-radius-xl: 24px;
+  --sc-radius-full: 9999px;
+
+  /* Spacing scale */
+  --sc-space-xs: 4px;
+  --sc-space-sm: 8px;
+  --sc-space-md: 16px;
+  --sc-space-lg: 24px;
+  --sc-space-xl: 32px;
+  --sc-space-2xl: 48px;
+  --sc-space-3xl: 64px;
+
+  /* Typography */
+  --sc-font-display: "Google Sans Flex", sans-serif;
+  --sc-font-body:    "Google Sans Flex", system-ui, -apple-system, sans-serif;
+  --sc-font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Type scale */
+  --sc-text-xs:   0.75rem;
+  --sc-text-sm:   0.875rem;
+  --sc-text-base: 1rem;
+  --sc-text-lg:   1.125rem;
+  --sc-text-xl:   1.25rem;
+  --sc-text-2xl:  1.5rem;
+  --sc-text-3xl:  1.875rem;
+  --sc-text-4xl:  2.25rem;
+  --sc-text-5xl:  3rem;
+
+  /* Transitions */
+  --sc-ease:     cubic-bezier(0.16, 1, 0.3, 1);
+  --sc-duration: 200ms;
+  --sc-duration-slow: 400ms;
+
+  /* Z-index */
+  --sc-z-base:    0;
+  --sc-z-above:   10;
+  --sc-z-modal:   100;
+  --sc-z-tooltip: 200;
+}
+
+/* ─────────────────────────────────────────────────────
+   Base reset & global styles
+   ───────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--sc-font-body);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--sc-bg);
+  color: var(--sc-text-primary);
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────────────────
+   Browser surfaces — themed to brand
+   (craft-floor: selection, caret, focus, scrollbar)
+   ───────────────────────────────────────────────────── */
+
+::selection {
+  background: var(--sc-brand-200);
+  color: var(--sc-text-primary);
+}
+
+input,
+textarea {
+  caret-color: var(--sc-brand-500);
+}
+
+/* Focus ring — consistent across all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--sc-border-focus);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar (Webkit) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sc-brand-200);
+  border-radius: var(--sc-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sc-brand-400);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sc-brand-200) transparent;
+}
+
+/* ─────────────────────────────────────────────────────
+   Smooth link underline offset
+   ───────────────────────────────────────────────────── */
+
+a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* ─────────────────────────────────────────────────────
+   Tabular numerals in data contexts
+   ───────────────────────────────────────────────────── */
+
+[data-tabular] {
+  font-variant-numeric: tabular-nums;
+}

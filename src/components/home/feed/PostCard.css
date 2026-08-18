@@ -1,0 +1,8 @@
+.post-card {
+  /* Any specific complex animations or styles that can't be easily done with Tailwind */
+}
+
+.post-card:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
