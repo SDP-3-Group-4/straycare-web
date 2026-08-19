@@ -39,8 +39,8 @@ export class BookmarksService {
           include: {
             author: true,
             _count: {
-              select: { comments: true, likes: true }
-            }
+              select: { comments: true, likes: true },
+            },
           },
         },
       },

@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Req,
+  ForbiddenException,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { ConnectionsService } from './connections.service';
 
 @Controller('connections')
@@ -7,30 +16,52 @@ export class ConnectionsController {
 
   @Post('request')
   async requestConnection(
-    @Body('requesterId') requesterId: string,
     @Body('recipientId') recipientId: string,
+    @Req() req: Request,
   ) {
-    return this.connectionsService.requestConnection(requesterId, recipientId);
+    return this.connectionsService.requestConnection(
+      req.user!.uid,
+      recipientId,
+    );
   }
 
   @Post(':recipientId/accept')
   async acceptConnection(
     @Param('recipientId') recipientId: string,
-    @Body('requesterId') requesterId: string,
+    @Req() req: Request,
   ) {
-    return this.connectionsService.acceptConnection(requesterId, recipientId);
+    if (recipientId !== req.user!.uid) {
+      throw new ForbiddenException(
+        'You can only accept connections addressed to you',
+      );
+    }
+    return this.connectionsService.acceptConnection(req.user!.uid, recipientId);
   }
 
   @Post(':recipientId/decline')
   async declineConnection(
     @Param('recipientId') recipientId: string,
-    @Body('requesterId') requesterId: string,
+    @Req() req: Request,
   ) {
-    return this.connectionsService.declineConnection(requesterId, recipientId);
+    if (recipientId !== req.user!.uid) {
+      throw new ForbiddenException(
+        'You can only decline connections addressed to you',
+      );
+    }
+    return this.connectionsService.declineConnection(
+      req.user!.uid,
+      recipientId,
+    );
   }
 
   @Get(':userId')
-  async getUserConnections(@Param('userId') userId: string) {
+  async getUserConnections(
+    @Param('userId') userId: string,
+    @Req() req: Request,
+  ) {
+    if (userId !== req.user!.uid) {
+      throw new ForbiddenException('You can only view your own connections');
+    }
     return this.connectionsService.getUserConnections(userId);
   }
 

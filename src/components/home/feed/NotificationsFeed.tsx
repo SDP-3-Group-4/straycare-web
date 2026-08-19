@@ -49,9 +49,9 @@ export default function NotificationsFeed() {
     if (!user) return;
     try {
       if (action === 'accept') {
-        await acceptConnection(user.uid, requesterId);
+        await acceptConnection(requesterId);
       } else {
-        await declineConnection(user.uid, requesterId);
+        await declineConnection(requesterId);
       }
       
       // Update local state to remove the actions

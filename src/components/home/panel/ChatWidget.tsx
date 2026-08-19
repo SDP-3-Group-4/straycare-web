@@ -133,7 +133,7 @@ export default function ChatWidget() {
                 onClick={async () => {
                   try {
                     if (!user) return;
-                    const conv = await createChat(user.uid, 'ai-vet-bot-id');
+                    const conv = await createChat('ai-vet-bot-id');
                     setActiveChat({
                       id: conv.id,
                       name: 'AI Vet Assistant',

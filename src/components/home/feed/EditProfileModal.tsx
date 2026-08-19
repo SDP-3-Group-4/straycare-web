@@ -24,8 +24,8 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
   const { updateLocalUser } = useAuth();
   const [name, setName] = useState(user.name);
   const [bio, setBio] = useState(user.bio);
-  const [avatar, setAvatar] = useState(user.avatar);
-  const [coverImage, setCoverImage] = useState(user.coverImage);
+  const [avatar] = useState(user.avatar);
+  const [coverImage] = useState(user.coverImage);
   const [location, setLocation] = useState(user.location);
   const [website, setWebsite] = useState(user.website);
   const [pets, setPets] = useState<{name: string, type: string, age?: string}[]>(user.pets || []);

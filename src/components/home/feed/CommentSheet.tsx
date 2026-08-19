@@ -55,7 +55,7 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
   const handleSend = async () => {
     if (!user || !newContent.trim()) return;
     try {
-      await addComment(postId, user.uid, newContent.trim());
+      await addComment(postId, newContent.trim());
       setNewContent('');
       loadComments();
       if (onCommentAdded) onCommentAdded();
@@ -75,7 +75,7 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
     ));
     
     try {
-      const res = await toggleCommentLike(commentId, user.uid);
+      const res = await toggleCommentLike(commentId);
       setComments(prev => prev.map(c => 
         c.id === commentId 
           ? { ...c, isLiked: res.liked, likesCount: res.likesCount }
@@ -91,7 +91,7 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
     if (!user) return;
     if (!confirm('Delete this comment?')) return;
     try {
-      await deleteComment(commentId, user.uid);
+      await deleteComment(commentId);
       loadComments();
       if (onCommentDeleted) onCommentDeleted();
     } catch (e) {
@@ -107,7 +107,7 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
   const handleSaveEdit = async () => {
     if (!user || !editingId || !editContent.trim()) return;
     try {
-      await updateComment(editingId, user.uid, editContent.trim());
+      await updateComment(editingId, editContent.trim());
       setEditingId(null);
       setEditContent('');
       loadComments();

@@ -1,4 +1,11 @@
-import { Injectable, Logger, NotFoundException, OnModuleInit, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NimService } from '../ai/nim.service';
 
@@ -120,7 +127,12 @@ export class ChatService implements OnModuleInit {
   }
 
   // Send a message
-  async sendMessage(userId: string, conversationId: string, content: string, imageUrl?: string) {
+  async sendMessage(
+    userId: string,
+    conversationId: string,
+    content: string,
+    imageUrl?: string,
+  ) {
     // Enforce per-user message rate limit (cost-abuse guardrail)
     this.assertWithinRateLimit(userId);
 
@@ -210,9 +222,10 @@ export class ChatService implements OnModuleInit {
     if (!aiUser) return;
 
     // Check if the AI is a participant
-    const isAiParticipant = await this.prisma.conversationParticipant.findUnique({
-      where: { conversationId_userId: { conversationId, userId: aiUser.id } },
-    });
+    const isAiParticipant =
+      await this.prisma.conversationParticipant.findUnique({
+        where: { conversationId_userId: { conversationId, userId: aiUser.id } },
+      });
 
     if (!isAiParticipant) return;
     if (!this.nimService.isConfigured) {
@@ -268,7 +281,9 @@ export class ChatService implements OnModuleInit {
           },
         });
 
-        this.logger.log(`AI reply sent to conversation ${conversationId}: ${aiMessage.id}`);
+        this.logger.log(
+          `AI reply sent to conversation ${conversationId}: ${aiMessage.id}`,
+        );
       } catch (err) {
         this.logger.error(
           `AI reply failed for conversation ${conversationId}: ${(err as Error).message}`,

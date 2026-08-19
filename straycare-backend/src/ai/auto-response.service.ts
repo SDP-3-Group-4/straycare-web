@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NimService } from './nim.service';
@@ -74,7 +79,9 @@ export class AutoResponseService implements OnModuleInit, OnModuleDestroy {
               where: { id: post.id },
               data: { aiResponseStatus: 'skipped', aiRespondedAt: new Date() },
             });
-            this.logger.log(`Post ${post.id}: AI skipped (not a rescue help request).`);
+            this.logger.log(
+              `Post ${post.id}: AI skipped (not a rescue help request).`,
+            );
             continue;
           }
 
@@ -105,7 +112,9 @@ export class AutoResponseService implements OnModuleInit, OnModuleDestroy {
             });
           }
 
-          this.logger.log(`Post ${post.id}: AI comment posted (comment ${comment.id}).`);
+          this.logger.log(
+            `Post ${post.id}: AI comment posted (comment ${comment.id}).`,
+          );
         } catch (err) {
           this.logger.error(
             `Auto-response failed for post ${post.id}: ${(err as Error).message}`,
@@ -113,9 +122,7 @@ export class AutoResponseService implements OnModuleInit, OnModuleDestroy {
         }
       }
     } catch (err) {
-      this.logger.error(
-        `Auto-response scan failed: ${(err as Error).message}`,
-      );
+      this.logger.error(`Auto-response scan failed: ${(err as Error).message}`);
     } finally {
       this.running = false;
     }

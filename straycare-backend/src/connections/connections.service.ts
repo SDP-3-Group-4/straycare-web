@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -11,7 +15,7 @@ export class ConnectionsService {
 
   async requestConnection(requesterId: string, recipientId: string) {
     if (requesterId === recipientId) {
-      throw new BadRequestException("Cannot connect with yourself");
+      throw new BadRequestException('Cannot connect with yourself');
     }
 
     const existing = await this.prisma.connection.findUnique({
@@ -105,11 +109,11 @@ export class ConnectionsService {
     if (!connection) {
       return { status: 'none' };
     }
-    
-    return { 
-      status: connection.status, 
+
+    return {
+      status: connection.status,
       requesterId: connection.requesterId,
-      recipientId: connection.recipientId
+      recipientId: connection.recipientId,
     };
   }
 }

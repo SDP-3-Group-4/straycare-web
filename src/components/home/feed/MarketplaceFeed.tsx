@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Loader2 } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import MarketItemCard from './MarketItemCard';
 import type { MarketItem } from './MarketItemCard';
 import MarketplaceProductModal from './MarketplaceProductModal';
@@ -16,7 +16,7 @@ export default function MarketplaceFeed() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MarketItem | null>(null);
   const [items, setItems] = useState<MarketItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const { addToCart } = useCart();
 
   useEffect(() => {

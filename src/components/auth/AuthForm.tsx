@@ -1,6 +1,6 @@
 import { useState, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, toFirebaseError } from '../../contexts/AuthContext';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { TextField, Input, Label, FieldError, Button, Separator } from '@heroui/react';
 import {
@@ -13,10 +13,11 @@ import {
   Ticket,
   ArrowRight,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import logo from '../../assets/logo.svg';
 
-type AuthMode = 'login' | 'register';
+type AuthMode = 'login' | 'register' | 'forgot';
 
 interface FormData {
   email: string;
@@ -28,21 +29,20 @@ interface FormData {
 }
 
 const INITIAL_FORM: FormData = {
-  email: 'test@example.com',
-  password: 'password123',
-  name: 'Test User',
-  phone: '+1 555-0198',
-  confirmPassword: 'password123',
+  email: '',
+  password: '',
+  name: '',
+  phone: '',
+  confirmPassword: '',
   referralCode: '',
 };
 
 /**
- * Auth form: login & registration modes, toggled in-place.
- * Uses HeroUI v3 compound TextField components (TextField > Label + Input + FieldError)
- * with StrayCare brand theming.
+ * Auth form: login, registration, and password-reset modes, toggled in-place.
+ * Uses HeroUI v3 compound TextField components with StrayCare brand theming.
  */
 export default function AuthForm() {
-  const { mockLogin } = useAuth();
+  const { signInWithEmail, signUp, signInWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const [parent] = useAutoAnimate();
@@ -51,9 +51,14 @@ export default function AuthForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [formError, setFormError] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
   const isLogin = mode === 'login';
+  const isRegister = mode === 'register';
+  const isForgot = mode === 'forgot';
 
   const updateField = useCallback((field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -74,6 +79,11 @@ export default function AuthForm() {
       errs.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Enter a valid email address';
+    }
+
+    if (isForgot) {
+      setErrors(errs);
+      return Object.keys(errs).length === 0;
     }
 
     if (!form.password) {
@@ -100,7 +110,7 @@ export default function AuthForm() {
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
-  }, [form, isLogin]);
+  }, [form, isLogin, isForgot]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -108,28 +118,70 @@ export default function AuthForm() {
       if (!validate()) return;
 
       setIsLoading(true);
-      
+      setFormError('');
+
       try {
-        await mockLogin(form.email);
+        if (mode === 'forgot') {
+          await resetPassword(form.email);
+          setResetSent(true);
+          return;
+        }
+        if (mode === 'register') {
+          await signUp({
+            email: form.email,
+            password: form.password,
+            displayName: form.name,
+            phone: form.phone,
+            referralCode: form.referralCode || undefined,
+          });
+        } else {
+          await signInWithEmail(form.email, form.password);
+        }
         navigate('/');
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        setFormError(toFirebaseError(err));
       } finally {
         setIsLoading(false);
       }
     },
-    [validate, form.email, mockLogin, navigate],
+    [validate, mode, form, resetPassword, signUp, signInWithEmail, navigate],
   );
 
   const toggleMode = useCallback(() => {
     setMode((m) => (m === 'login' ? 'register' : 'login'));
     setErrors({});
+    setFormError('');
+    setResetSent(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
   }, []);
 
-  const handleGoogleAuth = useCallback(() => {
-    console.log('[StrayCare] Continue with Google');
+  const handleGoogleAuth = useCallback(async () => {
+    setFormError('');
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      setFormError(toFirebaseError(err));
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }, [signInWithGoogle, navigate]);
+
+  const handleForgotPassword = useCallback(() => {
+    setMode('forgot');
+    setErrors({});
+    setFormError('');
+    setResetSent(false);
+  }, []);
+
+  const backToLogin = useCallback(() => {
+    setMode('login');
+    setResetSent(false);
+    setFormError('');
   }, []);
 
   return (
@@ -137,48 +189,73 @@ export default function AuthForm() {
       {/* Brand mark */}
       <img src={logo} alt="StrayCare" className="auth-form__brand" style={{ height: '48px', objectFit: 'contain', marginBottom: 'var(--sc-space-xs)' }} />
       <h2 className="auth-form__title">
-        {isLogin ? 'Login to your account' : 'Create your account'}
+        {isForgot ? 'Reset your password' : isLogin ? 'Login to your account' : 'Create your account'}
       </h2>
 
       {/* Google OAuth button — premium design, not HeroUI (custom) */}
+      {!isForgot && (
       <button
         type="button"
         className="auth-form__google-btn"
         onClick={handleGoogleAuth}
-        disabled={isLoading}
+        disabled={isGoogleLoading}
         id="google-auth-btn"
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        <span>Continue with Google</span>
+        {isGoogleLoading ? (
+          <Loader2 className="auth-form__google-spinner" size={20} />
+        ) : (
+          <>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            <span>Continue with Google</span>
+          </>
+        )}
       </button>
+      )}
 
+      {!isForgot && (
       <div className="auth-form__divider">
         <Separator className="auth-form__divider-line" />
         <span className="auth-form__divider-text">or</span>
         <Separator className="auth-form__divider-line" />
       </div>
+      )}
+
+      {/* Global error banner */}
+      {formError && (
+        <div className="auth-form__error-banner" role="alert">
+          <AlertCircle size={16} />
+          <span>{formError}</span>
+        </div>
+      )}
+
+      {/* Reset success */}
+      {isForgot && resetSent && (
+        <div className="auth-form__error-banner auth-form__error-banner--success" role="status">
+          <span>Password reset email sent. Check your inbox.</span>
+        </div>
+      )}
 
       {/* Form */}
       <form ref={parent} onSubmit={handleSubmit} noValidate className="auth-form__fields">
         {/* Registration-only fields */}
-        {!isLogin && (
+        {isRegister && (
           <>
             <TextField
               isInvalid={!!errors.name}
@@ -246,6 +323,7 @@ export default function AuthForm() {
         </TextField>
 
         {/* Password */}
+        {!isForgot && (
         <TextField
           isInvalid={!!errors.password}
           isDisabled={isLoading}
@@ -259,6 +337,7 @@ export default function AuthForm() {
                 className="auth-form__forgot-link"
                 tabIndex={0}
                 id="forgot-password-link"
+                onClick={handleForgotPassword}
               >
                 Forgot?
               </button>
@@ -287,9 +366,10 @@ export default function AuthForm() {
           </div>
           {errors.password && <FieldError className="auth-form__error">{errors.password}</FieldError>}
         </TextField>
+        )}
 
         {/* Confirm password (register only) */}
-        {!isLogin && (
+        {isRegister && (
           <TextField
             isInvalid={!!errors.confirmPassword}
             isDisabled={isLoading}
@@ -324,7 +404,7 @@ export default function AuthForm() {
         )}
 
         {/* Referral code (register only) */}
-        {!isLogin && (
+        {isRegister && (
           <TextField
             isDisabled={isLoading}
             className="auth-form__textfield"
@@ -358,7 +438,7 @@ export default function AuthForm() {
             <Loader2 size={20} className="auth-form__spinner" />
           ) : (
             <>
-              {isLogin ? 'Login now' : 'Create account'}
+              {isForgot ? 'Send reset email' : isLogin ? 'Login now' : 'Create account'}
               <ArrowRight size={18} />
             </>
           )}
@@ -367,15 +447,35 @@ export default function AuthForm() {
 
       {/* Toggle mode */}
       <p className="auth-form__toggle">
-        {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-        <button
-          type="button"
-          className="auth-form__toggle-link"
-          onClick={toggleMode}
-          id="auth-toggle-mode"
-        >
-          {isLogin ? 'Sign Up' : 'Login'}
-        </button>
+        {isForgot && resetSent ? (
+          <button type="button" className="auth-form__toggle-link" onClick={backToLogin} id="auth-back-to-login">
+            Back to Login
+          </button>
+        ) : isLogin ? (
+          <>
+            {"Don't have an account? "}
+            <button
+              type="button"
+              className="auth-form__toggle-link"
+              onClick={toggleMode}
+              id="auth-toggle-mode"
+            >
+              Sign Up
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{' '}
+            <button
+              type="button"
+              className="auth-form__toggle-link"
+              onClick={toggleMode}
+              id="auth-toggle-mode"
+            >
+              Login
+            </button>
+          </>
+        )}
       </p>
     </div>
   );

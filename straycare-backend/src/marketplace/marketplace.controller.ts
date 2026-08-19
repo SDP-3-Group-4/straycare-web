@@ -1,12 +1,22 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Req,
+  ForbiddenException,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { MarketplaceService } from './marketplace.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('marketplace')
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
   @Post()
-  async createItem(@Body() data: any) {
+  async createItem(@Body() data: any, @Req() req: Request) {
     return this.marketplaceService.createItem({
       title: data.title,
       description: data.description,
@@ -14,25 +24,33 @@ export class MarketplaceController {
       currency: data.currency,
       imageUrl: data.imageUrl,
       category: data.category,
-      seller: { connect: { id: data.sellerId } }
+      seller: { connect: { id: req.user!.uid } },
     });
   }
 
+  @Public()
   @Get()
   async getItems() {
     return this.marketplaceService.getItems();
   }
 
   @Post('order')
-  async createOrder(@Body() data: { userId: string, total: number }) {
-    return this.marketplaceService.createOrder(data.userId, data.total);
+  async createOrder(@Body('total') total: number, @Req() req: Request) {
+    return this.marketplaceService.createOrder(req.user!.uid, total);
   }
 
   @Get('orders/user/:userId')
-  async getOrdersByUserId(@Param('userId') userId: string) {
+  async getOrdersByUserId(
+    @Param('userId') userId: string,
+    @Req() req: Request,
+  ) {
+    if (userId !== req.user!.uid) {
+      throw new ForbiddenException('You can only view your own orders');
+    }
     return this.marketplaceService.getOrdersByUserId(userId);
   }
 
+  @Public()
   @Get(':id')
   async getItemById(@Param('id') id: string) {
     return this.marketplaceService.getItemById(id);

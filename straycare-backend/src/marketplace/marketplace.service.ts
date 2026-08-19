@@ -13,14 +13,14 @@ export class MarketplaceService {
   async getItems() {
     return this.prisma.marketplaceItem.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { seller: true }
+      include: { seller: true },
     });
   }
 
   async getItemById(id: string) {
     return this.prisma.marketplaceItem.findUnique({
       where: { id },
-      include: { seller: true }
+      include: { seller: true },
     });
   }
 
@@ -29,15 +29,15 @@ export class MarketplaceService {
       data: {
         userId,
         total,
-        status: 'pending'
-      }
+        status: 'pending',
+      },
     });
   }
 
   async getOrdersByUserId(userId: string) {
     return this.prisma.order.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

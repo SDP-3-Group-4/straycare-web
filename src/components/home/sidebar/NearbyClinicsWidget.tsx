@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Clock, Cross, LocateFixed, MapPin, Navigation, Star } from 'lucide-react';
 import L from 'leaflet';
-import { MapContainer, Marker, Polyline, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CLINICS, type Clinic } from '../../../data/clinics';
 import { haversineDistanceKm, formatDistance } from '../../../utils/geo';
@@ -52,6 +52,11 @@ function FitRoute({ user, clinic }: { user: [number, number]; clinic: [number, n
 
 const googleMapsUrl = (clinic: Clinic) =>
   `https://www.google.com/maps/dir/?api=1&destination=${clinic.lat},${clinic.lng}`;
+
+function RefetchOnClick({ onClick }: { onClick: () => void }) {
+  useMapEvents({ click: () => onClick() });
+  return null;
+}
 
 export default function NearbyClinicsWidget() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -127,10 +132,8 @@ export default function NearbyClinicsWidget() {
               scrollWheelZoom={false}
               zoomControl={false}
               className="w-full h-full"
-              eventHandlers={{
-                click: requestWithRetry,
-              }}
             >
+              <RefetchOnClick onClick={requestWithRetry} />
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {resolved && <FitRoute user={userPos} clinic={clinicPos} />}
               {resolved && (

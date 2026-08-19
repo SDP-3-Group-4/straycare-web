@@ -67,7 +67,7 @@ export default function PostCard({
   const [donorsCount, setDonorsCount] = useState(initialDonorsCount || 0);
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDonating, setIsDonating] = useState(false);
   
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -89,8 +89,8 @@ export default function PostCard({
 
   useEffect(() => {
     if (user) {
-      fetchLikeStatus(user.uid, id).then(res => setIsLiked(res.liked)).catch(console.error);
-      fetchBookmarkStatus(user.uid, id).then(res => setIsBookmarked(res.bookmarked)).catch(console.error);
+      fetchLikeStatus(id, user.uid).then(res => setIsLiked(res.liked)).catch(console.error);
+      fetchBookmarkStatus(id, user.uid).then(res => setIsBookmarked(res.bookmarked)).catch(console.error);
     }
   }, [user, id]);
 
@@ -99,7 +99,7 @@ export default function PostCard({
     setIsLiked(!isLiked);
     setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
     try {
-      const res = await toggleLike(user.uid, id);
+      const res = await toggleLike(id);
       setIsLiked(res.liked);
       setLikesCount(res.likesCount);
     } catch (err) {
@@ -112,7 +112,7 @@ export default function PostCard({
     if (!user) return;
     setIsBookmarked(!isBookmarked);
     try {
-      const res = await toggleBookmark(user.uid, id);
+      const res = await toggleBookmark(id);
       setIsBookmarked(res.bookmarked);
     } catch (err) {
       setIsBookmarked(!isBookmarked);
@@ -140,7 +140,7 @@ export default function PostCard({
     if (!user) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     try {
-      await deletePost(id, user.uid);
+      await deletePost(id);
       if (onPostDeleted) onPostDeleted();
     } catch (err) {
       console.error(err);
@@ -151,7 +151,7 @@ export default function PostCard({
   const handleSaveEdit = async () => {
     if (!user) return;
     try {
-      await updatePost(id, user.uid, { content: editContent });
+      await updatePost(id, { content: editContent });
       setIsEditing(false);
     } catch (e) {
       console.error(e);
@@ -169,7 +169,7 @@ export default function PostCard({
     
     setIsDonating(true);
     try {
-      await donateToPost(id, user.uid, amount);
+      await donateToPost(id, amount);
       setRaisedAmount(prev => prev + amount);
       setDonorsCount(prev => prev + 1);
       setIsDonationModalOpen(false);
@@ -233,7 +233,7 @@ export default function PostCard({
                 if (connectionStatus !== 'none' || isConnecting) return;
                 setIsConnecting(true);
                 try {
-                  await requestConnection(user.uid, authorId!);
+                  await requestConnection(authorId!);
                   setConnectionStatus('pending');
                 } catch(e) {
                   console.error(e);

@@ -7,6 +7,10 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async createUser(data: Prisma.UserCreateInput) {
+    const existing = await this.prisma.user.findUnique({
+      where: { id: data.id },
+    });
+    if (existing) return existing;
     return this.prisma.user.create({
       data: {
         ...data,
@@ -39,12 +43,12 @@ export class UsersService {
       where: { id },
       include: {
         posts: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
         },
         _count: {
-          select: { posts: true, comments: true }
-        }
-      }
+          select: { posts: true, comments: true },
+        },
+      },
     });
   }
 

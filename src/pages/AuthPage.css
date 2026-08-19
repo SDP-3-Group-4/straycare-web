@@ -160,6 +160,20 @@
   cursor: not-allowed;
 }
 
+.auth-form__google-spinner {
+  animation: auth-form__spin 0.8s linear infinite;
+  color: var(--sc-brand-600);
+}
+
+@keyframes auth-form__spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ─── Divider ─── */
 
 .auth-form__divider {
@@ -322,6 +336,29 @@
   color: #ef4444;
   margin: 0;
   line-height: 1.3;
+}
+
+/* Global error / info banner */
+.auth-form__error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-sm);
+  width: 100%;
+  padding: var(--sc-space-sm) var(--sc-space-md);
+  border-radius: var(--sc-radius-md);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+  font-family: var(--sc-font-body);
+  font-size: var(--sc-text-sm);
+  line-height: 1.4;
+  margin-bottom: var(--sc-space-sm);
+}
+
+.auth-form__error-banner--success {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #15803d;
 }
 
 /* ─── Submit button ─── */

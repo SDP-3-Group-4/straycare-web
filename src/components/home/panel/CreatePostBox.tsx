@@ -64,7 +64,6 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
       await createPost({
         content,
         category,
-        authorId: user.uid,
         imageUrl: imageUrl || undefined,
         location: finalLoc || undefined,
         latitude: finalCoords?.lat,

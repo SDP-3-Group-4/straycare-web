@@ -15,7 +15,7 @@ export class LikesService {
     });
 
     if (!post) {
-      throw new NotFoundException("Post not found");
+      throw new NotFoundException('Post not found');
     }
 
     const existing = await this.prisma.like.findUnique({

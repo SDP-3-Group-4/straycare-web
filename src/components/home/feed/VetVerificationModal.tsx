@@ -39,7 +39,7 @@ const eighteenYearsAgo = () => {
   return d.toISOString().split('T')[0];
 };
 
-export default function VetVerificationModal({ isOpen, onClose, userId, email, displayName }: VetVerificationModalProps) {
+export default function VetVerificationModal({ isOpen, onClose, email, displayName }: VetVerificationModalProps) {
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');
   const [clinic, setClinic] = useState('');
@@ -110,7 +110,6 @@ export default function VetVerificationModal({ isOpen, onClose, userId, email, d
     setSubmitting(true);
     try {
       await submitVetApplication({
-        userId,
         fullName: fullName.trim(),
         dob,
         clinic: clinic.trim(),

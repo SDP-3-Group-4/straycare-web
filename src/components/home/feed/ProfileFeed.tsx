@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
-import { Package, Users, LayoutList, Loader2, MapPin, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus } from '../../../services/api';
 import { avatarOnError } from '../../../constants';

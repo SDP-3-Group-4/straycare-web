@@ -38,7 +38,7 @@ export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChat
     if (mode === 'direct') {
       try {
         if (!user) return;
-        const newConv = await createChat(user.uid, id);
+        const newConv = await createChat(id);
         
         // Find the user we just started a chat with
         const targetUser = users.find(u => u.id === id);

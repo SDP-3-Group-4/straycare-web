@@ -1,4 +1,3 @@
-import React from 'react';
 import heroGraphics from '../../assets/loginGraphics.png';
 
 export default function HeroPanel() {

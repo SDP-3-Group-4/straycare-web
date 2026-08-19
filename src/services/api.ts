@@ -1,308 +1,151 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export const fetchPosts = async (tab?: string, userId?: string, lat?: number, lng?: number) => {
+import { getAuthToken } from '../firebase';
+
+export const UNAUTHORIZED_EVENT = 'straycare:unauthorized';
+
+async function request(path: string, init: RequestInit = {}): Promise<any> {
+  const token = await getAuthToken();
+  const headers = new Headers(init.headers);
+  headers.set('Authorization', `Bearer ${token}`);
+  if (init.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+
+  if (response.status === 401) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    throw new Error('Session expired. Please sign in again.');
+  }
+  if (response.status === 429) {
+    const text = await response.text();
+    throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
+  }
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = await response.json();
+      if (body.message) message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
+    } catch { /* non-JSON error body */ }
+    const err: any = new Error(message);
+    err.status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
+const postJson = (path: string, data: any) =>
+  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+
+const putJson = (path: string, data: any) =>
+  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+
+const deleteJson = (path: string, data: any) =>
+  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+
+export const fetchPosts = (tab?: string, userId?: string, lat?: number, lng?: number) => {
   const queryParams = new URLSearchParams();
   if (tab) queryParams.append('tab', tab);
   if (userId) queryParams.append('userId', userId);
   if (lat !== undefined) queryParams.append('lat', lat.toString());
   if (lng !== undefined) queryParams.append('lng', lng.toString());
-  
+
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  const response = await fetch(`${API_URL}/posts${queryString}`);
-  if (!response.ok) throw new Error('Failed to fetch posts');
-  return response.json();
+  return request(`/posts${queryString}`);
 };
 
-export const updatePost = async (id: string, authorId: string, data: any) => {
-  const response = await fetch(`${API_URL}/posts/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ authorId, ...data }),
-  });
-  if (!response.ok) throw new Error('Failed to update post');
-  return response.json();
-};
+export const createPost = (postData: any) => postJson('/posts', postData);
 
-export const deletePost = async (id: string, authorId: string) => {
-  const response = await fetch(`${API_URL}/posts/${id}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ authorId }),
-  });
-  if (!response.ok) throw new Error('Failed to delete post');
-  return response.json();
-};
+export const updatePost = (id: string, data: any) => putJson(`/posts/${id}`, data);
+
+export const deletePost = (id: string) => deleteJson(`/posts/${id}`, {});
 
 export const fetchUserProfile = async (id: string) => {
-  const response = await fetch(`${API_URL}/users/${id}?t=${Date.now()}`, { cache: 'no-store' });
-  if (!response.ok) {
-    if (response.status === 404) return null;
-    throw new Error('Failed to fetch user profile');
+  try {
+    return await request(`/users/${id}?t=${Date.now()}`);
+  } catch (e: any) {
+    if (e?.status === 404) return null;
+    throw e;
   }
-  return response.json();
 };
 
-export const createUserProfile = async (userData: any) => {
-  const response = await fetch(`${API_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-  if (!response.ok) throw new Error('Failed to create user profile');
-  return response.json();
-};
+export const createUserProfile = (userData: any) => postJson('/users', userData);
 
-export const fetchUsers = async () => {
-  const response = await fetch(`${API_URL}/users`);
-  if (!response.ok) throw new Error('Failed to fetch users');
-  return response.json();
-};
+export const fetchUsers = () => request('/users');
 
-export const fetchMarketplaceItems = async () => {
-  const response = await fetch(`${API_URL}/marketplace`);
-  if (!response.ok) throw new Error('Failed to fetch marketplace items');
-  return response.json();
-};
+export const fetchMarketplaceItems = () => request('/marketplace');
 
-export const createPost = async (postData: any) => {
-  const response = await fetch(`${API_URL}/posts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(postData),
-  });
-  if (!response.ok) throw new Error('Failed to create post');
-  return response.json();
-};
+export const fetchChats = (userId: string) => request(`/chat?userId=${userId}`);
 
-export const fetchChats = async (userId: string) => {
-  const response = await fetch(`${API_URL}/chat?userId=${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch chats');
-  return response.json();
-};
+export const createChat = (targetUserId: string) =>
+  postJson('/chat', { targetUserId });
 
-export const createChat = async (userId: string, targetUserId: string) => {
-  const response = await fetch(`${API_URL}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, targetUserId }),
-  });
-  if (!response.ok) throw new Error('Failed to create chat');
-  return response.json();
-};
+export const fetchMessages = (userId: string, chatId: string) =>
+  request(`/chat/${chatId}/messages?userId=${userId}`);
 
-export const fetchMessages = async (userId: string, chatId: string) => {
-  const response = await fetch(`${API_URL}/chat/${chatId}/messages?userId=${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch messages');
-  return response.json();
-};
+export const sendMessage = (chatId: string, content: string, imageUrl?: string) =>
+  postJson(`/chat/${chatId}/messages`, { content, imageUrl });
 
-export const sendMessage = async (userId: string, chatId: string, content: string, imageUrl?: string) => {
-  const response = await fetch(`${API_URL}/chat/${chatId}/messages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, content, imageUrl }),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    if (response.status === 429) {
-      throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
-    }
-    throw new Error(`Failed to send message (${response.status})`);
-  }
-  return response.json();
-};
-export const toggleBookmark = async (userId: string, postId: string) => {
-  const response = await fetch(`${API_URL}/bookmarks/${postId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-  if (!response.ok) throw new Error('Failed to toggle bookmark');
-  return response.json();
-};
+export const toggleBookmark = (postId: string) => postJson(`/bookmarks/${postId}`, {});
 
-export const fetchBookmarks = async (userId: string) => {
-  const response = await fetch(`${API_URL}/bookmarks/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch bookmarks');
-  return response.json();
-};
+export const fetchBookmarks = (userId: string) => request(`/bookmarks/${userId}`);
 
-export const fetchBookmarkStatus = async (userId: string, postId: string) => {
-  const response = await fetch(`${API_URL}/bookmarks/${postId}/status/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch bookmark status');
-  return response.json();
-};
+export const fetchBookmarkStatus = (postId: string, userId: string) =>
+  request(`/bookmarks/${postId}/status/${userId}`);
 
-export const toggleLike = async (userId: string, postId: string) => {
-  const response = await fetch(`${API_URL}/likes/${postId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-  if (!response.ok) throw new Error('Failed to toggle like');
-  return response.json();
-};
+export const toggleLike = (postId: string) => postJson(`/likes/${postId}`, {});
 
-export const fetchLikeStatus = async (userId: string, postId: string) => {
-  const response = await fetch(`${API_URL}/likes/${postId}/status/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch like status');
-  return response.json();
-};
+export const fetchLikeStatus = (postId: string, userId: string) =>
+  request(`/likes/${postId}/status/${userId}`);
 
-export const fetchNotifications = async (userId: string) => {
-  const response = await fetch(`${API_URL}/notifications/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch notifications');
-  return response.json();
-};
+export const fetchNotifications = (userId: string) => request(`/notifications/${userId}`);
 
-export const markNotificationRead = async (id: string) => {
-  const response = await fetch(`${API_URL}/notifications/${id}/read`, { method: 'POST' });
-  if (!response.ok) throw new Error('Failed to mark notification read');
-  return response.json();
-};
+export const markNotificationRead = (id: string) => postJson(`/notifications/${id}/read`, {});
 
-export const markAllNotificationsRead = async (userId: string) => {
-  const response = await fetch(`${API_URL}/notifications/read-all/${userId}`, { method: 'POST' });
-  if (!response.ok) throw new Error('Failed to mark all notifications read');
-  return response.json();
-};
+export const markAllNotificationsRead = (userId: string) =>
+  postJson(`/notifications/read-all/${userId}`, {});
 
-export const fetchConnections = async (userId: string) => {
-  const response = await fetch(`${API_URL}/connections/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch connections');
-  return response.json();
-};
+export const fetchConnections = (userId: string) => request(`/connections/${userId}`);
 
-export const fetchConnectionStatus = async (userId1: string, userId2: string) => {
-  const response = await fetch(`${API_URL}/connections/status/${userId1}/${userId2}`);
-  if (!response.ok) throw new Error('Failed to fetch connection status');
-  return response.json();
-};
+export const fetchConnectionStatus = (userId1: string, userId2: string) =>
+  request(`/connections/status/${userId1}/${userId2}`);
 
-export const requestConnection = async (requesterId: string, recipientId: string) => {
-  const response = await fetch(`${API_URL}/connections/request`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requesterId, recipientId }),
-  });
-  if (!response.ok) throw new Error('Failed to request connection');
-  return response.json();
-};
+export const requestConnection = (recipientId: string) =>
+  postJson('/connections/request', { recipientId });
 
-export const acceptConnection = async (recipientId: string, requesterId: string) => {
-  const response = await fetch(`${API_URL}/connections/${recipientId}/accept`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requesterId }),
-  });
-  if (!response.ok) throw new Error('Failed to accept connection');
-  return response.json();
-};
+export const acceptConnection = (recipientId: string) =>
+  postJson(`/connections/${recipientId}/accept`, {});
 
-export const declineConnection = async (recipientId: string, requesterId: string) => {
-  const response = await fetch(`${API_URL}/connections/${recipientId}/decline`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requesterId }),
-  });
-  if (!response.ok) throw new Error('Failed to decline connection');
-  return response.json();
-};
+export const declineConnection = (recipientId: string) =>
+  postJson(`/connections/${recipientId}/decline`, {});
 
-export const fetchComments = async (postId: string, userId?: string) => {
+export const fetchComments = (postId: string, userId?: string) => {
   const queryString = userId ? `?userId=${userId}` : '';
-  const response = await fetch(`${API_URL}/posts/${postId}/comments${queryString}`);
-  if (!response.ok) throw new Error('Failed to fetch comments');
-  return response.json();
+  return request(`/posts/${postId}/comments${queryString}`);
 };
 
-export const addComment = async (postId: string, userId: string, content: string) => {
-  const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, content }),
-  });
-  if (!response.ok) throw new Error('Failed to add comment');
-  return response.json();
-};
+export const addComment = (postId: string, content: string) =>
+  postJson(`/posts/${postId}/comments`, { content });
 
-export const updateComment = async (id: string, userId: string, content: string) => {
-  const response = await fetch(`${API_URL}/comments/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, content }),
-  });
-  if (!response.ok) throw new Error('Failed to update comment');
-  return response.json();
-};
+export const updateComment = (id: string, content: string) => putJson(`/comments/${id}`, { content });
 
-export const deleteComment = async (id: string, userId: string) => {
-  const response = await fetch(`${API_URL}/comments/${id}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-  if (!response.ok) throw new Error('Failed to delete comment');
-  return response.json();
-};
+export const deleteComment = (id: string) => deleteJson(`/comments/${id}`, {});
 
-export const toggleCommentLike = async (id: string, userId: string) => {
-  const response = await fetch(`${API_URL}/comments/${id}/like`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
-  if (!response.ok) throw new Error('Failed to toggle comment like');
-  return response.json();
-};
+export const toggleCommentLike = (id: string) => postJson(`/comments/${id}/like`, {});
 
-export const donateToPost = async (postId: string, userId: string, amount: number) => {
-  const response = await fetch(`${API_URL}/posts/${postId}/donate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, amount }),
-  });
-  if (!response.ok) throw new Error('Failed to process donation');
-  return response.json();
-};
+export const donateToPost = (postId: string, amount: number) =>
+  postJson(`/posts/${postId}/donate`, { amount });
 
-export const createOrder = async (userId: string, total: number) => {
-  const response = await fetch(`${API_URL}/marketplace/order`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, total }),
-  });
-  if (!response.ok) throw new Error('Failed to create order');
-  return response.json();
-};
-export const fetchUserOrders = async (userId: string) => {
-  const response = await fetch(`${API_URL}/marketplace/orders/user/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch user orders');
-  return response.json();
-};
+export const createOrder = (total: number) => postJson('/marketplace/order', { total });
 
-export const touchPresence = async (uid: string) => {
-  const response = await fetch(`${API_URL}/users/presence`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ uid }),
-  });
-  if (!response.ok) throw new Error('Failed to update presence');
-  return response.json();
-};
+export const fetchUserOrders = (userId: string) => request(`/marketplace/orders/user/${userId}`);
 
-export const updateUserProfile = async (id: string, data: any) => {
-  const response = await fetch(`${API_URL}/users/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error('Failed to update user profile');
-  return response.json();
-};
+export const touchPresence = (_uid: string) => postJson('/users/presence', {});
 
-export const submitVetApplication = async (data: {
-  userId: string;
+export const updateUserProfile = (id: string, data: any) => putJson(`/users/${id}`, data);
+
+export const submitVetApplication = (data: {
   fullName: string;
   dob?: string;
   clinic: string;
@@ -312,18 +155,6 @@ export const submitVetApplication = async (data: {
   docName?: string;
   docMimeType?: string;
   docBase64?: string;
-}) => {
-  const response = await fetch(`${API_URL}/vet-applications`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error('Failed to submit application');
-  return response.json();
-};
+}) => postJson('/vet-applications', data);
 
-export const fetchVetApplicationStatus = async (userId: string) => {
-  const response = await fetch(`${API_URL}/vet-applications/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch application status');
-  return response.json();
-};
+export const fetchVetApplicationStatus = (userId: string) => request(`/vet-applications/${userId}`);

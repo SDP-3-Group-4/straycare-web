@@ -1,4 +1,4 @@
-import { MapPin, Compass, Navigation } from 'lucide-react';
+import { Compass, Navigation } from 'lucide-react';
 
 interface FeedTabsProps {
   selected: string;

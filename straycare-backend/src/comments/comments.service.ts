@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -50,7 +54,7 @@ export class CommentsService {
       },
     });
 
-    return comments.map(c => ({
+    return comments.map((c) => ({
       ...c,
       isLiked: userId ? c.likes.length > 0 : false,
     }));
@@ -59,7 +63,8 @@ export class CommentsService {
   async updateComment(id: string, userId: string, content: string) {
     const comment = await this.prisma.comment.findUnique({ where: { id } });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.userId !== userId) throw new UnauthorizedException('Unauthorized to edit this comment');
+    if (comment.userId !== userId)
+      throw new UnauthorizedException('Unauthorized to edit this comment');
 
     return this.prisma.comment.update({
       where: { id },
@@ -70,7 +75,8 @@ export class CommentsService {
   async deleteComment(id: string, userId: string) {
     const comment = await this.prisma.comment.findUnique({ where: { id } });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.userId !== userId) throw new UnauthorizedException('Unauthorized to delete this comment');
+    if (comment.userId !== userId)
+      throw new UnauthorizedException('Unauthorized to delete this comment');
 
     await this.prisma.comment.delete({ where: { id } });
 

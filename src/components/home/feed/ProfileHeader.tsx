@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
 import { updateUserProfile, requestConnection, fetchConnectionStatus } from '../../../services/api';
@@ -40,8 +40,6 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
   
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalAvatar(null);
@@ -103,7 +101,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
     if (!authUser || !user.id || connectionStatus !== 'none') return;
     setIsConnecting(true);
     try {
-      await requestConnection(authUser.uid, user.id);
+      await requestConnection(user.id);
       setConnectionStatus('pending');
     } catch (e: any) {
       console.error(e);

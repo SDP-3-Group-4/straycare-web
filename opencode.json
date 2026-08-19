@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "codebasemcp": {
+      "type": "local",
+      "command": ["cmd", "/c", "codebase-memory-mcp"],
+      "cwd": ".",
+      "enabled": true,
+      "timeout": 120000
+    }
+  }
+}

@@ -1,10 +1,18 @@
-import { 
-  User, Mail, Key, Bell, Smartphone, Moon, Globe, 
+import {
+  User, Mail, Key, Bell, Smartphone, Moon, Globe,
   ShieldAlert, EyeOff, FileText, HelpCircle, ChevronRight,
-  LogOut
+  LogOut,
+  type LucideIcon,
 } from 'lucide-react';
 
-const SETTING_SECTIONS = [
+interface SettingItem {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  active?: boolean;
+}
+
+const SETTING_SECTIONS: { title: string; items: SettingItem[] }[] = [
   {
     title: 'Account Settings',
     items: [

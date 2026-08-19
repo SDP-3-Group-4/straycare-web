@@ -21,6 +21,9 @@ model User {
   latitude       Float?
   longitude      Float?
   website        String?
+  phone          String?
+  referralCode   String?
+  emailVerified  Boolean   @default(false)
   verifiedStatus Boolean   @default(false)
   isVet          Boolean   @default(false)
   topContributor Boolean   @default(false)

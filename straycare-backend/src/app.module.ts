@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FirebaseModule } from './firebase/firebase.module';
+import { FirebaseAuthGuard } from './auth/firebase-auth.guard';
 import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
@@ -15,8 +17,21 @@ import { AiModule } from './ai/ai.module';
 import { VetApplicationsModule } from './vet-applications/vet-applications.module';
 
 @Module({
-  imports: [FirebaseModule, PostsModule, UsersModule, MarketplaceModule, PrismaModule, ChatModule, BookmarksModule, ConnectionsModule, LikesModule, CommentsModule, AiModule, VetApplicationsModule],
+  imports: [
+    FirebaseModule,
+    PostsModule,
+    UsersModule,
+    MarketplaceModule,
+    PrismaModule,
+    ChatModule,
+    BookmarksModule,
+    ConnectionsModule,
+    LikesModule,
+    CommentsModule,
+    AiModule,
+    VetApplicationsModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: FirebaseAuthGuard }],
 })
 export class AppModule {}

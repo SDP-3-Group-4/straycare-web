@@ -32,7 +32,7 @@ export default function MarketplaceCheckoutModal({ isOpen, onClose, total }: Mar
     if (!user) return;
     setIsProcessing(true);
     try {
-      await createOrder(user.uid, total);
+      await createOrder(total);
       setStep(3);
       clearCart();
     } catch (error) {

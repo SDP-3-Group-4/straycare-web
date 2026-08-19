@@ -71,7 +71,7 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
         timestamp: timeString,
         day: dayLabel(date),
         isMine: m.senderId === user?.uid,
-        status: 'read'
+        status: 'read' as const
       };
     }), [user?.uid, chat.name, botAvatar]);
 
@@ -145,7 +145,7 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
     }
     
     try {
-      await sendMessage(user.uid, chat.id.toString(), tempText);
+      await sendMessage(chat.id.toString(), tempText);
       setSendError(null);
       // Immediately fetch new messages
       const data = await fetchMessages(user.uid, chat.id.toString());
@@ -175,7 +175,7 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
           typingTimeoutRef.current = setTimeout(() => setIsBotTyping(false), BOT_TYPING_SAFETY_MS);
         }
         try {
-          await sendMessage(user.uid, chat.id.toString(), "📷 Sent an image", base64String);
+          await sendMessage(chat.id.toString(), "📷 Sent an image", base64String);
           // Immediately fetch new messages
           const data = await fetchMessages(user.uid, chat.id.toString());
           setMessages(formatMessages(data));
