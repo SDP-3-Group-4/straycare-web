@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Avatar } from "@heroui/react";
-import { Bot, MessageSquare, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { Bot, MessageSquare, ChevronUp, ChevronDown, Plus, ChevronRight, Sparkles } from "lucide-react";
 import ChatConversation from "./ChatConversation";
 import NewChatModal from "./NewChatModal";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -41,7 +41,7 @@ export default function ChatWidget() {
             unread: c.unread,
             avatar: c.avatar || `https://i.pravatar.cc/150?u=${c.id}`,
             isGroup: c.isGroup,
-            isAiBot: false,
+            isAiBot: c.otherUserId === 'ai-vet-bot-id',
           };
         });
         setChats(formattedChats);
@@ -67,7 +67,8 @@ export default function ChatWidget() {
     );
   }
 
-  const totalUnread = chats.reduce((acc, chat) => acc + chat.unread, 0);
+  const humanChats = chats.filter((chat) => !chat.isAiBot);
+  const totalUnread = humanChats.reduce((acc, chat) => acc + chat.unread, 0);
 
   // Otherwise, render the Chat List view
   return (
@@ -101,7 +102,7 @@ export default function ChatWidget() {
 
         {!isCollapsed && (
           <>
-            {/* AI Vet Bot Button */}
+            {/* AI Vet Bot Banner */}
             <div className="px-5 mb-4">
               <button 
                 onClick={async () => {
@@ -121,21 +122,32 @@ export default function ChatWidget() {
                     console.error("Failed to start AI chat", e);
                   }
                 }}
-                className="w-full relative overflow-hidden bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] rounded-2xl p-4 flex items-center gap-4 text-white transition-all group"
+                className="w-full relative overflow-hidden bg-gradient-to-br from-[var(--sc-brand-500)] via-[var(--sc-brand-550,#4f46e5)] to-[var(--sc-brand-700)] hover:from-[var(--sc-brand-600)] hover:to-[var(--sc-brand-800)] rounded-2xl p-4 flex items-center gap-4 text-white transition-all duration-300 group shadow-lg shadow-[var(--sc-brand-200)]"
               >
-                <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm">
-                  <Bot size={24} className="text-white" />
+                <div className="absolute -right-8 -top-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
+                <div className="absolute -left-4 -bottom-10 w-20 h-20 bg-[var(--sc-brand-300)]/20 rounded-full blur-xl" />
+                <div className="relative bg-white/20 p-2.5 rounded-xl backdrop-blur-sm border border-white/25">
+                  <Bot size={22} className="text-white" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="font-bold text-[15px]">AI Vet Assistant</span>
-                  <span className="text-xs text-white/90">Get instant advice</span>
+                <div className="relative flex flex-col text-left flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[15px] tracking-tight whitespace-nowrap">AI Vet Assistant</span>
+                    <span className="bg-white text-[var(--sc-brand-600)] text-[9px] font-extrabold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-full shadow-sm">
+                      Beta
+                    </span>
+                  </div>
+                  <span className="text-xs text-white/90 mt-0.5">Instant vet advice, anytime</span>
+                </div>
+                <div className="relative flex items-center gap-1 text-white/70 group-hover:text-white transition-colors">
+                  <Sparkles size={15} className="group-hover:rotate-12 transition-transform" />
+                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </button>
             </div>
 
             {/* Chat List */}
             <div className="flex flex-col px-3 pb-2 overflow-y-auto flex-1">
-              {chats.map((chat) => (
+              {humanChats.map((chat) => (
                 <button 
                   key={chat.id} 
                   onClick={() => setActiveChat(chat)}
@@ -160,7 +172,7 @@ export default function ChatWidget() {
                   </div>
                 </button>
               ))}
-              {chats.length === 0 && (
+              {humanChats.length === 0 && (
                 <div className="text-center text-gray-400 py-8 text-sm">
                   No conversations yet.
                 </div>

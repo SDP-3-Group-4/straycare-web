@@ -1,9 +1,20 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NimService } from '../ai/nim.service';
 
 @Injectable()
 export class ChatService implements OnModuleInit {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ChatService.name);
+
+  private readonly rateLimitMax = Number(process.env.AI_RATE_LIMIT_MAX ?? 10);
+  private readonly rateLimitWindowMs =
+    Number(process.env.AI_RATE_LIMIT_WINDOW_MIN ?? 2) * 60 * 1000;
+  private readonly userMessageTimestamps = new Map<string, number[]>();
+
+  constructor(
+    private prisma: PrismaService,
+    private readonly nimService: NimService,
+  ) {}
 
   async onModuleInit() {
     await this.ensureAiUserExists();
@@ -109,6 +120,9 @@ export class ChatService implements OnModuleInit {
 
   // Send a message
   async sendMessage(userId: string, conversationId: string, content: string, imageUrl?: string) {
+    // Enforce per-user message rate limit (cost-abuse guardrail)
+    this.assertWithinRateLimit(userId);
+
     // Create message
     const message = await this.prisma.message.create({
       data: {
@@ -141,8 +155,8 @@ export class ChatService implements OnModuleInit {
       },
     });
 
-    // AI Vet Mock logic
-    await this.handleAIMockReply(conversationId);
+    // AI Vet reply (real NIM backend)
+    await this.handleAiReply(conversationId, content);
 
     return message;
   }
@@ -159,9 +173,39 @@ export class ChatService implements OnModuleInit {
     });
   }
 
-  // Mock AI response
-  private async handleAIMockReply(conversationId: string) {
-    const aiUser = await this.prisma.user.findUnique({ where: { email: 'ai-vet@straycare.org' } });
+  // Sliding-window rate limit: max N user messages per user per window
+  private assertWithinRateLimit(userId: string) {
+    const now = Date.now();
+    const timestamps = (this.userMessageTimestamps.get(userId) ?? []).filter(
+      (t) => now - t < this.rateLimitWindowMs,
+    );
+
+    if (timestamps.length >= this.rateLimitMax) {
+      this.logger.warn(
+        `Rate limit hit for user ${userId}: ${this.rateLimitMax} messages within ${this.rateLimitWindowMs / 60000} min`,
+      );
+      throw new HttpException(
+        `Rate limit exceeded: maximum ${this.rateLimitMax} messages within ${this.rateLimitWindowMs / 60000} minute(s). Please wait a moment before sending more.`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    timestamps.push(now);
+    this.userMessageTimestamps.set(userId, timestamps);
+
+    // Lazy cleanup so the map never grows unbounded
+    if (this.userMessageTimestamps.size > 5000) {
+      for (const [id, times] of this.userMessageTimestamps) {
+        if (times.length === 0) this.userMessageTimestamps.delete(id);
+      }
+    }
+  }
+
+  // Generate AI Vet reply via NVIDIA NIM when the AI user is a participant
+  private async handleAiReply(conversationId: string, userContent: string) {
+    const aiUser = await this.prisma.user.findUnique({
+      where: { id: this.nimService.botId },
+    });
     if (!aiUser) return;
 
     // Check if the AI is a participant
@@ -169,16 +213,45 @@ export class ChatService implements OnModuleInit {
       where: { conversationId_userId: { conversationId, userId: aiUser.id } },
     });
 
-    if (isAiParticipant) {
-      setTimeout(async () => {
-        await this.prisma.message.create({
+    if (!isAiParticipant) return;
+    if (!this.nimService.isConfigured) {
+      this.logger.warn('NIM not configured; skipping AI vet reply.');
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        // Build recent history so the bot keeps conversational context
+        const historyMessages = await this.prisma.message.findMany({
+          where: { conversationId },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        });
+
+        const history = historyMessages
+          .slice()
+          .reverse()
+          .slice(-6)
+          .map((m) => ({
+            role:
+              m.senderId === aiUser.id
+                ? ('assistant' as const)
+                : ('user' as const),
+            content: m.content,
+          }));
+
+        const reply = await this.nimService.chatWithHistory(
+          userContent,
+          history.filter((h) => h.content !== userContent),
+        );
+        const aiMessage = await this.prisma.message.create({
           data: {
             conversationId,
             senderId: aiUser.id,
-            content: 'Hello! I am the AI Vet Assistant. I am analyzing your request and will get back to you shortly. Feel free to attach any relevant pictures.',
+            content: reply,
           },
         });
-        
+
         await this.prisma.conversation.update({
           where: { id: conversationId },
           data: { updatedAt: new Date() },
@@ -193,26 +266,18 @@ export class ChatService implements OnModuleInit {
             unreadCount: { increment: 1 },
           },
         });
-      }, 2000);
-    }
+
+        this.logger.log(`AI reply sent to conversation ${conversationId}: ${aiMessage.id}`);
+      } catch (err) {
+        this.logger.error(
+          `AI reply failed for conversation ${conversationId}: ${(err as Error).message}`,
+        );
+      }
+    }, 1500);
   }
 
-  // Setup mock AI User
+  // Setup AI Bot user (delegated to NimService for a single source of truth)
   async ensureAiUserExists() {
-    const aiEmail = 'ai-vet@straycare.org';
-    const existing = await this.prisma.user.findUnique({ where: { email: aiEmail } });
-    if (!existing) {
-      await this.prisma.user.create({
-        data: {
-          id: 'ai-vet-bot-id',
-          email: aiEmail,
-          displayName: 'AI Vet Assistant',
-          handle: 'ai_vet',
-          photoUrl: 'https://cdn-icons-png.flaticon.com/512/8649/8649603.png',
-          isVet: true,
-          bio: 'Automated Veterinary Assistant',
-        },
-      });
-    }
+    return this.nimService.ensureAiUserExists();
   }
 }

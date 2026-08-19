@@ -2,4 +2,7 @@ node_modules
 # Keep environment variables out of version control
 .env
 
+# Sensitive AI blueprints — never commit
+src/ai/vetbot-system-prompt-guardrails.md
+
 /generated/prisma

@@ -55,11 +55,13 @@ model Post {
   latitude      Float?
   longitude     Float?
   fundraiseGoal Float?
-  raisedAmount  Float     @default(0)
-  donorsCount   Int       @default(0)
-  createdAt     DateTime  @default(now())
-  likesCount    Int       @default(0)
-  commentsCount Int       @default(0)
+  raisedAmount    Float     @default(0)
+  donorsCount     Int       @default(0)
+  createdAt       DateTime  @default(now())
+  likesCount      Int       @default(0)
+  commentsCount   Int       @default(0)
+  aiResponseStatus String   @default("pending") // pending | processed | skipped
+  aiRespondedAt   DateTime?
 
   comments      Comment[]
   likes         Like[]

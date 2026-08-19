@@ -102,7 +102,13 @@ export const sendMessage = async (userId: string, chatId: string, content: strin
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, content, imageUrl }),
   });
-  if (!response.ok) throw new Error('Failed to send message');
+  if (!response.ok) {
+    const text = await response.text();
+    if (response.status === 429) {
+      throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
+    }
+    throw new Error(`Failed to send message (${response.status})`);
+  }
   return response.json();
 };
 export const toggleBookmark = async (userId: string, postId: string) => {

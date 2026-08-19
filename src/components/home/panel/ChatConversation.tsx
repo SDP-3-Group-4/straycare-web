@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Info, Send, Paperclip, Smile, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Info, Send, Paperclip, Smile, X } from 'lucide-react';
 import { Avatar } from '@heroui/react';
 import EmojiPicker from 'emoji-picker-react';
 import ChatBubble from './ChatBubble';
@@ -24,10 +24,13 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
   const [inputValue, setInputValue] = useState('');
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -38,6 +41,13 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Clear typing state on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
   }, []);
 
   // Load and poll messages
@@ -63,6 +73,12 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
         });
         
         setMessages(formatted);
+
+        // An AI reply arriving clears the typing indicator
+        if (chat.isAiBot && formatted.some(m => !m.isMine)) {
+          setIsBotTyping(false);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        }
       } catch (err) {
         console.error("Failed to fetch messages:", err);
       }
@@ -71,7 +87,7 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
     loadMsgs();
     const interval = setInterval(loadMsgs, 3000);
     return () => clearInterval(interval);
-  }, [user, chat.id]);
+  }, [user, chat.id, chat.name, chat.isAiBot]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -86,9 +102,17 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
     const tempText = inputValue;
     setInputValue('');
     setIsEmojiOpen(false);
+
+    // Show the typing indicator until the AI reply arrives
+    if (chat.isAiBot) {
+      setIsBotTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => setIsBotTyping(false), 15000);
+    }
     
     try {
       await sendMessage(user.uid, chat.id.toString(), tempText);
+      setSendError(null);
       // Immediately fetch new messages
       const data = await fetchMessages(user.uid, chat.id.toString());
       const formatted = data.map((m: any) => {
@@ -108,6 +132,12 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
       setMessages(formatted);
     } catch (err) {
       console.error("Failed to send message:", err);
+      setSendError(err instanceof Error ? err.message : "Failed to send message. Please try again.");
+      setInputValue(tempText);
+      if (chat.isAiBot) {
+        setIsBotTyping(false);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      }
     }
   };
 
@@ -205,9 +235,26 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
               key={msg.id} 
               message={{...msg, senderAvatar: chat.avatar}} 
               showAvatar={showAvatar} 
+              isBot={chat.isAiBot && !msg.isMine}
             />
           );
         })}
+        
+        {isBotTyping && (
+          <div className="flex w-full justify-start mb-4">
+            <div className="mr-2 flex-shrink-0 flex items-end">
+              <Avatar src={chat.avatar} size="sm" className="w-8 h-8" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-[12px] font-bold text-gray-500 mb-1 ml-1">AI Vet Assistant</span>
+              <div className="bg-gradient-to-br from-[var(--sc-brand-50)] to-purple-50 border border-[var(--sc-brand-200)] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--sc-brand-400)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--sc-brand-400)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--sc-brand-400)] animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="text-center text-gray-400 py-8 text-sm">
             Say hi to {chat.name}!
@@ -217,6 +264,15 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
 
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-[var(--sc-border)] shrink-0 rounded-b-2xl relative">
+        {sendError && (
+          <div className="mb-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-[13px] font-medium flex items-center gap-2">
+            <span className="flex-1">{sendError}</span>
+            <button onClick={() => setSendError(null)} className="text-red-400 hover:text-red-600 transition-colors shrink-0">
+              <X size={14} strokeWidth={3} />
+            </button>
+          </div>
+        )}
+
         {/* Render emoji picker outside the text input container so it doesn't get squished */}
         {isEmojiOpen && (
           <div ref={emojiRef} className="absolute bottom-[80px] right-4 z-50 shadow-xl rounded-xl">

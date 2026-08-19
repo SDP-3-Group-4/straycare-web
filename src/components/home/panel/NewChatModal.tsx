@@ -29,6 +29,7 @@ export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChat
 
   const filteredUsers = users.filter(u => 
     u.id !== user?.uid && 
+    u.id !== 'ai-vet-bot-id' &&
     (u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) || 
     u.handle.toLowerCase().includes(searchQuery.toLowerCase()))
   );

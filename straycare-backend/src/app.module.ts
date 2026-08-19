@@ -11,9 +11,10 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { ConnectionsModule } from './connections/connections.module';
 import { LikesModule } from './likes/likes.module';
 import { CommentsModule } from './comments/comments.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
-  imports: [FirebaseModule, PostsModule, UsersModule, MarketplaceModule, PrismaModule, ChatModule, BookmarksModule, ConnectionsModule, LikesModule, CommentsModule],
+  imports: [FirebaseModule, PostsModule, UsersModule, MarketplaceModule, PrismaModule, ChatModule, BookmarksModule, ConnectionsModule, LikesModule, CommentsModule, AiModule],
   controllers: [AppController],
   providers: [AppService],
 })
