@@ -7,7 +7,19 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async createUser(data: Prisma.UserCreateInput) {
-    return this.prisma.user.create({ data });
+    return this.prisma.user.create({
+      data: {
+        ...data,
+        lastSeenAt: new Date(),
+      },
+    });
+  }
+
+  async touchPresence(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { lastSeenAt: new Date() },
+    });
   }
 
   async getAllUsers() {

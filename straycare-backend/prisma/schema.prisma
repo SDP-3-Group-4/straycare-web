@@ -26,6 +26,7 @@ model User {
   topContributor Boolean   @default(false)
   createdAt      DateTime  @default(now())
   lastLogin      DateTime?
+  lastSeenAt     DateTime?
 
   posts          Post[]
   comments       Comment[]

@@ -1,5 +1,6 @@
 import UserProfileCard from './UserProfileCard';
 import SidebarNav from './SidebarNav';
+import NearbyClinicsWidget from './NearbyClinicsWidget';
 import SearchBar from '../feed/SearchBar';
 import logo from '../../../assets/logo.svg';
 
@@ -19,6 +20,10 @@ export default function LeftSidebar() {
         
         <div className="mt-4 px-2">
           <UserProfileCard />
+        </div>
+
+        <div className="mt-3 px-2">
+          <NearbyClinicsWidget />
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
 import { Check, CheckCheck, Sparkles } from 'lucide-react';
-import { Avatar } from '@heroui/react';
 
 export interface Message {
   id: string;
@@ -9,6 +8,7 @@ export interface Message {
   senderAvatar?: string;
   content: string;
   timestamp: string;
+  day?: string;
   isMine: boolean;
   status: 'sent' | 'delivered' | 'read';
 }
@@ -41,7 +41,7 @@ export default function ChatBubble({ message, showAvatar, isBot }: ChatBubblePro
     <div className={`flex w-full mb-4 ${message.isMine ? 'justify-end' : 'justify-start'}`}>
       {!message.isMine && showAvatar && (
         <div className="mr-2 flex-shrink-0 flex items-end">
-          <Avatar src={message.senderAvatar} size="sm" className="w-8 h-8" />
+          <img src={message.senderAvatar} alt={message.senderName} className="w-8 h-8 rounded-full object-cover" />
         </div>
       )}
       
@@ -68,7 +68,7 @@ export default function ChatBubble({ message, showAvatar, isBot }: ChatBubblePro
             message.isMine 
               ? 'bg-[var(--sc-brand-600)] text-white rounded-2xl rounded-br-sm' 
               : isBot
-                ? 'bg-gradient-to-br from-[var(--sc-brand-50)] to-purple-50 border border-[var(--sc-brand-200)] text-[var(--sc-text-primary)] rounded-2xl rounded-bl-sm'
+                ? 'bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] text-[var(--sc-text-primary)] rounded-2xl rounded-bl-sm'
                 : 'bg-white border border-[var(--sc-border)] text-[var(--sc-text-primary)] rounded-2xl rounded-bl-sm'
           }`}
         >

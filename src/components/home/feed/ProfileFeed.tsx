@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import PostCard from './PostCard';
-import { Package, Users, LayoutList, Loader2, MapPin } from 'lucide-react';
+import { Package, Users, LayoutList, Loader2, MapPin, User } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders } from '../../../services/api';
+import { avatarOnError } from '../../../constants';
 
 export default function ProfileFeed() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function ProfileFeed() {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [fundraiserStats, setFundraiserStats] = useState({ count: 0, raised: 0, donors: 0, goal: 0 });
   const [loading, setLoading] = useState(true);
 
   const loadData = () => {
@@ -37,7 +39,7 @@ export default function ProfileFeed() {
         name: profile.displayName,
         handle: profile.handle,
         bio: profile.bio || '',
-        avatar: profile.photoUrl || user.photoURL,
+        avatar: profile.photoUrl || '',
         coverImage: profile.coverImageUrl || '',
         location: profile.location || '',
         website: profile.website || '',
@@ -56,6 +58,14 @@ export default function ProfileFeed() {
       
       setConnections(userConns || []);
       setOrders(userOrders || []);
+
+      const fundraiserPosts = filtered.filter((p: any) => p.fundraiseGoal != null);
+      setFundraiserStats({
+        count: fundraiserPosts.length,
+        raised: fundraiserPosts.reduce((sum: number, p: any) => sum + (p.raisedAmount || 0), 0),
+        donors: fundraiserPosts.reduce((sum: number, p: any) => sum + (p.donorsCount || 0), 0),
+        goal: fundraiserPosts.reduce((sum: number, p: any) => sum + (p.fundraiseGoal || 0), 0)
+      });
       
       setLoading(false);
     })
@@ -93,7 +103,10 @@ export default function ProfileFeed() {
         user={profileData} 
         onProfileUpdate={loadData} 
         connectionsCount={connections.length}
-        rescuesCount={userPosts.filter(p => p.category === 'rescue').length}
+        fundraisersCount={fundraiserStats.count}
+        totalRaised={fundraiserStats.raised}
+        totalDonors={fundraiserStats.donors}
+        totalGoal={fundraiserStats.goal}
         isOwnProfile={isOwnProfile}
       />
 
@@ -202,7 +215,13 @@ export default function ProfileFeed() {
               const otherUser = conn.initiatorId === user?.uid ? conn.receiver : conn.initiator;
               return (
                 <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center gap-4">
-                  <img src={otherUser.photoUrl || `https://ui-avatars.com/api/?name=${otherUser.displayName}`} alt={otherUser.displayName} className="w-12 h-12 rounded-full object-cover" />
+                  <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
+                    {otherUser.photoUrl ? (
+                      <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <User size={22} className="text-gray-400" />
+                    )}
+                  </div>
                   <div>
                     <p className="font-bold text-[var(--sc-text-primary)]">{otherUser.displayName}</p>
                     <p className="text-sm text-[var(--sc-text-secondary)]">{otherUser.handle}</p>

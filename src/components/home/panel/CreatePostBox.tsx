@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ImagePlus, MapPin, Smile, ChevronDown, SquarePen, Loader2, X, CheckCircle, AlertCircle } from "lucide-react";
-import { Avatar } from "@heroui/react";
+import { ImagePlus, MapPin, Smile, ChevronDown, SquarePen, Loader2, X, CheckCircle, AlertCircle, User } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { createPost } from "../../../services/api";
@@ -147,11 +146,15 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
         <div className="bg-white rounded-2xl p-4 border border-[var(--sc-border)] flex flex-col gap-3">
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-              <img 
-                src={user?.photoURL || user?.photoUrl || "https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png"} 
-                alt={user?.displayName || 'User'}
-                className="w-full h-full object-cover rounded-full"
-              />
+              {user?.photoURL || user?.photoUrl ? (
+                <img 
+                  src={user?.photoURL || user?.photoUrl || undefined} 
+                  alt={user?.displayName || 'User'}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <User size={16} className="text-gray-400" />
+              )}
             </div>
             <div className="flex-1 flex flex-col gap-2">
               <textarea 

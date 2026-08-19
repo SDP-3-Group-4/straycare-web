@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Avatar } from '@heroui/react';
-import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus } from 'lucide-react';
+import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
 import { updateUserProfile, requestConnection, fetchConnectionStatus } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { avatarOnError } from '../../../constants';
 
 interface ProfileHeaderProps {
   user: {
@@ -19,15 +19,18 @@ interface ProfileHeaderProps {
     isVerified: boolean;
     isVet: boolean;
     topContributor?: boolean;
-    pets?: { name: string; type: string }[];
+    pets?: { name: string; type: string; age?: string }[];
   };
   onProfileUpdate?: () => void;
   connectionsCount?: number;
-  rescuesCount?: number;
+  fundraisersCount?: number;
+  totalRaised?: number;
+  totalDonors?: number;
+  totalGoal?: number;
   isOwnProfile?: boolean;
 }
 
-export default function ProfileHeader({ user, onProfileUpdate, connectionsCount = 0, rescuesCount = 0, isOwnProfile = true }: ProfileHeaderProps) {
+export default function ProfileHeader({ user, onProfileUpdate, connectionsCount = 0, fundraisersCount = 0, totalRaised = 0, totalDonors = 0, totalGoal = 0, isOwnProfile = true }: ProfileHeaderProps) {
   const { user: authUser, updateLocalUser } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -122,10 +125,12 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
               className="w-full h-full object-cover"
             />
             {/* Darkening / Dimming Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-black/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-black/30 pointer-events-none" />
           </>
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-[var(--sc-brand-600)] to-[var(--sc-brand-800)] opacity-90" />
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <Camera size={44} className="text-gray-400" />
+          </div>
         )}
         {isOwnProfile && (
           <label className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full cursor-pointer shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -151,11 +156,12 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
                 <img 
                   src={displayAvatar} 
                   alt={user.name || "Avatar"} 
+                  onError={avatarOnError}
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <div className="w-full h-full bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] flex items-center justify-center font-bold text-2xl">
-                  {user.name?.[0]?.toUpperCase() || 'U'}
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <User size={36} className="text-gray-400" />
                 </div>
               )}
             </div>
@@ -173,7 +179,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 -mr-6">
             {isOwnProfile ? (
               <button 
                 onClick={() => setIsEditModalOpen(true)}
@@ -230,7 +236,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
           <div className="flex flex-wrap gap-2 mb-4">
             {user.pets.map((pet, idx) => (
               <span key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 text-orange-700 text-[13px] font-bold rounded-full">
-                {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : '🐾'} {pet.name}
+                {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : '🐾'} {pet.name}{pet.age ? ` · ${pet.age} yrs` : ''}
               </span>
             ))}
           </div>
@@ -264,9 +270,46 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
             <span className="font-bold text-[var(--sc-text-primary)]">{connectionsCount}</span>
             <span className="text-gray-500 font-medium">Connections</span>
           </div>
-          <div className="flex items-center gap-1.5 cursor-pointer hover:underline">
-            <span className="font-bold text-[var(--sc-text-primary)]">{rescuesCount}</span>
-            <span className="text-gray-500 font-medium">Rescues</span>
+        </div>
+
+        {/* Holistic Fundraising Overview */}
+        <div className="mt-4 rounded-2xl border border-[var(--sc-border)] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <HandHeart size={17} className="text-[var(--sc-brand-500)]" />
+              <span className="text-[14px] font-bold text-[var(--sc-text-primary)]">Fundraising</span>
+            </div>
+            <span className="text-[11px] font-bold text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)] border border-[var(--sc-brand-100)] px-2 py-0.5 rounded-full">
+              {fundraisersCount} fundraiser{fundraisersCount === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {totalGoal > 0 ? (
+            <>
+              <div className="flex justify-between items-center mb-1.5 text-[13px]">
+                <span className="font-bold text-[var(--sc-text-primary)]">৳{totalRaised.toLocaleString()} raised</span>
+                <span className="text-gray-500 font-medium">of ৳{totalGoal.toLocaleString()}</span>
+              </div>
+              <div className="h-2 rounded-full bg-gray-100 overflow-hidden mb-3">
+                <div 
+                  className="h-full bg-[var(--sc-brand-500)] rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(100, Math.round((totalRaised / totalGoal) * 100))}%` }} 
+                />
+              </div>
+            </>
+          ) : (
+            <p className="text-[13px] text-gray-500 mb-3">No active fundraisers yet.</p>
+          )}
+
+          <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[var(--sc-text-primary)]">৳{totalRaised.toLocaleString()}</span>
+              <span className="text-gray-500 font-medium">Raised</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[var(--sc-text-primary)]">{totalDonors.toLocaleString()}</span>
+              <span className="text-gray-500 font-medium">Donors</span>
+            </div>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Users, Settings, LogOut, Bell, BellOff, Image as ImageIcon, Trash2, ShieldAlert } from 'lucide-react';
-import { Avatar } from '@heroui/react';
+import { avatarOnError } from '../../../constants';
 
 interface ChatInfoModalProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ export default function ChatInfoModal({ isOpen, onClose, chat }: ChatInfoModalPr
           {/* Profile Section */}
           <div className="flex flex-col items-center pt-8 pb-6 px-6 border-b border-[var(--sc-border)]">
             <div className="relative group mb-4">
-              <Avatar src={chat.avatar} className="w-24 h-24 text-large" />
+              <img src={chat.avatar} alt={chat.name} onError={avatarOnError} className="w-24 h-24 rounded-full object-cover" />
               {chat.isGroup && (
                 <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <ImageIcon size={24} className="text-white" />

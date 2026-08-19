@@ -8,6 +8,7 @@ const navItems = [
   { label: 'Home', icon: Home, path: '/', badge: 0 },
   { label: 'Notifications', icon: Bell, path: '/notifications', badge: 0 },
   { label: 'Marketplace', icon: Store, path: '/marketplace', badge: 0 },
+  
   { label: 'Bookmarks', icon: Bookmark, path: '/bookmarks', badge: 0 },
   { label: 'Settings', icon: Settings, path: '/settings', badge: 0 },
 ];

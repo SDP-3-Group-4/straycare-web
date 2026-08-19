@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, Users, Check } from 'lucide-react';
-import { Avatar } from '@heroui/react';
 import { fetchUsers, createChat } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { avatarOnError } from '../../../constants';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -149,7 +149,7 @@ export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChat
                   const u = users.find(u => u.id === id);
                   return u ? (
                     <div key={id} className="flex items-center gap-1.5 bg-[var(--sc-brand-50)] border border-[var(--sc-brand-100)] rounded-full pl-1.5 pr-2 py-1">
-                      <Avatar src={u.photoUrl} className="w-5 h-5" />
+                      <img src={u.photoUrl} alt={u.displayName} onError={avatarOnError} className="w-5 h-5 rounded-full object-cover" />
                       <span className="text-[12px] font-bold text-[var(--sc-brand-700)]">{u.displayName.split(' ')[0]}</span>
                       <button onClick={() => toggleUser(id)} className="text-[var(--sc-brand-400)] hover:text-[var(--sc-brand-600)] ml-1">
                         <X size={12} strokeWidth={3} />
@@ -170,7 +170,7 @@ export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChat
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors w-full text-left"
                   >
                     <div className="relative">
-                      <Avatar src={u.photoUrl} size="md" />
+                      <img src={u.photoUrl} alt={u.displayName} onError={avatarOnError} className="w-10 h-10 rounded-full object-cover" />
                       {mode === 'group' && (
                         <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white transition-colors ${
                           isSelected ? 'bg-[var(--sc-brand-500)]' : 'bg-gray-200'

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Avatar } from "@heroui/react";
-import { Send, Heart, X, Pencil, Trash2 } from 'lucide-react';
+import { Send, Heart, X, Pencil, Trash2, User } from 'lucide-react';
 import { fetchComments, addComment, toggleCommentLike, deleteComment, updateComment } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { avatarOnError } from '../../../constants';
 
 interface Comment {
   id: string;
@@ -138,11 +138,16 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
               {comments.map(comment => (
                 <div key={comment.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-                    <img 
-                      src={(comment.userId === user?.uid ? (user?.photoURL || user?.photoUrl || comment.user.photoUrl) : comment.user.photoUrl) || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.displayName || 'User')}`} 
-                      alt={comment.user.displayName} 
-                      className="w-full h-full object-cover rounded-full"
-                    />
+                    {(comment.userId === user?.uid ? (user?.photoURL || user?.photoUrl || comment.user.photoUrl) : comment.user.photoUrl) ? (
+                      <img 
+                        src={comment.userId === user?.uid ? (user?.photoURL || user?.photoUrl || comment.user.photoUrl) || undefined : comment.user.photoUrl || undefined} 
+                        alt={comment.user.displayName} 
+                        onError={avatarOnError}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <User size={16} className="text-gray-400" />
+                    )}
                   </div>
                   <div className="flex-1 flex flex-col">
                     <div className="bg-gray-100 rounded-2xl p-3 inline-block">
@@ -204,11 +209,15 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
 
         <div className="p-4 border-t border-[var(--sc-border)] shrink-0 bg-white flex gap-3">
            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-             <img 
-               src={user?.photoURL || user?.photoUrl || "https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png"} 
-               alt={user?.displayName || 'User'}
-               className="w-full h-full object-cover rounded-full"
-             />
+             {user?.photoURL || user?.photoUrl ? (
+               <img 
+                 src={user?.photoURL || user?.photoUrl || undefined} 
+                 alt={user?.displayName || 'User'}
+                 className="w-full h-full object-cover rounded-full"
+               />
+             ) : (
+               <User size={16} className="text-gray-400" />
+             )}
            </div>
            <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2">
              <input 

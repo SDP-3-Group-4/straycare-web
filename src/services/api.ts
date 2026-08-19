@@ -281,6 +281,16 @@ export const fetchUserOrders = async (userId: string) => {
   return response.json();
 };
 
+export const touchPresence = async (uid: string) => {
+  const response = await fetch(`${API_URL}/users/presence`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid }),
+  });
+  if (!response.ok) throw new Error('Failed to update presence');
+  return response.json();
+};
+
 export const updateUserProfile = async (id: string, data: any) => {
   const response = await fetch(`${API_URL}/users/${id}`, {
     method: 'PUT',

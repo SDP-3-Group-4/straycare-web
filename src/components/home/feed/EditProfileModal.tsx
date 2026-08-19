@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Plus, Trash2, Loader2 } from 'lucide-react';
-import { Avatar } from '@heroui/react';
 import { updateUserProfile } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 

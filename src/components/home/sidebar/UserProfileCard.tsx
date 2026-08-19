@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Avatar } from '@heroui/react';
-import { LogOut, X } from 'lucide-react';
+import { LogOut, X, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { avatarOnError } from '../../../constants';
 
 export default function UserProfileCard() {
   const { user, logout } = useAuth();
@@ -34,11 +34,16 @@ export default function UserProfileCard() {
         <div className="flex items-center gap-3 relative z-10">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 flex items-center justify-center bg-white/10">
-              <img 
-                src={user.photoURL || user.photoUrl || "https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png"} 
-                alt={user.displayName || 'User'}
-                className="w-full h-full object-cover rounded-full"
-              />
+              {user.photoURL || user.photoUrl ? (
+                <img 
+                  src={user.photoURL || user.photoUrl || undefined} 
+                  alt={user.displayName || 'User'}
+                  onError={avatarOnError}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <User size={20} className="text-white/80" />
+              )}
             </div>
           </div>
           <div className="hidden xl:flex flex-col">

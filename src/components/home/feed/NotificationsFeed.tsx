@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell } from "lucide-react";
-import { Avatar } from "@heroui/react";
+import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell, User } from "lucide-react";
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchNotifications, markAllNotificationsRead, acceptConnection, declineConnection } from '../../../services/api';
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead, acceptConnection, declineConnection } from '../../../services/api';
+import { avatarOnError } from '../../../constants';
 
 const getTypeConfig = (type: string) => {
   switch (type) {
@@ -113,7 +113,13 @@ export default function NotificationsFeed() {
               }`}
             >
               <div className="relative">
-                <Avatar src={notif.sender?.photoUrl} size="md" />
+                {notif.sender?.photoUrl ? (
+                  <img src={notif.sender?.photoUrl} alt={notif.sender?.displayName || 'User'} onError={avatarOnError} className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={20} className="text-gray-400" />
+                  </div>
+                )}
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ${bg}`}>
                   <Icon size={12} className={color} fill="currentColor" />
                 </div>

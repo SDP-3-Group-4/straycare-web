@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { fetchUserProfile, createUserProfile } from '../services/api';
+import { fetchUserProfile, createUserProfile, fetchUsers, touchPresence } from '../services/api';
 
 export interface AppUser {
   uid: string;
   id: string;
   email: string | null;
   displayName: string;
-  photoURL: string;
-  photoUrl: string;
+  photoURL: string | null;
+  photoUrl: string | null;
   coverImageUrl?: string;
   bio?: string;
   location?: string;
@@ -49,6 +49,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Build a unique name-derived handle (e.g. @mujahiduljoy) on account creation
+  const buildHandle = async (displayName: string, email: string | null) => {
+    const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+    const baseSlug = base || 'user';
+    let handle = `@${baseSlug}`;
+    try {
+      const users = await fetchUsers();
+      const taken = new Set(users.map((u: any) => u.handle).filter(Boolean));
+      let i = 2;
+      while (taken.has(handle)) {
+        handle = `@${baseSlug}${i}`;
+        i += 1;
+      }
+    } catch {
+      // DB unavailable — fall back to a unique-looking suffix so creation can proceed
+      handle = `@${baseSlug}${Date.now().toString(36).slice(-4)}`;
+    }
+    return handle;
+  };
+
   // Syncs with PostgreSQL backend
   const syncWithPostgres = async (uid: string, initialData: { email: string | null; displayName: string | null; photoURL: string | null }): Promise<AppUser> => {
     try {
@@ -56,9 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!dbUser) {
         // Create user in postgres using initial Firebase info
         const displayName = initialData.displayName || initialData.email?.split('@')[0] || 'User';
-        const handle = `@${displayName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${uid.slice(-4)}`;
-        const photoUrl = initialData.photoURL || 'https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png';
-        
+        // Clean slate: only Google OAuth provides a photo URL; email/password signups start without one
+        const photoUrl = initialData.photoURL || null;
+        const handle = await buildHandle(displayName, initialData.email);
+
         dbUser = await createUserProfile({
           id: uid,
           email: initialData.email || `${uid}@straycare.local`,
@@ -69,8 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      const defaultAvatar = 'https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png';
-      const resolvedAvatar = dbUser.photoUrl || initialData.photoURL || defaultAvatar;
+      const resolvedAvatar = dbUser.photoUrl || initialData.photoURL || null;
 
       const appUser: AppUser = {
         uid,
@@ -94,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return appUser;
     } catch (e) {
       console.error('Error syncing with backend in AuthContext:', e);
-      const fallbackAvatar = initialData.photoURL || 'https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png';
+      const fallbackAvatar = initialData.photoURL || null;
       return {
         uid,
         id: uid,
@@ -123,6 +143,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return unsubscribe;
   }, []);
+
+  // Presence heartbeat: mark the user online on login and every 30s while the app is open
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const heartbeat = () => {
+      touchPresence(user.uid).catch(() => {
+        // Backend may be down — presence simply stays stale
+      });
+    };
+
+    heartbeat();
+    const interval = setInterval(heartbeat, 30000);
+    return () => clearInterval(interval);
+  }, [user?.uid]);
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();

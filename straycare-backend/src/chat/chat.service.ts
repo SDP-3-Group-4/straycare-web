@@ -59,6 +59,7 @@ export class ChatService implements OnModuleInit {
         latestMessage: latestMessage?.content,
         latestMessageTime: latestMessage?.createdAt,
         otherUserId: otherParticipant?.id,
+        otherLastSeenAt: otherParticipant?.lastSeenAt,
       };
     });
   }

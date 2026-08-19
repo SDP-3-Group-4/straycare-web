@@ -73,7 +73,12 @@ GOOD (scope redirect): "I'm just set up to help with pet and animal care — for
 BAD (scope redirect): "I'm sorry, but as an AI assistant specialized in veterinary topics, I am not able to fulfill requests that fall outside of my designated operational parameters..."
 
 LANGUAGE:
-You MUST fluently understand and reply in the exact language the user speaks. If they speak English, reply in English. If they speak Bangla (Bengali script), reply in Bangla. If they speak Banglish (Bengali written in English letters), reply in Banglish.`;
+You MUST fluently understand and reply in the exact language the user speaks. If they speak English, reply in English. If they speak Bangla (Bengali script), reply in Bangla. If they speak Banglish (Bengali written in English letters), reply in Banglish.
+
+CONCISENESS:
+- Keep replies SHORT by default: 2-4 sentences for most questions, at most a short bullet list when steps are involved. No long paragraphs, no markdown tables, no exhaustive lists.
+- Only elaborate — longer explanations, full step-by-step breakdowns, detailed comparisons — when the user EXPLICITLY asks for more detail or elaboration (e.g. "explain in detail", "elaborate", "tell me more", "give me all the details").
+- Emergency protocol and the medical safety next-step always take priority over brevity: never trim a safety-critical instruction to save space.`;
 
 /** Wraps user-provided content as inert data, per the indirect-injection guardrail. */
 const asUserDocument = (content: string) =>
@@ -93,7 +98,9 @@ export class NimService {
   private readonly apiKey =
     process.env.NIM_API_KEY ?? process.env.NVIDIA_NIM_API_KEY ?? '';
   private readonly model =
-    process.env.NIM_MODEL ?? 'nvidia/nemotron-4-340b-instruct';
+    process.env.NIM_MODEL ?? 'nvidia/nemotron-3-nano-30b-a3b';
+  private readonly rescueModel =
+    process.env.NIM_RESCUE_MODEL ?? 'nvidia/nemotron-mini-4b-instruct';
   private readonly timeoutMs = Number(process.env.NIM_TIMEOUT_MS ?? 60000);
 
   constructor(private prisma: PrismaService) {}
@@ -108,6 +115,10 @@ export class NimService {
 
   get botId() {
     return 'ai-vet-bot-id';
+  }
+
+  get botAvatar() {
+    return "data:image/png;base64,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";
   }
 
   get disclaimer() {
@@ -129,7 +140,7 @@ export class NimService {
         email: 'ai-vet@straycare.org',
         displayName: this.botName,
         handle: 'ai_vet',
-        photoUrl: 'https://cdn-icons-png.flaticon.com/512/8649/8649603.png',
+        photoUrl: this.botAvatar,
         isVet: true,
         bio: 'Automated Veterinary Assistant',
       },
@@ -138,7 +149,7 @@ export class NimService {
 
   private async callNim(
     messages: NimChatTurn[],
-    opts: { maxTokens?: number; temperature?: number } = {},
+    opts: { maxTokens?: number; temperature?: number; model?: string } = {},
   ): Promise<string> {
     if (!this.isConfigured) {
       this.logger.warn('NIM not configured (missing NIM_API_KEY/NIM_MODEL).');
@@ -156,7 +167,7 @@ export class NimService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: this.model,
+          model: opts.model ?? this.model,
           messages,
           max_tokens: opts.maxTokens ?? 1024,
           temperature: opts.temperature ?? 0.5,
@@ -198,7 +209,7 @@ export class NimService {
       { role: 'user' as const, content: asUserDocument(userMessage) },
     ];
 
-    return this.callNim(messages, { maxTokens: 1024, temperature: 0.5 });
+    return this.callNim(messages, { maxTokens: 512, temperature: 0.5 });
   }
 
   /**
@@ -211,7 +222,7 @@ export class NimService {
     try {
       const advice = await this.callNim(
         [{ role: 'user', content: RESCUE_ADVICE_PROMPT(postContent) }],
-        { maxTokens: 200, temperature: 0.1 },
+        { maxTokens: 200, temperature: 0.1, model: this.rescueModel },
       );
       if (advice.toUpperCase().includes('NO_RESPONSE')) return 'NO_RESPONSE';
       return advice.startsWith('AI Vet Bot Suggestion')

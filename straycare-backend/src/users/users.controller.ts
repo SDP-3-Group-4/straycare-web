@@ -10,6 +10,11 @@ export class UsersController {
     return this.usersService.createUser(data);
   }
 
+  @Post('presence')
+  async touchPresence(@Body() body: { uid: string }) {
+    return this.usersService.touchPresence(body.uid);
+  }
+
   @Get()
   async getAllUsers() {
     return this.usersService.getAllUsers();
