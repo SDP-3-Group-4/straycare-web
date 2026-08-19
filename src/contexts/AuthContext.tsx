@@ -9,6 +9,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   mockLogin: (email: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateLocalUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async () => {},
   mockLogin: async () => {},
   logout: async () => {},
+  updateLocalUser: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -63,8 +65,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(mockUser);
   };
 
+  const updateLocalUser = (data: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...data } as User);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, mockLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, mockLogin, logout, updateLocalUser }}>
       {children}
     </AuthContext.Provider>
   );

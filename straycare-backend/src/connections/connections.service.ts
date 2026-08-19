@@ -91,4 +91,25 @@ export class ConnectionsService {
       },
     });
   }
+
+  async getConnectionStatus(userId1: string, userId2: string) {
+    const connection = await this.prisma.connection.findFirst({
+      where: {
+        OR: [
+          { requesterId: userId1, recipientId: userId2 },
+          { requesterId: userId2, recipientId: userId1 },
+        ],
+      },
+    });
+
+    if (!connection) {
+      return { status: 'none' };
+    }
+    
+    return { 
+      status: connection.status, 
+      requesterId: connection.requesterId,
+      recipientId: connection.recipientId
+    };
+  }
 }

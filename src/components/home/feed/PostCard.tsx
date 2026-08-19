@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import './PostCard.css';
-import { Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, BadgeCheck, Pencil, Trash2 } from "lucide-react";
+import { Avatar } from "@heroui/react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, BadgeCheck, Pencil, Trash2, UserPlus } from "lucide-react";
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { toggleLike, fetchLikeStatus, toggleBookmark, fetchBookmarkStatus, deletePost, updatePost, donateToPost, requestConnection } from '../../../services/api';
+import { toggleLike, fetchLikeStatus, toggleBookmark, fetchBookmarkStatus, deletePost, updatePost, donateToPost, requestConnection, fetchConnectionStatus } from '../../../services/api';
 import CommentSheet from './CommentSheet';
+import { Link } from 'react-router-dom';
 
 interface PostCardProps {
   id: string;
@@ -30,7 +31,7 @@ const categoryConfig: Record<string, { label: string, colorClass: string }> = {
   adoption: { label: 'Adoption', colorClass: 'bg-green-100 text-green-700' },
   fun: { label: 'Fun', colorClass: 'bg-blue-100 text-blue-700' },
   rescue: { label: 'Rescue', colorClass: 'bg-red-100 text-red-700' },
-  fundraise: { label: 'Fundraise', colorClass: 'bg-purple-100 text-purple-700' },
+  fundraise: { label: 'Fundraise', colorClass: 'bg-[var(--sc-brand-100)] text-[var(--sc-brand-700)]' },
 };
 
 export default function PostCard({
@@ -66,7 +67,21 @@ export default function PostCard({
   const [donorsCount, setDonorsCount] = useState(initialDonorsCount || 0);
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
-  const [isDonating, setIsDonating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    if (user && authorId && user.uid !== authorId) {
+      fetchConnectionStatus(user.uid, authorId).then(data => {
+        setConnectionStatus(data.status);
+      }).catch(console.error);
+    }
+  }, [user, authorId]);
+
+  // Actions Menu State
+  const [showActions, setShowActions] = useState(false);
 
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -173,27 +188,23 @@ export default function PostCard({
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3">
-          <Avatar src={authorAvatar} size="md" className="flex-shrink-0" />
+          <Link to={`/profile?id=${authorId}`} className="flex-shrink-0 cursor-pointer relative block mt-1">
+            <Avatar 
+              src={authorAvatar} 
+              size="md" 
+              className={`hover:opacity-80 transition-opacity ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`} 
+            />
+            {isVerified && (
+              <div className="absolute -bottom-1 -right-1 bg-white rounded-full shadow-sm z-10 border border-white">
+                <BadgeCheck size={14} className="text-[var(--sc-brand-500)]" />
+              </div>
+            )}
+          </Link>
           <div className="flex flex-col">
             <div className="flex items-center gap-1">
-              <span className="font-bold text-[var(--sc-text-primary)] hover:underline">{authorName}</span>
-              {isVerified && <BadgeCheck size={16} className="text-[var(--sc-brand-500)]" />}
-              {user && user.uid !== authorId && (
-                <button 
-                  onClick={async () => {
-                    try {
-                      await requestConnection(user.uid, authorId!);
-                      alert('Connection request sent!');
-                    } catch(e) {
-                      console.error(e);
-                      alert('Failed to send connection request or already sent.');
-                    }
-                  }}
-                  className="ml-2 text-xs font-bold text-[var(--sc-brand-600)] hover:text-[var(--sc-brand-700)] bg-[var(--sc-brand-50)] px-2 py-0.5 rounded-full transition-colors"
-                >
-                  + Connect
-                </button>
-              )}
+              <Link to={`/profile?id=${authorId}`} className="font-bold text-[var(--sc-text-primary)] hover:underline">
+                {authorName}
+              </Link>
             </div>
             <div className="flex items-center gap-2 text-[13px]">
               <span className="text-[var(--sc-text-muted)]">@user • {timeAgo}</span>
@@ -207,23 +218,67 @@ export default function PostCard({
           </div>
         </div>
         
-        {user?.uid === authorId && (
-          <Dropdown>
-            <DropdownTrigger>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
+        <div className="flex items-center gap-4">
+          {user && user.uid !== authorId && (
+            <div 
+              className={`flex items-center gap-2 ${connectionStatus === 'none' && !isConnecting ? 'cursor-pointer group' : 'opacity-70 cursor-default'}`} 
+              onClick={async () => {
+                if (connectionStatus !== 'none' || isConnecting) return;
+                setIsConnecting(true);
+                try {
+                  await requestConnection(user.uid, authorId!);
+                  setConnectionStatus('pending');
+                } catch(e) {
+                  console.error(e);
+                } finally {
+                  setIsConnecting(false);
+                }
+              }}
+            >
+              <span className="text-[13px] font-bold text-[var(--sc-brand-600)] transition-colors hidden sm:block">
+                {isConnecting ? 'Connecting...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Connected' : 'Connect'}
+              </span>
+              <button 
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm ${connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] group-hover:bg-[var(--sc-brand-700)]' : 'bg-[var(--sc-brand-300)]'}`}
+                disabled={connectionStatus !== 'none' || isConnecting}
+              >
+                <UserPlus size={16} className="text-white" />
+              </button>
+            </div>
+          )}
+          
+          {user?.uid === authorId && (
+            <div className="relative">
+              <button 
+                className="text-gray-400 hover:text-[var(--sc-brand-600)] transition-colors p-1 rounded-full hover:bg-[var(--sc-brand-50)]"
+                onClick={() => setShowActions(!showActions)}
+              >
                 <MoreHorizontal size={20} />
               </button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Post Actions">
-              <DropdownItem key="edit" startContent={<Pencil size={16} />} onPress={() => setIsEditing(true)}>
-                Edit Post
-              </DropdownItem>
-              <DropdownItem key="delete" className="text-danger" color="danger" startContent={<Trash2 size={16} />} onPress={handleDeletePost}>
-                Delete Post
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        )}
+              {showActions && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowActions(false)}></div>
+                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[var(--sc-border)] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col py-1.5 animate-in fade-in zoom-in-95 duration-200">
+                    <button 
+                      onClick={() => { setIsEditing(true); setShowActions(false); }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                    >
+                      <Pencil size={16} className="text-gray-500" /> 
+                      Edit Post
+                    </button>
+                    <button 
+                      onClick={() => { handleDeletePost(); setShowActions(false); }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <Trash2 size={16} className="text-red-500" /> 
+                      Delete Post
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Content */}
@@ -257,21 +312,21 @@ export default function PostCard({
 
       {/* Fundraise Progress */}
       {category === 'fundraise' && fundraiseGoal && (
-        <div className="mb-4 bg-purple-50 rounded-xl p-4 border border-purple-100">
+        <div className="mb-4 bg-[var(--sc-brand-50)] rounded-xl p-4 border border-[var(--sc-brand-100)]">
           <div className="flex justify-between text-[13px] mb-2 font-bold">
-            <span className="text-purple-800">Raised: ৳{raisedAmount}</span>
-            <span className="text-purple-600">Goal: ৳{fundraiseGoal}</span>
+            <span className="text-[var(--sc-brand-800)]">Raised: ৳{raisedAmount}</span>
+            <span className="text-[var(--sc-brand-600)]">Goal: ৳{fundraiseGoal}</span>
           </div>
-          <div className="w-full bg-purple-200 rounded-full h-2">
-            <div className="bg-purple-600 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min((raisedAmount / fundraiseGoal) * 100, 100)}%` }}></div>
+          <div className="w-full bg-[var(--sc-brand-200)] rounded-full h-2">
+            <div className="bg-[var(--sc-brand-600)] h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min((raisedAmount / fundraiseGoal) * 100, 100)}%` }}></div>
           </div>
-          <div className="text-[12px] text-purple-600 mt-2 flex justify-between items-center">
+          <div className="text-[12px] text-[var(--sc-brand-600)] mt-2 flex justify-between items-center">
             <span>{donorsCount} people donated</span>
             <span className="font-medium">{Math.min(100, Math.round((raisedAmount / fundraiseGoal) * 100))}% funded</span>
           </div>
           <button 
             onClick={() => setIsDonationModalOpen(true)}
-            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 transition-colors text-white font-bold py-2 rounded-full"
+            className="w-full mt-4 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] transition-colors text-white font-bold py-2 rounded-full"
             disabled={user?.uid === authorId}
           >
             {user?.uid === authorId ? 'Your Fundraiser' : 'Donate Now'}
@@ -327,16 +382,16 @@ export default function PostCard({
             <h2 className="text-xl font-bold mb-1 text-[var(--sc-text-primary)]">Donate to Fundraiser</h2>
             <p className="text-sm text-gray-500 mb-4">Supporting {authorName}'s cause.</p>
             
-            <div className="p-3 bg-purple-50 rounded-xl mb-4 border border-purple-100">
-              <label className="text-[12px] font-bold text-purple-800 uppercase tracking-wider mb-1 block">Donation Amount</label>
-              <div className="flex items-center text-xl font-bold text-purple-900">
+            <div className="p-3 bg-[var(--sc-brand-50)] rounded-xl mb-4 border border-[var(--sc-brand-100)]">
+              <label className="text-[12px] font-bold text-[var(--sc-brand-800)] uppercase tracking-wider mb-1 block">Donation Amount</label>
+              <div className="flex items-center text-xl font-bold text-[var(--sc-brand-900)]">
                 <span className="mr-1">৳</span>
                 <input 
                   type="number"
                   placeholder="500"
                   value={donationAmount}
                   onChange={(e) => setDonationAmount(e.target.value)}
-                  className="bg-transparent outline-none w-full placeholder-purple-300"
+                  className="bg-transparent outline-none w-full placeholder:text-[var(--sc-brand-300)]"
                   autoFocus
                 />
               </div>
@@ -352,7 +407,7 @@ export default function PostCard({
               </button>
               <button 
                 onClick={handleDonate}
-                className="flex-1 py-3 font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 py-3 font-bold text-white bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] rounded-xl transition-colors disabled:opacity-50"
                 disabled={isDonating || !donationAmount}
               >
                 {isDonating ? 'Processing...' : 'Donate'}

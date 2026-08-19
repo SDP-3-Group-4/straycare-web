@@ -15,7 +15,7 @@ interface EditProfileModalProps {
     coverImage: string;
     location: string;
     website: string;
-    pets: { name: string; type: string }[];
+    pets: { name: string; type: string; age?: string }[];
   };
   onProfileUpdate?: () => void;
 }
@@ -27,18 +27,22 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
   const [coverImage, setCoverImage] = useState(user.coverImage);
   const [location, setLocation] = useState(user.location);
   const [website, setWebsite] = useState(user.website);
-  const [pets, setPets] = useState<{name: string, type: string}[]>(user.pets || []);
+  const [pets, setPets] = useState<{name: string, type: string, age?: string}[]>(user.pets || []);
   const [loading, setLoading] = useState(false);
 
   const [newPetName, setNewPetName] = useState('');
   const [newPetType, setNewPetType] = useState('dog');
+  const [newPetAge, setNewPetAge] = useState('');
 
   if (!isOpen) return null;
 
+
+
   const handleAddPet = () => {
     if (newPetName.trim()) {
-      setPets([...pets, { name: newPetName.trim(), type: newPetType }]);
+      setPets([...pets, { name: newPetName.trim(), type: newPetType, age: newPetAge.trim() }]);
       setNewPetName('');
+      setNewPetAge('');
     }
   };
 
@@ -93,33 +97,6 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
         {/* Body */}
         <div className="p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto max-h-[70vh]">
           
-          {/* Cover URL */}
-          <div className="space-y-2">
-            <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider ml-1">
-              Cover Image URL
-            </label>
-            <input
-              type="text"
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-[var(--sc-border)] rounded-xl focus:outline-none focus:border-[var(--sc-brand-400)] focus:ring-4 focus:ring-[var(--sc-brand-100)] transition-all font-medium"
-              placeholder="https://example.com/cover.jpg"
-            />
-          </div>
-
-          {/* Avatar URL */}
-          <div className="space-y-2">
-            <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider ml-1">
-              Avatar Image URL
-            </label>
-            <input
-              type="text"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-[var(--sc-border)] rounded-xl focus:outline-none focus:border-[var(--sc-brand-400)] focus:ring-4 focus:ring-[var(--sc-brand-100)] transition-all font-medium"
-              placeholder="https://example.com/avatar.jpg"
-            />
-          </div>
 
           {/* Name Input */}
           <div className="space-y-2">
@@ -187,9 +164,12 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
             <div className="flex flex-col gap-2 mb-3">
               {pets.map((pet, idx) => (
                 <div key={idx} className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                  <span className="font-medium text-gray-700 capitalize">
-                    {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : '🐾'} {pet.name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-700 capitalize">
+                      {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : '🐾'} {pet.name}
+                    </span>
+                    {pet.age && <span className="text-xs text-gray-500">Age: {pet.age}</span>}
+                  </div>
                   <button onClick={() => handleRemovePet(idx)} className="p-1 text-red-400 hover:text-red-600 rounded-full hover:bg-red-50">
                     <Trash2 size={16} />
                   </button>
@@ -198,7 +178,7 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
             </div>
 
             {/* Add new pet */}
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={newPetName}
@@ -206,22 +186,31 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
                 placeholder="Pet Name"
                 className="flex-1 px-3 py-2 bg-gray-50 border border-[var(--sc-border)] rounded-lg focus:outline-none focus:border-[var(--sc-brand-400)]"
               />
-              <select 
-                value={newPetType}
-                onChange={(e) => setNewPetType(e.target.value)}
-                className="w-24 px-2 py-2 bg-gray-50 border border-[var(--sc-border)] rounded-lg focus:outline-none focus:border-[var(--sc-brand-400)]"
-              >
-                <option value="dog">Dog</option>
-                <option value="cat">Cat</option>
-                <option value="bird">Bird</option>
-                <option value="other">Other</option>
-              </select>
-              <button 
-                onClick={handleAddPet}
-                className="p-2 bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-200)] rounded-lg font-bold transition-colors"
-              >
-                <Plus size={20} />
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newPetAge}
+                  onChange={(e) => setNewPetAge(e.target.value)}
+                  placeholder="Age"
+                  className="w-20 px-3 py-2 bg-gray-50 border border-[var(--sc-border)] rounded-lg focus:outline-none focus:border-[var(--sc-brand-400)]"
+                />
+                <select 
+                  value={newPetType}
+                  onChange={(e) => setNewPetType(e.target.value)}
+                  className="w-24 px-2 py-2 bg-gray-50 border border-[var(--sc-border)] rounded-lg focus:outline-none focus:border-[var(--sc-brand-400)]"
+                >
+                  <option value="dog">Dog</option>
+                  <option value="cat">Cat</option>
+                  <option value="bird">Bird</option>
+                  <option value="other">Other</option>
+                </select>
+                <button 
+                  onClick={handleAddPet}
+                  className="p-2 bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-200)] rounded-lg font-bold transition-colors"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
             </div>
           </div>
           

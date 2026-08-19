@@ -83,6 +83,7 @@ export default function BookmarksFeed() {
             <PostCard 
               key={post.id} 
               id={post.id}
+              authorId={post.authorId}
               authorName={post.author?.displayName || 'Unknown'}
               authorAvatar={post.author?.photoUrl || ''}
               timeAgo={timeAgo}

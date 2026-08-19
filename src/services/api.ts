@@ -154,6 +154,12 @@ export const fetchConnections = async (userId: string) => {
   return response.json();
 };
 
+export const fetchConnectionStatus = async (userId1: string, userId2: string) => {
+  const response = await fetch(`${API_URL}/connections/status/${userId1}/${userId2}`);
+  if (!response.ok) throw new Error('Failed to fetch connection status');
+  return response.json();
+};
+
 export const requestConnection = async (requesterId: string, recipientId: string) => {
   const response = await fetch(`${API_URL}/connections/request`, {
     method: 'POST',

@@ -33,4 +33,12 @@ export class ConnectionsController {
   async getUserConnections(@Param('userId') userId: string) {
     return this.connectionsService.getUserConnections(userId);
   }
+
+  @Get('status/:userId1/:userId2')
+  async getConnectionStatus(
+    @Param('userId1') userId1: string,
+    @Param('userId2') userId2: string,
+  ) {
+    return this.connectionsService.getConnectionStatus(userId1, userId2);
+  }
 }

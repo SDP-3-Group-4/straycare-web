@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import PostCard from './PostCard';
 import { Package, Users, LayoutList, Loader2, MapPin } from 'lucide-react';
@@ -7,6 +8,10 @@ import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders } from 
 
 export default function ProfileFeed() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get('id') || user?.uid;
+  const isOwnProfile = targetUserId === user?.uid;
+  
   const [activeTab, setActiveTab] = useState<'posts' | 'orders' | 'connections'>('posts');
   
   const [profileData, setProfileData] = useState<any>(null);
@@ -16,14 +21,14 @@ export default function ProfileFeed() {
   const [loading, setLoading] = useState(true);
 
   const loadData = () => {
-    if (!user) return;
+    if (!user || !targetUserId) return;
     setLoading(true);
     
     Promise.all([
-      fetchUserProfile(user.uid),
+      fetchUserProfile(targetUserId),
       fetchPosts(),
-      fetchConnections(user.uid),
-      fetchUserOrders(user.uid)
+      fetchConnections(targetUserId),
+      fetchUserOrders(targetUserId)
     ])
     .then(([profile, allPosts, userConns, userOrders]) => {
       // Format profile to match expected structure
@@ -46,7 +51,7 @@ export default function ProfileFeed() {
       setProfileData(formattedProfile);
       
       // Filter posts for this user
-      const filtered = allPosts.filter((p: any) => p.authorId === user.uid);
+      const filtered = allPosts.filter((p: any) => p.authorId === targetUserId);
       setUserPosts(filtered);
       
       setConnections(userConns || []);
@@ -62,7 +67,7 @@ export default function ProfileFeed() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, targetUserId]);
 
   if (loading) {
     return (
@@ -84,7 +89,13 @@ export default function ProfileFeed() {
     <div className="flex flex-col max-w-[600px] w-full pt-4 pb-20 sm:pb-4 mx-auto relative animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* Profile Header Block */}
-      <ProfileHeader user={profileData} onProfileUpdate={loadData} />
+      <ProfileHeader 
+        user={profileData} 
+        onProfileUpdate={loadData} 
+        connectionsCount={connections.length}
+        rescuesCount={userPosts.filter(p => p.category === 'rescue').length}
+        isOwnProfile={isOwnProfile}
+      />
 
       {/* Tabs */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[var(--sc-border)] mb-6 flex items-center justify-between shadow-sm rounded-2xl px-2 py-2 mt-2">
@@ -133,6 +144,7 @@ export default function ProfileFeed() {
               <PostCard 
                 key={post.id} 
                 id={post.id}
+                authorId={post.authorId}
                 authorName={post.author.displayName}
                 authorAvatar={post.author.photoUrl}
                 timeAgo={new Date(post.createdAt).toLocaleDateString()}
@@ -164,7 +176,7 @@ export default function ProfileFeed() {
                   <p className="text-sm text-[var(--sc-text-secondary)]">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-[var(--sc-brand-600)]">${order.total.toFixed(2)}</p>
+                  <p className="font-bold text-[var(--sc-brand-600)]">৳{order.total.toFixed(2)}</p>
                   <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg uppercase tracking-wider mt-1">{order.status}</span>
                 </div>
               </div>

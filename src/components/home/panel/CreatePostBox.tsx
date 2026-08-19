@@ -10,7 +10,7 @@ const CATEGORIES = [
   { key: "adoption", label: "Adoption", activeClass: "bg-green-100 text-green-700" },
   { key: "fun", label: "Fun", activeClass: "bg-blue-100 text-blue-700" },
   { key: "rescue", label: "Rescue", activeClass: "bg-red-100 text-red-700" },
-  { key: "fundraise", label: "Fundraise", activeClass: "bg-purple-100 text-purple-700" }
+  { key: "fundraise", label: "Fundraise", activeClass: "bg-[var(--sc-brand-100)] text-[var(--sc-brand-700)]" }
 ];
 
 export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () => void }) {
@@ -181,14 +181,14 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
             )}
 
             {category === "fundraise" && (
-              <div className="mt-2 p-3 bg-purple-50 border border-purple-100 rounded-xl">
-                <label className="text-[13px] font-bold text-purple-800 mb-1 block">Fundraise Goal (৳)</label>
+              <div className="mt-2 p-3 bg-[var(--sc-brand-50)] border border-[var(--sc-brand-100)] rounded-xl">
+                <label className="text-[13px] font-bold text-[var(--sc-brand-800)] mb-1 block">Fundraise Goal (৳)</label>
                 <input
                   type="number"
                   placeholder="e.g. 5000"
                   value={fundraiseGoal}
                   onChange={(e) => setFundraiseGoal(e.target.value)}
-                  className="w-full bg-white border border-purple-200 rounded-lg px-3 py-2 text-[14px] outline-none focus:border-purple-400"
+                  className="w-full bg-white border border-[var(--sc-brand-200)] rounded-lg px-3 py-2 text-[14px] outline-none focus:border-[var(--sc-brand-400)]"
                   disabled={isSubmitting}
                 />
               </div>

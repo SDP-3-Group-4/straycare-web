@@ -10,7 +10,7 @@ const getTypeConfig = (type: string) => {
     case 'comment': return { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-50' };
     case 'connection': return { icon: UserPlus, color: 'text-green-500', bg: 'bg-green-50' };
     case 'connection_accepted': return { icon: UserPlus, color: 'text-green-500', bg: 'bg-green-50' };
-    case 'donation': return { icon: DollarSign, color: 'text-purple-500', bg: 'bg-purple-50' };
+    case 'donation': return { icon: DollarSign, color: 'text-[var(--sc-brand-500)]', bg: 'bg-[var(--sc-brand-50)]' };
     default: return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-50' };
   }
 };

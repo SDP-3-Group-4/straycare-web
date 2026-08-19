@@ -78,6 +78,7 @@ export default function CenterFeed() {
             <PostCard 
               key={post.id}
               id={post.id}
+              authorId={post.authorId}
               authorName={post.author.displayName}
               authorAvatar={post.author.photoUrl || ''}
               timeAgo={new Date(post.createdAt).toLocaleDateString()}
