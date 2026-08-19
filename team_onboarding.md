@@ -14,9 +14,9 @@ Before you start, make sure you have the following installed on your machine:
 
 ---
 
-## ⚙️ 2. Installation & Setup
+## ⚙️ 2. Repository Cloning & Fullstack Setup
 
-Follow these steps to get the project running locally:
+The StrayCare project is a monorepo containing both the web frontend and the backend API.
 
 1. **Clone the Repository**
    ```bash
@@ -24,14 +24,54 @@ Follow these steps to get the project running locally:
    cd straycare-web
    ```
 
+## 🛠️ 3. Backend & Database Setup (Required First)
+
+The frontend relies on the backend to function. You must set up the database and API first.
+
+1. **Navigate to the Backend**
+   ```bash
+   cd straycare-backend
+   ```
+
+2. **Start the Database (Docker)**
+   Make sure Docker Desktop is running, then spin up the PostgreSQL container:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Install Dependencies & Environment**
+   Ask the Team Lead for the backend `.env` file and place it in the `straycare-backend` folder.
+   ```bash
+   npm install
+   ```
+
+4. **Push Database Schema (Prisma)**
+   Sync your local database with the Prisma schema:
+   ```bash
+   npx prisma db push
+   ```
+
+5. **Start the API Server**
+   ```bash
+   npm run start:dev
+   ```
+
+---
+
+## 💻 4. Frontend Installation & Setup
+
+Once the backend is running, open a **new terminal tab** to set up the frontend:
+
+1. **Navigate to the Root Directory**
+   Ensure you are in the root `straycare-web` folder (not inside the backend).
+
 2. **Install Dependencies**
-   Run the following command to install all required packages:
    ```bash
    npm install
    ```
 
 3. **Environment Variables**
-   Ask the team lead for the `.env` file or copy the `.env.example` file and fill in the necessary API keys (if applicable).
+   Ask the team lead for the frontend `.env` file and place it in the root folder.
    ```bash
    cp .env.example .env
    ```
@@ -40,7 +80,7 @@ Follow these steps to get the project running locally:
    ```bash
    npm run dev
    ```
-   The application should now be running locally at `http://localhost:5173` (or similar).
+   The application should now be running locally at `http://localhost:5173`.
 
 ---
 

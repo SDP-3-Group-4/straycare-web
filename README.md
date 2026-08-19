@@ -38,17 +38,19 @@ StrayCare Web leverages a modern, highly scalable tech stack:
 - **Real-Time & Search:** Socket.io, Elasticsearch
 - **Security:** NextAuth.js, Cloudflare (WAF/CDN)
 
-## 📂 Project Structure
+## 📂 Project Structure (Monorepo)
 
 ```text
-src/
-├── components/   # Reusable UI components (Auth, Feed, Chat, Marketplace)
-├── pages/        # Main application pages and routing
-├── contexts/     # React Context providers (Auth, Theme)
-├── hooks/        # Custom React hooks (e.g., useInfiniteQuery wrappers)
-├── styles/       # Global stylesheets and Tailwind configurations
-├── lib/          # API abstractions and utility functions
-└── assets/       # Static assets, icons, and illustrations
+.
+├── straycare-backend/ # Backend API (NestJS/Node + Prisma + PostgreSQL)
+└── src/              # Frontend Web Application (React + Next.js)
+    ├── components/   # Reusable UI components (Auth, Feed, Chat, Marketplace)
+    ├── pages/        # Main application pages and routing
+    ├── contexts/     # React Context providers (Auth, Theme)
+    ├── hooks/        # Custom React hooks (e.g., useInfiniteQuery wrappers)
+    ├── styles/       # Global stylesheets and Tailwind configurations
+    ├── lib/          # API abstractions and utility functions
+    └── assets/       # Static assets, icons, and illustrations
 ```
 
 ## 📦 Installation & Onboarding

@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String    @id // Firebase UID
+  email          String    @unique
+  displayName    String
+  handle         String    @unique
+  photoUrl       String?
+  coverImageUrl  String?
+  bio            String?
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  website        String?
+  verifiedStatus Boolean   @default(false)
+  isVet          Boolean   @default(false)
+  topContributor Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  lastLogin      DateTime?
+
+  posts          Post[]
+  comments       Comment[]
+  likes          Like[]
+  bookmarks      Bookmark[]
+  marketItems    MarketplaceItem[]
+  orders         Order[]
+  conversations  ConversationParticipant[]
+  sentMessages   Message[]
+  
+  notifications         Notification[] @relation("UserNotifications")
+  sentNotifications     Notification[] @relation("UserSentNotifications")
+  pets                  Json?
+  
+  connectionsInitiated  Connection[]   @relation("ConnectionsInitiated")
+  connectionsReceived   Connection[]   @relation("ConnectionsReceived")
+}
+
+model Post {
+  id            String    @id @default(uuid())
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  content       String
+  imageUrl      String?
+  category      String
+  location      String?
+  latitude      Float?
+  longitude     Float?
+  fundraiseGoal Float?
+  raisedAmount  Float     @default(0)
+  donorsCount   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  likesCount    Int       @default(0)
+  commentsCount Int       @default(0)
+
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String
+  createdAt  DateTime @default(now())
+  likesCount Int      @default(0)
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  
+  likes      Like[]
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@unique([commentId, userId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        String   // 'like', 'comment', 'connection', 'donation'
+  content     String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  userId      String   // the recipient
+  user        User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  
+  senderId    String?  // the person who caused the notification
+  sender      User?    @relation("UserSentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  
+  postId      String?  // optional link to a post
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Connection {
+  id          String   @id @default(uuid())
+  status      String   @default("pending") // pending, accepted, rejected
+  createdAt   DateTime @default(now())
+  
+  requesterId String
+  requester   User     @relation("ConnectionsInitiated", fields: [requesterId], references: [id], onDelete: Cascade)
+  
+  recipientId String
+  recipient   User     @relation("ConnectionsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  @@unique([requesterId, recipientId])
+}
+
+model MarketplaceItem {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  currency    String   @default("USD")
+  imageUrl    String?
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  category    String
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  total     Float
+  status    String   @default("pending") // pending, completed, cancelled
+  createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id           String                    @id @default(uuid())
+  isGroup      Boolean                   @default(false)
+  name         String?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  userId         String
+  unreadCount    Int          @default(0)
+  lastReadAt     DateTime?
+  joinedAt       DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String       @db.Text
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  isSystem       Boolean      @default(false)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
