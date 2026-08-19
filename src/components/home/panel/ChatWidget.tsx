@@ -104,6 +104,7 @@ export default function ChatWidget() {
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-center gap-2">
+            <MessageSquare size={20} className="text-[var(--sc-brand-600)] shrink-0" />
             <h3 className="font-bold text-[var(--sc-text-primary)] text-xl">Messages</h3>
             {totalUnread > 0 && (
               <span className="bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] text-[11px] font-bold px-2 py-0.5 rounded-full">

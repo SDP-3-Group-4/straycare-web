@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
+import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
-import { Package, Users, LayoutList, Loader2, MapPin, User } from 'lucide-react';
+import { Package, Users, LayoutList, Loader2, MapPin, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders } from '../../../services/api';
+import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
 
 export default function ProfileFeed() {
@@ -21,6 +22,26 @@ export default function ProfileFeed() {
   const [orders, setOrders] = useState<any[]>([]);
   const [fundraiserStats, setFundraiserStats] = useState({ count: 0, raised: 0, donors: 0, goal: 0 });
   const [loading, setLoading] = useState(true);
+  const [vetModalOpen, setVetModalOpen] = useState(false);
+  const [merchantToast, setMerchantToast] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(true);
+  const [vetStatus, setVetStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOwnProfile && user?.uid) {
+      fetchVetApplicationStatus(user.uid)
+        .then((app) => setVetStatus(app?.status || null))
+        .catch(() => setVetStatus(null));
+    } else {
+      setVetStatus(null);
+    }
+  }, [isOwnProfile, user?.uid]);
+
+  useEffect(() => {
+    if (!merchantToast) return;
+    const t = setTimeout(() => setMerchantToast(false), 2600);
+    return () => clearTimeout(t);
+  }, [merchantToast]);
 
   const loadData = () => {
     if (!user || !targetUserId) return;
@@ -109,6 +130,84 @@ export default function ProfileFeed() {
         totalGoal={fundraiserStats.goal}
         isOwnProfile={isOwnProfile}
       />
+
+      {/* Account & Verification (own profile) */}
+      {isOwnProfile && (
+        <div className="bg-white border border-[var(--sc-border)] rounded-2xl mb-6 overflow-hidden">
+          <button
+            onClick={() => setAccountOpen(!accountOpen)}
+            className="w-full p-3.5 flex items-center justify-between bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] transition-colors border-b border-[var(--sc-border)]"
+          >
+            <span className="text-[13px] font-bold text-white">Account & Verification</span>
+            <span className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-white/80">Grow your profile</span>
+              {accountOpen ? (
+                <ChevronUp size={16} className="text-white/80" />
+              ) : (
+                <ChevronDown size={16} className="text-white/80" />
+              )}
+            </span>
+          </button>
+
+          {accountOpen && (
+            <>
+              {/* Apply for Vet Verification (hidden for accounts that already have the vet badge) */}
+              {!user?.isVet && !user?.verifiedStatus && (
+                <>
+                  <button
+                    onClick={() => setVetModalOpen(true)}
+                    className="w-full flex items-center gap-3 p-3.5 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[var(--sc-text-primary)] text-[14px]">
+                        {vetStatus === 'approved' ? 'Verified Vet' : 'Apply for Vet Verification'}
+                      </p>
+                      <p className="text-[12px] text-gray-500 truncate">
+                        {vetStatus === 'approved'
+                          ? 'You are verified — thank you for keeping pets safe'
+                          : vetStatus === 'pending'
+                            ? 'Application under review — we will get back to you'
+                            : 'Get a verified badge with authentic credentials'}
+                      </p>
+                    </div>
+                    {vetStatus === 'approved' ? (
+                      <span className="flex items-center gap-1 shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                        <ShieldCheck size={12} /> Verified
+                      </span>
+                    ) : vetStatus === 'pending' ? (
+                      <span className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Pending</span>
+                    ) : (
+                      <ChevronRight size={18} className="shrink-0 text-gray-300" />
+                    )}
+                  </button>
+
+                  <div className="border-t border-[var(--sc-border)]" />
+                </>
+              )}
+
+              {/* Become a Merchant */}
+              <button
+                onClick={() => setMerchantToast(true)}
+                className="w-full flex items-center gap-3 p-3.5 hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Store size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[var(--sc-text-primary)] text-[14px]">Become a Merchant</p>
+                  <p className="text-[12px] text-gray-500 truncate">Sell pet products to the community</p>
+                </div>
+                <span className="flex items-center gap-1 shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                  <Sparkles size={12} /> Coming soon
+                </span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[var(--sc-border)] mb-6 flex items-center justify-between shadow-sm rounded-2xl px-2 py-2 mt-2">
@@ -240,8 +339,28 @@ export default function ProfileFeed() {
             )}
           </div>
         )}
-      </div>
 
+        {/* Vet Verification modal */}
+        {isOwnProfile && user?.uid && (
+          <VetVerificationModal
+            isOpen={vetModalOpen}
+            onClose={() => setVetModalOpen(false)}
+            userId={user.uid}
+            email={user.email}
+            displayName={user.displayName}
+          />
+        )}
+
+        {/* Merchant coming-soon toast */}
+        {merchantToast && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-2xl">
+              <Store size={16} className="text-amber-400" />
+              Become a Merchant: Coming soon!
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

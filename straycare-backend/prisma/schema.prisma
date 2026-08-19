@@ -43,6 +43,7 @@ model User {
   
   connectionsInitiated  Connection[]   @relation("ConnectionsInitiated")
   connectionsReceived   Connection[]   @relation("ConnectionsReceived")
+  vetApplications       VetApplication[]
 }
 
 model Post {
@@ -196,4 +197,23 @@ model Message {
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model VetApplication {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  dob         String?
+  clinic      String
+  nid         String
+  photoName   String?
+  photoBase64 String?  @db.Text
+  docName     String?
+  docMimeType String?
+  docBase64   String?  @db.Text
+  status      String   @default("pending") // pending | approved | rejected
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }

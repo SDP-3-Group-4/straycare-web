@@ -300,3 +300,30 @@ export const updateUserProfile = async (id: string, data: any) => {
   if (!response.ok) throw new Error('Failed to update user profile');
   return response.json();
 };
+
+export const submitVetApplication = async (data: {
+  userId: string;
+  fullName: string;
+  dob?: string;
+  clinic: string;
+  nid: string;
+  photoName?: string;
+  photoBase64?: string;
+  docName?: string;
+  docMimeType?: string;
+  docBase64?: string;
+}) => {
+  const response = await fetch(`${API_URL}/vet-applications`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to submit application');
+  return response.json();
+};
+
+export const fetchVetApplicationStatus = async (userId: string) => {
+  const response = await fetch(`${API_URL}/vet-applications/${userId}`);
+  if (!response.ok) throw new Error('Failed to fetch application status');
+  return response.json();
+};

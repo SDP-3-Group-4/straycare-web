@@ -12,9 +12,10 @@ import { ConnectionsModule } from './connections/connections.module';
 import { LikesModule } from './likes/likes.module';
 import { CommentsModule } from './comments/comments.module';
 import { AiModule } from './ai/ai.module';
+import { VetApplicationsModule } from './vet-applications/vet-applications.module';
 
 @Module({
-  imports: [FirebaseModule, PostsModule, UsersModule, MarketplaceModule, PrismaModule, ChatModule, BookmarksModule, ConnectionsModule, LikesModule, CommentsModule, AiModule],
+  imports: [FirebaseModule, PostsModule, UsersModule, MarketplaceModule, PrismaModule, ChatModule, BookmarksModule, ConnectionsModule, LikesModule, CommentsModule, AiModule, VetApplicationsModule],
   controllers: [AppController],
   providers: [AppService],
 })
