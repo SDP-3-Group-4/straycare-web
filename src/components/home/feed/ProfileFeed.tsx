@@ -109,30 +109,34 @@ export default function ProfileFeed() {
             }`}
           >
             <LayoutList size={18} />
-            My Posts
+            {isOwnProfile ? 'My Posts' : 'Posts'}
           </button>
-          <button 
-            onClick={() => setActiveTab('orders')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
-              activeTab === 'orders' 
-                ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-            }`}
-          >
-            <Package size={18} />
-            Order History
-          </button>
-          <button 
-            onClick={() => setActiveTab('connections')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
-              activeTab === 'connections' 
-                ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-            }`}
-          >
-            <Users size={18} />
-            Connections
-          </button>
+          {isOwnProfile && (
+            <>
+              <button 
+                onClick={() => setActiveTab('orders')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
+                  activeTab === 'orders' 
+                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                }`}
+              >
+                <Package size={18} />
+                Order History
+              </button>
+              <button 
+                onClick={() => setActiveTab('connections')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
+                  activeTab === 'connections' 
+                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                }`}
+              >
+                <Users size={18} />
+                Connections
+              </button>
+            </>
+          )}
         </div>
       </div>
 

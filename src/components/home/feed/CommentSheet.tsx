@@ -137,7 +137,13 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
             <div className="flex flex-col gap-4">
               {comments.map(comment => (
                 <div key={comment.id} className="flex gap-3">
-                  <Avatar src={comment.user.photoUrl || ''} size="sm" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                    <img 
+                      src={(comment.userId === user?.uid ? (user?.photoURL || user?.photoUrl || comment.user.photoUrl) : comment.user.photoUrl) || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.displayName || 'User')}`} 
+                      alt={comment.user.displayName} 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
                   <div className="flex-1 flex flex-col">
                     <div className="bg-gray-100 rounded-2xl p-3 inline-block">
                       <div className="flex justify-between items-start gap-4">
@@ -197,7 +203,13 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
         </div>
 
         <div className="p-4 border-t border-[var(--sc-border)] shrink-0 bg-white flex gap-3">
-           <Avatar src={user?.photoURL || ''} size="sm" />
+           <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+             <img 
+               src={user?.photoURL || user?.photoUrl || "https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png"} 
+               alt={user?.displayName || 'User'}
+               className="w-full h-full object-cover rounded-full"
+             />
+           </div>
            <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2">
              <input 
                type="text" 

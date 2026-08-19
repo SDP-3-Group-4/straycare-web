@@ -34,8 +34,21 @@ export const deletePost = async (id: string, authorId: string) => {
 };
 
 export const fetchUserProfile = async (id: string) => {
-  const response = await fetch(`${API_URL}/users/${id}`);
-  if (!response.ok) throw new Error('Failed to fetch user profile');
+  const response = await fetch(`${API_URL}/users/${id}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error('Failed to fetch user profile');
+  }
+  return response.json();
+};
+
+export const createUserProfile = async (userData: any) => {
+  const response = await fetch(`${API_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) throw new Error('Failed to create user profile');
   return response.json();
 };
 

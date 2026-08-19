@@ -32,11 +32,24 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+  const [localCover, setLocalCover] = useState<string | null>(null);
   
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalAvatar(null);
+  }, [user.avatar]);
+
+  useEffect(() => {
+    setLocalCover(null);
+  }, [user.coverImage]);
+
+  const displayAvatar = localAvatar || user.avatar;
+  const displayCover = localCover || user.coverImage;
 
   useEffect(() => {
     if (authUser && user.id && !isOwnProfile) {
@@ -61,18 +74,23 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
         reader.readAsDataURL(file);
       });
 
+      if (field === 'avatar') {
+        setLocalAvatar(base64String);
+        updateLocalUser({ photoURL: base64String, photoUrl: base64String });
+      } else {
+        setLocalCover(base64String);
+        updateLocalUser({ coverImageUrl: base64String });
+      }
+
       const payloadKey = field === 'avatar' ? 'photoUrl' : 'coverImageUrl';
       await updateUserProfile(user.id, { [payloadKey]: base64String });
-      
-      if (field === 'avatar') {
-        updateLocalUser({ photoURL: base64String });
-      }
       
       onProfileUpdate?.();
     } catch (err) {
       console.error('Upload failed:', err);
       alert('Failed to upload image.');
     } finally {
+      e.target.value = '';
       if (field === 'avatar') setUploadingAvatar(false);
       else setUploadingCover(false);
     }
@@ -95,16 +113,22 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
   return (
     <div className="bg-white border border-[var(--sc-border)] rounded-2xl overflow-hidden mb-6">
       {/* Cover Image */}
-      <div className="h-48 w-full bg-gray-200 relative group">
-        {user.coverImage && (
-          <img 
-            src={user.coverImage} 
-            alt="Cover" 
-            className="w-full h-full object-cover opacity-80 mix-blend-overlay"
-          />
+      <div className="h-48 w-full bg-slate-900 relative group overflow-hidden">
+        {displayCover ? (
+          <>
+            <img 
+              src={displayCover} 
+              alt="Cover" 
+              className="w-full h-full object-cover"
+            />
+            {/* Darkening / Dimming Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-black/10 pointer-events-none" />
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-[var(--sc-brand-600)] to-[var(--sc-brand-800)] opacity-90" />
         )}
         {isOwnProfile && (
-          <label className="absolute top-4 right-4 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full cursor-pointer shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+          <label className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full cursor-pointer shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10">
             {uploadingCover ? <Loader2 size={18} className="animate-spin" /> : <Pencil size={18} />}
             <input 
               type="file" 
@@ -122,12 +146,21 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
         {/* Avatar & Actions Row */}
         <div className="flex justify-between items-end mt-[-48px] mb-4">
           <div className="relative group">
-            <Avatar 
-              src={user.avatar} 
-              className="w-24 h-24 text-large border-4 border-white bg-white"
-            />
+            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white bg-white shadow-md flex items-center justify-center">
+              {displayAvatar ? (
+                <img 
+                  src={displayAvatar} 
+                  alt={user.name || "Avatar"} 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="w-full h-full bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] flex items-center justify-center font-bold text-2xl">
+                  {user.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
+            </div>
             {isOwnProfile && (
-              <label className="absolute bottom-0 right-0 bg-white border border-gray-200 text-gray-700 p-1.5 rounded-full cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+              <label className="absolute bottom-0 right-0 bg-white border border-gray-200 text-gray-700 p-1.5 rounded-full cursor-pointer shadow-sm hover:bg-gray-50 transition-colors z-10">
                 {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
                 <input 
                   type="file" 

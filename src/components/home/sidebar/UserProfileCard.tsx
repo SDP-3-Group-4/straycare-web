@@ -33,12 +33,13 @@ export default function UserProfileCard() {
       >
         <div className="flex items-center gap-3 relative z-10">
           <div className="flex-shrink-0">
-            <Avatar 
-              src={user.photoURL || "https://i.pravatar.cc/150"} 
-              name={user.displayName || user.email || 'User'}
-              size="md"
-              classNames={{ base: "border-2 border-white/20" }}
-            />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 flex items-center justify-center bg-white/10">
+              <img 
+                src={user.photoURL || user.photoUrl || "https://res.cloudinary.com/dxpufap96/image/upload/v1765859391/cy4leimp8itbbl4spokh.png"} 
+                alt={user.displayName || 'User'}
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
           </div>
           <div className="hidden xl:flex flex-col">
             <span className="font-bold text-white text-[15px] truncate max-w-[120px]">{user.displayName || 'User'}</span>

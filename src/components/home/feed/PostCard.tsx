@@ -189,11 +189,13 @@ export default function PostCard({
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3">
           <Link to={`/profile?id=${authorId}`} className="flex-shrink-0 cursor-pointer relative block mt-1">
-            <Avatar 
-              src={authorAvatar} 
-              size="md" 
-              className={`hover:opacity-80 transition-opacity ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`} 
-            />
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0 hover:opacity-80 transition-opacity ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`}>
+              <img 
+                src={(authorId === user?.uid ? (user?.photoURL || user?.photoUrl || authorAvatar) : authorAvatar) || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName || 'User')}`} 
+                alt={authorName || 'Author'}
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
             {isVerified && (
               <div className="absolute -bottom-1 -right-1 bg-white rounded-full shadow-sm z-10 border border-white">
                 <BadgeCheck size={14} className="text-[var(--sc-brand-500)]" />

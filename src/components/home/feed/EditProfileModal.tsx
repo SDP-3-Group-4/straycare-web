@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Save, Plus, Trash2, Loader2 } from 'lucide-react';
 import { Avatar } from '@heroui/react';
 import { updateUserProfile } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdate }: EditProfileModalProps) {
+  const { updateLocalUser } = useAuth();
   const [name, setName] = useState(user.name);
   const [bio, setBio] = useState(user.bio);
   const [avatar, setAvatar] = useState(user.avatar);
@@ -57,6 +59,16 @@ export default function EditProfileModal({ isOpen, onClose, user, onProfileUpdat
         displayName: name,
         bio,
         photoUrl: avatar,
+        coverImageUrl: coverImage,
+        location,
+        website,
+        pets
+      });
+      updateLocalUser({
+        displayName: name,
+        bio,
+        photoUrl: avatar,
+        photoURL: avatar,
         coverImageUrl: coverImage,
         location,
         website,
