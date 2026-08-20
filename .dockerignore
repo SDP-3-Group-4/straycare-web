@@ -1,0 +1,7 @@
+node_modules
+dist
+straycare-backend
+.git
+*.log
+.env
+.firebase

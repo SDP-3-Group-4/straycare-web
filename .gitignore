@@ -14,6 +14,10 @@ dist-ssr
 
 # Environment variables
 .env
+*.env.local
+
+# Firebase service account (secret — never commit)
+straycare-backend/firebase-service-account.json
 
 # Editor directories and files
 .vscode/*

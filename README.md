@@ -59,6 +59,30 @@ For detailed instructions on how to set up the environment, install dependencies
 
 👉 **[Read the Team Onboarding Guide](./team_onboarding.md)**
 
+## 🐳 Quick Start with Docker (recommended for demos)
+
+Runs the whole stack (PostgreSQL, backend API, frontend) in isolated containers — no Node/Postgres install needed. Requires only [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+# 1. Place the Firebase service-account JSON at:
+#    straycare-backend/firebase-service-account.json   (gitignored)
+#    Backend config lives in straycare-backend/.env  (gitignored)
+
+# 2. Build & start the stack
+docker compose up -d --build
+
+# 3. Push the Prisma schema to the fresh database (first run only)
+docker compose run --rm backend npx prisma db push
+
+# 4. Done — open the app
+open http://localhost:8080     # frontend (nginx)
+# API: http://localhost:3000
+```
+
+Stop everything with `docker compose down` (add `-v` to also wipe the database volume).
+
+> Note: new accounts must verify their email (Firebase sends the verification link) before using the app.
+
 ## 🤝 Contributing
 
 We follow a strict Git workflow to maintain code quality and stability. 

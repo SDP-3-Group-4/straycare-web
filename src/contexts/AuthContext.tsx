@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateData.emailVerified = true;
   }
   if (Object.keys(updateData).length > 0) {
-    await updateUserProfile(uid, updateData);
+    await updateUserProfile(uid, updateData).catch(() => {});
   }
 
   const resolvedAvatar = dbUser.photoUrl || initialData.photoURL || null;
@@ -242,12 +242,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        await refreshFromFirebase(currentUser);
-      } else {
-        setUser(null);
+      try {
+        if (currentUser) {
+          await refreshFromFirebase(currentUser);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Auth state sync failed:', err);
+        if (currentUser) {
+          setUser({
+            uid: currentUser.uid,
+            id: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName || 'User',
+            photoURL: currentUser.photoURL,
+            photoUrl: currentUser.photoURL,
+            emailVerified: currentUser.emailVerified,
+          });
+        } else {
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
@@ -282,6 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithPopup(auth, provider);
   };
 
