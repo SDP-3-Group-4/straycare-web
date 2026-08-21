@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import AuthPage from './pages/AuthPage';
 import HomeFeedPage from './pages/HomeFeedPage';
 import CenterFeed from './components/home/feed/CenterFeed';
@@ -10,9 +11,28 @@ import MarketplaceFeed from './components/home/feed/MarketplaceFeed';
 import ProfileFeed from './components/home/feed/ProfileFeed';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
-export default function App() {
+const TITLE_MAP: Record<string, string> = {
+  '/auth': 'StrayCare — Sign In',
+  '/': 'StrayCare — Home',
+  '/notifications': 'StrayCare — Notifications',
+  '/marketplace': 'StrayCare — Marketplace',
+  '/bookmarks': 'StrayCare — Bookmarks',
+  '/settings': 'StrayCare — Settings',
+  '/profile': 'StrayCare — Profile',
+};
+
+function TitleManager() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = TITLE_MAP[pathname] ?? 'StrayCare';
+  }, [pathname]);
+  return null;
+}
+
+function AppRoutes() {
   return (
-    <BrowserRouter>
+    <>
+      <TitleManager />
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/" element={<ProtectedRoute><HomeFeedPage /></ProtectedRoute>}>
@@ -24,6 +44,14 @@ export default function App() {
           <Route path="profile" element={<ProfileFeed />} />
         </Route>
       </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }
