@@ -463,10 +463,10 @@ export default function PaymentMethodsModal({ isOpen, onClose }: PaymentMethodsM
                                   </span>
                                 )}
                               </div>
-                              <span className="text-xs text-gray-500 font-mono block truncate mt-0.5">
+                              <span className="text-xs text-gray-500 font-mono block truncate mt-0.5 notranslate" translate="no">
                                 {pm.identifier}
                               </span>
-                              <span className="text-[11px] text-gray-400 block truncate">
+                              <span className="text-[11px] text-gray-400 block truncate notranslate" translate="no">
                                 {pm.accountHolder}
                               </span>
                             </div>
@@ -531,14 +531,14 @@ export default function PaymentMethodsModal({ isOpen, onClose }: PaymentMethodsM
                       <span className="font-bold text-xs text-[var(--sc-text-primary)] line-clamp-1">
                         {tx.campaignTitle}
                       </span>
-                      <span className="font-bold text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-md">
+                      <span className="font-bold text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-md notranslate" translate="no">
                         {tx.currency}{tx.amount}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-gray-400">
                       <span>{tx.date} · {tx.methodTitle}</span>
-                      <span className="font-mono text-gray-500">{tx.transactionRef}</span>
+                      <span className="font-mono text-gray-500 notranslate" translate="no">{tx.transactionRef}</span>
                     </div>
                   </div>
                 ))}

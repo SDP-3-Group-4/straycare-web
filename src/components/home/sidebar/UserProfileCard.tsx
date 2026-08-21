@@ -55,7 +55,7 @@ export default function UserProfileCard() {
           </div>
           <div className="hidden xl:flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-white text-[15px] truncate max-w-[110px]">{user.displayName || 'User'}</span>
+              <span className="font-bold text-white text-[15px] truncate max-w-[110px] notranslate" translate="no">{user.displayName || 'User'}</span>
               {(user.isVet || user.verifiedStatus) && (
                 <span className="px-1.5 py-0.5 bg-white/20 text-white text-[9px] font-bold uppercase rounded-md tracking-wider">Vet</span>
               )}

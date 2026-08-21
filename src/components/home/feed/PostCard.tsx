@@ -228,7 +228,7 @@ export default function PostCard({
           {/* Author Name + Handle + Category + Subtitle */}
           <div className="flex flex-col min-w-0 flex-1 justify-center">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Link to={`/profile?id=${authorId}`} className="font-bold text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] hover:underline truncate">
+              <Link to={`/profile?id=${authorId}`} className="font-bold text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] hover:underline truncate notranslate" translate="no">
                 {displayAuthorName}
               </Link>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0 ${cat.colorClass}`}>
@@ -237,7 +237,7 @@ export default function PostCard({
             </div>
             
             <div className="flex items-center gap-1 text-[11px] sm:text-[12px] text-[var(--sc-text-muted)] truncate mt-0.5">
-              <span className="text-gray-500 font-medium shrink-0">{displayHandle}</span>
+              <span className="text-gray-500 font-medium shrink-0 notranslate" translate="no">{displayHandle}</span>
               <span className="shrink-0">•</span>
               <span className="shrink-0">{timeAgo}</span>
               {location && (
@@ -412,8 +412,8 @@ export default function PostCard({
       {category === 'fundraise' && fundraiseGoal && (
         <div className="mb-3.5 bg-[var(--sc-brand-50)] rounded-xl p-3.5 sm:p-4 border border-[var(--sc-brand-100)] w-full box-border">
           <div className="flex justify-between text-[12px] sm:text-[13px] mb-2 font-bold">
-            <span className="text-[var(--sc-brand-800)] truncate mr-2">Raised: ৳{raisedAmount}</span>
-            <span className="text-[var(--sc-brand-600)] shrink-0">Goal: ৳{fundraiseGoal}</span>
+            <span className="text-[var(--sc-brand-800)] truncate mr-2">Raised: <span className="notranslate" translate="no">৳{raisedAmount.toLocaleString()}</span></span>
+            <span className="text-[var(--sc-brand-600)] shrink-0">Goal: <span className="notranslate" translate="no">৳{fundraiseGoal.toLocaleString()}</span></span>
           </div>
           <div className="w-full bg-[var(--sc-brand-200)] rounded-full h-2">
             <div className="bg-[var(--sc-brand-600)] h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min((raisedAmount / fundraiseGoal) * 100, 100)}%` }}></div>

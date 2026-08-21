@@ -188,8 +188,8 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-extrabold text-[17px] truncate leading-tight">{displayName || 'Dr. Practitioner'}</h3>
-                  <p className="text-emerald-100 text-xs font-medium truncate mt-0.5">{(user as any)?.handle ? `@${(user as any).handle}` : email}</p>
+                  <h3 className="font-extrabold text-[17px] truncate leading-tight notranslate" translate="no">{displayName || 'Dr. Practitioner'}</h3>
+                  <p className="text-emerald-100 text-xs font-medium truncate mt-0.5 notranslate" translate="no">{(user as any)?.handle ? `@${(user as any).handle}` : email}</p>
                   <p className="text-[11px] text-emerald-200 mt-0.5 flex items-center gap-1">
                     <Stethoscope size={11} /> Certified Veterinary Doctor
                   </p>
@@ -199,7 +199,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
               <div className="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-emerald-200 text-[10px] uppercase font-bold block">License ID</span>
-                  <span className="font-mono font-bold text-white text-[12px]">SC-VET-{(userId || '2026').slice(-6).toUpperCase()}</span>
+                  <span className="font-mono font-bold text-white text-[12px] notranslate" translate="no">SC-VET-{(userId || '2026').slice(-6).toUpperCase()}</span>
                 </div>
                 <div>
                   <span className="text-emerald-200 text-[10px] uppercase font-bold block">Status</span>

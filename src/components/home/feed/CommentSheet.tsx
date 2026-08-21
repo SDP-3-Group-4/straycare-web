@@ -152,7 +152,7 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
                   <div className="flex-1 flex flex-col">
                     <div className="bg-gray-100 rounded-2xl p-3 inline-block">
                       <div className="flex justify-between items-start gap-4">
-                        <span className="font-bold text-[13px]">{comment.user.displayName}</span>
+                        <span className="font-bold text-[13px] notranslate" translate="no">{comment.user.displayName}</span>
                         {user?.uid === comment.userId && (
                            <div className="flex gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
                              <button 

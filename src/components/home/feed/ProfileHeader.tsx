@@ -224,7 +224,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
         {/* User Details */}
         <div className="mb-3">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-[var(--sc-text-primary)]">{user.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-[var(--sc-text-primary)] notranslate" translate="no">{user.name}</h1>
             {user.isVerified && (
               <span className="flex items-center gap-1 px-2 py-0.5 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-lg flex-shrink-0">
                 <BadgeCheck size={13} />
@@ -244,7 +244,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
             )}
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm">{user.handle}</p>
+            <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm notranslate" translate="no">{user.handle}</p>
             {!isOwnProfile && graphDegree && (
               <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border ${
                 graphDegree.degree === 1
@@ -270,7 +270,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
         {user.pets && user.pets.length > 0 && (
           <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
             {user.pets.map((pet, idx) => (
-              <span key={idx} className="flex items-center gap-1 px-2.5 py-0.5 bg-orange-50 border border-orange-100 text-orange-700 text-[12px] sm:text-[13px] font-bold rounded-full">
+              <span key={idx} className="flex items-center gap-1 px-2.5 py-0.5 bg-orange-50 border border-orange-100 text-orange-700 text-[12px] sm:text-[13px] font-bold rounded-full notranslate" translate="no">
                 {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : '🐾'} {pet.name}{pet.age ? ` · ${pet.age} yrs` : ''}
               </span>
             ))}

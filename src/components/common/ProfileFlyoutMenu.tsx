@@ -122,7 +122,7 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate">
+                  <h4 className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate notranslate" translate="no">
                     {user.displayName || 'User'}
                   </h4>
                   {isVerifiedVet && (
@@ -131,7 +131,7 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[var(--sc-text-secondary)] truncate">
+                <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
                   {(user as any).handle ? `@${(user as any).handle}` : user.email}
                 </p>
               </div>
