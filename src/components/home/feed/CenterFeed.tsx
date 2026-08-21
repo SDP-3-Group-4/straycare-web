@@ -21,13 +21,16 @@ export default function CenterFeed() {
             fetchPostsWithLocation(position.coords.latitude, position.coords.longitude);
           },
           (error) => {
-            console.error("Error getting location:", error);
-            // Fallback to fetching without precise location
+            console.warn("Geolocation fallback on mobile:", error);
             fetchPostsWithLocation();
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 300000,
           }
         );
       } else {
-        // Geolocation not supported, fallback
         fetchPostsWithLocation();
       }
     } else {

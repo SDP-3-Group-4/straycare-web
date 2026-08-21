@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
@@ -352,27 +352,36 @@ export default function ProfileFeed() {
         {activeTab === 'connections' && (
           <div className="flex flex-col gap-3">
             {connections.length > 0 ? connections.map(conn => {
-              const isRequester = conn.requesterId === user?.uid;
+              const isRequester = conn.requesterId === (user?.uid || targetUserId);
               const otherUser = isRequester ? conn.recipient : conn.requester;
               if (!otherUser) return null;
               const isOwn = isOwnProfile;
               return (
-                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors shadow-xs">
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
-                    {otherUser.photoUrl ? (
-                      <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
-                    ) : (
-                      <User size={20} className="text-gray-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
-                    <p className="text-xs text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
-                  </div>
+                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-gray-50/80 transition-all shadow-xs">
+                  <Link 
+                    to={`/profile?id=${otherUser.id}`}
+                    className="flex items-center gap-3 min-w-0 flex-1 group"
+                  >
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0 group-hover:ring-2 group-hover:ring-[var(--sc-brand-500)] transition-all">
+                      {otherUser.photoUrl ? (
+                        <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <User size={20} className="text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] group-hover:text-[var(--sc-brand-600)] group-hover:underline truncate transition-colors">
+                        {otherUser.displayName}
+                      </p>
+                      <p className="text-xs text-[var(--sc-text-secondary)] truncate">
+                        {otherUser.handle ? (otherUser.handle.startsWith('@') ? otherUser.handle : `@${otherUser.handle}`) : `@${otherUser.displayName?.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`}
+                      </p>
+                    </div>
+                  </Link>
                   {isOwn ? (
                     <button
                       onClick={() => setDisconnectConfirm(otherUser.id)}
-                      className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0 active:scale-95"
+                      className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0 active:scale-95 transition-all"
                     >
                       <UserMinus size={12} /> Disconnect
                     </button>

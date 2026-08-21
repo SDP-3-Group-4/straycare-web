@@ -122,7 +122,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
   return (
     <div className="bg-white border border-[var(--sc-border)] rounded-2xl overflow-hidden mb-4 sm:mb-6 shadow-xs w-full box-border">
       {/* Cover Image */}
-      <div className="h-36 sm:h-48 w-full bg-slate-900 relative group overflow-hidden">
+      <div className="h-36 sm:h-48 w-full bg-slate-200 relative group overflow-hidden">
         {displayCover ? (
           <>
             <img 
@@ -133,8 +133,8 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
             <div className="absolute inset-0 bg-black/30 pointer-events-none" />
           </>
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-purple-900 to-indigo-950 flex items-center justify-center">
-            <Camera size={36} className="text-white/40" />
+          <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+            <Camera size={32} className="text-slate-400" />
           </div>
         )}
         {isOwnProfile && (

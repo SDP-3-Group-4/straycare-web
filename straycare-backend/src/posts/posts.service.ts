@@ -51,7 +51,7 @@ export class PostsService {
       // Fallback to user's saved location if browser location is not provided
       if (
         userId &&
-        (referenceLat === undefined || referenceLng === undefined)
+        (referenceLat === undefined || referenceLng === undefined || isNaN(referenceLat) || isNaN(referenceLng))
       ) {
         const user = await this.prisma.user.findUnique({
           where: { id: userId },
@@ -62,23 +62,36 @@ export class PostsService {
         }
       }
 
-      if (referenceLat !== undefined && referenceLng !== undefined) {
-        // Filter posts within 100km radius
-        posts = posts.filter((post) => {
-          if (post.latitude == null || post.longitude == null) return false;
-          const dist = getDistance(
-            referenceLat,
-            referenceLng,
-            post.latitude,
-            post.longitude,
-          );
-          // Attach distance temporarily for sorting
-          (post as any).distance = dist;
-          return dist <= 100; // 100 km radius filter
+      if (referenceLat !== undefined && referenceLng !== undefined && !isNaN(referenceLat) && !isNaN(referenceLng)) {
+        // Calculate distance for all posts
+        posts.forEach((post) => {
+          if (post.latitude != null && post.longitude != null) {
+            const dist = getDistance(
+              referenceLat!,
+              referenceLng!,
+              post.latitude,
+              post.longitude,
+            );
+            (post as any).distance = dist;
+          } else {
+            (post as any).distance = 999999;
+          }
         });
 
-        // Sort by distance
-        posts.sort((a: any, b: any) => a.distance - b.distance);
+        // Filter for posts within 150km if any exist, otherwise gracefully show all sorted by proximity
+        const closePosts = posts.filter((p: any) => p.distance <= 150);
+        if (closePosts.length > 0) {
+          closePosts.sort((a: any, b: any) => a.distance - b.distance);
+          posts = closePosts;
+        } else {
+          // Sort by distance (closest first), then by newest
+          posts.sort((a: any, b: any) => {
+            if (a.distance !== b.distance) {
+              return a.distance - b.distance;
+            }
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+        }
       }
     }
 
