@@ -3,8 +3,6 @@
 
 /* ─────────────────────────────────────────────────────
    StrayCare Design Tokens
-   Dark-mode ready: override --sc-* vars inside
-   [data-theme="dark"] when the time comes.
    ───────────────────────────────────────────────────── */
 
 :root {
@@ -88,6 +86,36 @@
 }
 
 /* ─────────────────────────────────────────────────────
+   Dark Theme Definition
+   ───────────────────────────────────────────────────── */
+html.dark {
+  --sc-bg:          #09090B;
+  --sc-bg-subtle:   #121215;
+  --sc-bg-panel:    #18181B;
+  --sc-surface:     #18181B;
+  --sc-surface-alt: #27272A;
+
+  --sc-text-primary:   #F4F4F5;
+  --sc-text-secondary: #A1A1AA;
+  --sc-text-muted:     #71717A;
+
+  --sc-border:        #27272A;
+  --sc-border-focus:  var(--sc-brand-400);
+  --sc-ring:          rgba(143, 79, 252, 0.35);
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: var(--sc-bg);
+  color: var(--sc-text-primary);
+}
+
+/* Accessibility Typography Scale */
+html.text-scale-lg {
+  font-size: 110%;
+}
+
+/* ─────────────────────────────────────────────────────
    Base reset & global styles
    ───────────────────────────────────────────────────── */
 
@@ -127,7 +155,6 @@ img, video {
 
 /* ─────────────────────────────────────────────────────
    Browser surfaces — themed to brand
-   (craft-floor: selection, caret, focus, scrollbar)
    ───────────────────────────────────────────────────── */
 
 ::selection {
@@ -140,13 +167,11 @@ textarea {
   caret-color: var(--sc-brand-500);
 }
 
-/* Focus ring — consistent across all interactive elements */
 :focus-visible {
   outline: 2px solid var(--sc-border-focus);
   outline-offset: 2px;
 }
 
-/* Custom scrollbar (Webkit) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -165,24 +190,15 @@ textarea {
   background: var(--sc-brand-400);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--sc-brand-200) transparent;
 }
 
-/* ─────────────────────────────────────────────────────
-   Smooth link underline offset
-   ───────────────────────────────────────────────────── */
-
 a {
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
 }
-
-/* ─────────────────────────────────────────────────────
-   Tabular numerals in data contexts
-   ───────────────────────────────────────────────────── */
 
 [data-tabular] {
   font-variant-numeric: tabular-nums;

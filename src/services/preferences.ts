@@ -39,8 +39,22 @@ export const applyThemeDOM = (theme: 'light' | 'dark' | 'system') => {
   }
 };
 
+export const applyFontSizeDOM = (fontSize: 'normal' | 'large') => {
+  try {
+    if (fontSize === 'large') {
+      document.documentElement.classList.add('text-scale-lg');
+    } else {
+      document.documentElement.classList.remove('text-scale-lg');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 export const applyLanguageTranslation = (langCode: string) => {
   try {
+    // Set google translate cookie for persistence
+    document.cookie = `googtrans=/en/${langCode}; path=/;`;
     const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
     if (select) {
       select.value = langCode;
@@ -61,6 +75,12 @@ export const getStoredPreferences = (): UserPreferences => {
   return DEFAULT_PREFERENCES;
 };
 
+export const initPreferencesDOM = () => {
+  const prefs = getStoredPreferences();
+  applyThemeDOM(prefs.theme);
+  applyFontSizeDOM(prefs.fontSize);
+};
+
 export const savePreferences = (prefs: Partial<UserPreferences>): UserPreferences => {
   const current = getStoredPreferences();
   const updated = { ...current, ...prefs };
@@ -73,6 +93,9 @@ export const savePreferences = (prefs: Partial<UserPreferences>): UserPreference
   if (prefs.theme) {
     applyThemeDOM(prefs.theme);
   }
+  if (prefs.fontSize) {
+    applyFontSizeDOM(prefs.fontSize);
+  }
   if (prefs.language) {
     applyLanguageTranslation(prefs.language);
   }
@@ -80,3 +103,8 @@ export const savePreferences = (prefs: Partial<UserPreferences>): UserPreference
   window.dispatchEvent(new CustomEvent('straycare:preferences-changed', { detail: updated }));
   return updated;
 };
+
+// Initialize DOM attributes on load
+if (typeof window !== 'undefined') {
+  initPreferencesDOM();
+}
