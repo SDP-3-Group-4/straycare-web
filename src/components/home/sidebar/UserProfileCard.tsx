@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LogOut, X, User } from 'lucide-react';
+import { LogOut, X, User, BadgeCheck } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { avatarOnError } from '../../../constants';
@@ -48,8 +48,8 @@ export default function UserProfileCard() {
               )}
             </div>
             {(user.isVet || user.verifiedStatus) && (
-              <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-xs">
-                <span className="text-[10px] leading-none">🛡️</span>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-xs">
+                <BadgeCheck size={12} className="text-[var(--sc-brand-600)]" />
               </div>
             )}
           </div>
@@ -57,7 +57,7 @@ export default function UserProfileCard() {
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-white text-[15px] truncate max-w-[110px]">{user.displayName || 'User'}</span>
               {(user.isVet || user.verifiedStatus) && (
-                <span className="px-1 py-0.2 bg-white/20 text-white text-[9px] font-bold uppercase rounded">Vet</span>
+                <span className="px-1.5 py-0.5 bg-white/20 text-white text-[9px] font-bold uppercase rounded-md tracking-wider">Vet</span>
               )}
             </div>
             <span className="text-white/80 text-[13px] font-medium">View Profile</span>
