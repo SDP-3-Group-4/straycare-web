@@ -87,8 +87,9 @@ export default function CenterFeed() {
               key={post.id}
               id={post.id}
               authorId={post.authorId}
-              authorName={post.author.displayName}
-              authorAvatar={post.author.photoUrl || ''}
+              authorName={post.author?.displayName || 'User'}
+              authorAvatar={post.author?.photoUrl || ''}
+              authorHandle={post.author?.handle}
               timeAgo={new Date(post.createdAt).toLocaleDateString()}
               category={post.category}
               content={post.content}

@@ -299,8 +299,9 @@ export default function ProfileFeed() {
                 key={post.id} 
                 id={post.id}
                 authorId={post.authorId}
-                authorName={post.author.displayName}
-                authorAvatar={post.author.photoUrl}
+                authorName={post.author?.displayName || profileUser?.name}
+                authorAvatar={post.author?.photoUrl || profileUser?.avatar}
+                authorHandle={post.author?.handle || profileUser?.handle}
                 timeAgo={new Date(post.createdAt).toLocaleDateString()}
                 category={post.category}
                 content={post.content}
@@ -312,7 +313,7 @@ export default function ProfileFeed() {
                 fundraiseGoal={post.fundraiseGoal}
                 raisedAmount={post.raisedAmount}
                 donorsCount={post.donorsCount}
-                isVerified={post.author.verifiedStatus}
+                isVerified={post.author?.verifiedStatus || profileUser?.isVerified}
               />
             )) : (
               <div className="text-center py-12 text-gray-500 border border-[var(--sc-border)] rounded-2xl bg-white p-6">

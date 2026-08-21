@@ -13,6 +13,7 @@ interface PostCardProps {
   authorId?: string;
   authorName: string;
   authorAvatar: string;
+  authorHandle?: string;
   timeAgo: string;
   category: 'adoption' | 'fun' | 'rescue' | 'fundraise' | string;
   content: string;
@@ -40,6 +41,7 @@ export default function PostCard({
   authorId,
   authorName,
   authorAvatar,
+  authorHandle,
   timeAgo,
   category,
   content,
@@ -56,6 +58,16 @@ export default function PostCard({
 }: PostCardProps) {
   const cat = categoryConfig[category] || { label: category, colorClass: 'bg-gray-100 text-gray-700' };
   const { user } = useAuth();
+
+  const isOwnPost = Boolean(user?.uid && authorId && user.uid === authorId);
+
+  // Synced User Display Data
+  const displayAuthorName = (isOwnPost && user?.displayName) ? user.displayName : (authorName || 'User');
+  const displayAvatar = (isOwnPost && (user?.photoURL || user?.photoUrl)) ? (user?.photoURL || user?.photoUrl) : authorAvatar;
+  const rawHandle = (isOwnPost && (user as any)?.handle) 
+    ? (user as any).handle 
+    : (authorHandle || `@${displayAuthorName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`);
+  const displayHandle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
 
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -127,7 +139,7 @@ export default function PostCard({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Post by ${authorName}`,
+          title: `Post by ${displayAuthorName}`,
           text: content,
           url: `${window.location.origin}/post/${id}`,
         });
@@ -195,10 +207,10 @@ export default function PostCard({
           {/* Avatar */}
           <Link to={`/profile?id=${authorId}`} className="shrink-0 relative block">
             <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0 ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`}>
-              {(authorId === user?.uid ? (user?.photoURL || user?.photoUrl || authorAvatar) : authorAvatar) ? (
+              {displayAvatar ? (
                 <img 
-                  src={(authorId === user?.uid ? (user?.photoURL || user?.photoUrl || authorAvatar) : authorAvatar) || undefined} 
-                  alt={authorName || 'Author'}
+                  src={displayAvatar} 
+                  alt={displayAuthorName || 'Author'}
                   onError={avatarOnError}
                   className="w-full h-full object-cover rounded-full"
                 />
@@ -213,11 +225,11 @@ export default function PostCard({
             )}
           </Link>
 
-          {/* Author Name + Category + Subtitle */}
+          {/* Author Name + Handle + Category + Subtitle */}
           <div className="flex flex-col min-w-0 flex-1 justify-center">
             <div className="flex items-center gap-1.5 min-w-0">
               <Link to={`/profile?id=${authorId}`} className="font-bold text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] hover:underline truncate">
-                {authorName}
+                {displayAuthorName}
               </Link>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0 ${cat.colorClass}`}>
                 {cat.label}
@@ -225,6 +237,8 @@ export default function PostCard({
             </div>
             
             <div className="flex items-center gap-1 text-[11px] sm:text-[12px] text-[var(--sc-text-muted)] truncate mt-0.5">
+              <span className="text-gray-500 font-medium shrink-0">{displayHandle}</span>
+              <span className="shrink-0">•</span>
               <span className="shrink-0">{timeAgo}</span>
               {location && (
                 <>
@@ -270,7 +284,7 @@ export default function PostCard({
             </button>
           )}
 
-          {user?.uid === authorId && (
+          {isOwnPost && (
             <div className="relative">
               <button 
                 className="text-gray-400 hover:text-[var(--sc-brand-600)] transition-colors p-1.5 rounded-full hover:bg-[var(--sc-brand-50)]"
@@ -411,9 +425,9 @@ export default function PostCard({
           <button 
             onClick={() => setIsDonationModalOpen(true)}
             className="w-full mt-3 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] transition-colors text-white font-bold py-2 rounded-full text-xs sm:text-sm active:scale-98"
-            disabled={user?.uid === authorId}
+            disabled={isOwnPost}
           >
-            {user?.uid === authorId ? 'Your Fundraiser' : 'Donate Now'}
+            {isOwnPost ? 'Your Fundraiser' : 'Donate Now'}
           </button>
         </div>
       )}
@@ -476,7 +490,7 @@ export default function PostCard({
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsDonationModalOpen(false)} />
           <div className="relative bg-white rounded-3xl w-full max-w-sm overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-xl animate-in fade-in zoom-in duration-200 p-5 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold mb-1 text-[var(--sc-text-primary)]">Donate to Fundraiser</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mb-4">Supporting {authorName}'s cause.</p>
+            <p className="text-xs sm:text-sm text-gray-500 mb-4">Supporting {displayAuthorName}'s cause.</p>
             
             <div className="p-3 bg-[var(--sc-brand-50)] rounded-xl mb-4 border border-[var(--sc-brand-100)]">
               <label className="text-[11px] sm:text-[12px] font-bold text-[var(--sc-brand-800)] uppercase tracking-wider mb-1 block">Donation Amount (৳)</label>
