@@ -53,7 +53,13 @@ export default function ChatBubble({ message, showAvatar, isBot }: ChatBubblePro
     <div className={`flex w-full mb-4 ${message.isMine ? 'justify-end' : 'justify-start'}`}>
       {!message.isMine && showAvatar && (
         <div className="mr-2 flex-shrink-0 flex items-end">
-          <img src={message.senderAvatar} alt={message.senderName} className="w-8 h-8 rounded-full object-cover" />
+          {isBot ? (
+            <div className="w-8 h-8 rounded-full bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-2xs">
+              <img src={message.senderAvatar} alt={message.senderName} className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <img src={message.senderAvatar} alt={message.senderName} className="w-8 h-8 rounded-full object-cover" />
+          )}
         </div>
       )}
       

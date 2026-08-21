@@ -209,7 +209,11 @@ export default function ChatConversation({ chat, onBack, onChatDeleted }: ChatCo
           </button>
           
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsInfoOpen(true)}>
-            {isAi || chat.avatar ? (
+            {isAi ? (
+              <div className="w-9 h-9 rounded-full bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                <img src={botAvatar} alt={chat.name} className="w-full h-full object-contain" />
+              </div>
+            ) : chat.avatar ? (
               <img src={botAvatar} alt={chat.name} className="w-8 h-8 rounded-full object-cover" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -270,7 +274,9 @@ export default function ChatConversation({ chat, onBack, onChatDeleted }: ChatCo
         {isBotTyping && (
           <div className="flex w-full justify-start mb-4">
             <div className="mr-2 flex-shrink-0 flex items-end">
-              <img src={botAvatar} alt="AI Vet Assistant" className="w-8 h-8 rounded-full object-cover" />
+              <div className="w-8 h-8 rounded-full bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-2xs">
+                <img src={botAvatar} alt="AI Vet Assistant" className="w-full h-full object-contain" />
+              </div>
             </div>
             <div className="flex flex-col items-start">
               <span className="text-[12px] font-bold text-gray-500 mb-1 ml-1">AI Vet Assistant</span>

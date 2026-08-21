@@ -227,7 +227,9 @@ export default function ChatWidget() {
                     {chat.avatar && !chat.isAiBot ? (
                       <img src={chat.avatar} alt={chat.name} onError={avatarOnError} className="w-10 h-10 rounded-full object-cover" />
                     ) : chat.isAiBot ? (
-                      <img src={chat.avatar} alt={chat.name} className="w-10 h-10 rounded-full object-cover" />
+                      <div className="w-10 h-10 rounded-full bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                        <img src={chat.avatar || AI_BOT_AVATAR} alt={chat.name} className="w-full h-full object-contain" />
+                      </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <User size={20} className="text-gray-400" />
