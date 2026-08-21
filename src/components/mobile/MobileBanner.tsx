@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Smartphone, Monitor, X, ExternalLink } from 'lucide-react';
 import bannerBrandingIcon from '../../assets/banner_branding.svg';
 
-const ANDROID_WAITLIST_URL = 'https://forms.gle/dCQchSJ98vLdN5K';
+const ANDROID_WAITLIST_URL = 'https://forms.gle/T8di6jGPrGnk8Qbr6';
 
 export default function MobileBanner() {
   const [isVisible, setIsVisible] = useState(true);
