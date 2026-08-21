@@ -64,7 +64,7 @@
 
   /* Transitions */
   --sc-ease:     cubic-bezier(0.16, 1, 0.3, 1);
-  --sc-duration: 200ms;
+  --sc-duration: 220ms;
   --sc-duration-slow: 400ms;
 
   /* Z-index */
@@ -216,6 +216,96 @@ html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
 /* Accessibility Typography Scale */
 html.text-scale-lg {
   font-size: 110%;
+}
+
+/* ─────────────────────────────────────────────────────
+   Eye-Soothing Animation & Micro-Interaction System
+   ───────────────────────────────────────────────────── */
+
+/* Global Smooth Transitions */
+body, #root, .home-feed-page, nav, aside, header, div[role="dialog"] {
+  transition: background-color var(--sc-duration) var(--sc-ease), 
+              color var(--sc-duration) var(--sc-ease), 
+              border-color var(--sc-duration) var(--sc-ease);
+}
+
+/* Eye-soothing page fade-and-slide up animation */
+@keyframes sc-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-feed-page__center {
+  animation: sc-fade-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Card Subtle Elevation Lift */
+.hover-lift,
+.home-feed-page__center > div,
+.post-card {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px -6px rgba(119, 43, 251, 0.10), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px -6px rgba(143, 79, 252, 0.16), 0 2px 6px -1px rgba(0, 0, 0, 0.35);
+}
+
+/* Tactile Spring Press on Buttons & Chips */
+button:not(:disabled):active,
+.btn-spring:active {
+  transform: scale(0.975);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Soft Breathing Pulse for Emergency Alerts */
+@keyframes sc-pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.45));
+  }
+}
+
+.animate-pulse-glow {
+  animation: sc-pulse-glow 2.6s ease-in-out infinite;
+}
+
+/* Shimmer Loading Wave Skeleton */
+@keyframes sc-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(228,228,231,0.5) 25%, rgba(244,244,245,0.95) 50%, rgba(228,228,231,0.5) 75%);
+  background-size: 200% 100%;
+  animation: sc-shimmer 1.8s infinite linear;
+}
+
+html.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(37,37,54,0.6) 25%, rgba(46,46,66,0.95) 50%, rgba(37,37,54,0.6) 75%);
+  background-size: 200% 100%;
+  animation: sc-shimmer 1.8s infinite linear;
 }
 
 /* ─────────────────────────────────────────────────────
