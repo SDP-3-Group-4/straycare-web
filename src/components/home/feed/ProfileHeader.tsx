@@ -177,7 +177,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
             )}
           </div>
           
-          <div className="flex items-center gap-3 -mr-6">
+          <div className="flex items-center gap-3 mr-2">
             {isOwnProfile ? (
               <button 
                 onClick={() => setIsEditModalOpen(true)}
@@ -190,7 +190,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
               <button 
                 onClick={handleConnect}
                 disabled={connectionStatus !== 'none' || isConnecting}
-                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl transition-colors disabled:opacity-50 ${connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white' : 'bg-gray-200 text-gray-600'}`}
+                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl transition-colors disabled:opacity-50 shadow-sm ${connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white' : 'bg-gray-200 text-gray-600'}`}
               >
                 {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
                 {isConnecting ? 'Connecting...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Connected' : 'Connect'}

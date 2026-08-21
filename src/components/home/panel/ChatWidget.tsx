@@ -128,7 +128,8 @@ export default function ChatWidget() {
       <div className="bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col flex-1 min-h-0 max-h-[800px] relative z-10">
         <ChatConversation 
           chat={activeChat} 
-          onBack={() => setActiveChat(null)} 
+          onBack={() => setActiveChat(null)}
+          onChatDeleted={(id) => setChats(prev => prev.filter(c => c.id !== id))}
         />
       </div>
     );

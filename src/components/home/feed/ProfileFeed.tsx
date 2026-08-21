@@ -46,12 +46,14 @@ export default function ProfileFeed() {
   const loadData = () => {
     if (!user || !targetUserId) return;
     setLoading(true);
+    const connPromise = fetchConnections(targetUserId).catch(() => []);
+    const ordersPromise = isOwnProfile ? fetchUserOrders(targetUserId).catch(() => []) : Promise.resolve([]);
     
     Promise.all([
       fetchUserProfile(targetUserId),
       fetchPosts(),
-      fetchConnections(targetUserId),
-      fetchUserOrders(targetUserId)
+      connPromise,
+      ordersPromise
     ])
     .then(([profile, allPosts, userConns, userOrders]) => {
       // Format profile to match expected structure

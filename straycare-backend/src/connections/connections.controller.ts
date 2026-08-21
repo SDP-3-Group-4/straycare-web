@@ -42,13 +42,7 @@ export class ConnectionsController {
   }
 
   @Get(':userId')
-  async getUserConnections(
-    @Param('userId') userId: string,
-    @Req() req: Request,
-  ) {
-    if (userId !== req.user!.uid) {
-      throw new ForbiddenException('You can only view your own connections');
-    }
+  async getUserConnections(@Param('userId') userId: string) {
     return this.connectionsService.getUserConnections(userId);
   }
 

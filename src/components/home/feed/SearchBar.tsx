@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, Bookmark, Store, Bell, Settings, Home, X, ShieldCheck } from "lucide-react";
+import { Search, User, Bookmark, Store, Bell, Settings, Home, ShieldCheck } from "lucide-react";
 import { fetchUsers } from "../../../services/api";
 import { avatarOnError } from "../../../constants";
 
@@ -76,14 +76,9 @@ export default function SearchBar() {
         value={query}
         onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
         onFocus={() => setIsOpen(true)}
-        className="w-full bg-gray-100 hover:bg-gray-200 focus:bg-white border border-transparent focus:border-[var(--sc-brand-500)] rounded-full py-3 pl-12 pr-10 text-[15px] text-[var(--sc-text-primary)] placeholder-[var(--sc-text-muted)] outline-none transition-colors"
-        placeholder="Search users, settings..."
+        className="w-full bg-gray-100 hover:bg-gray-200 focus:bg-white border border-transparent focus:border-[var(--sc-brand-500)] rounded-full py-3 pl-12 pr-4 text-[15px] text-[var(--sc-text-primary)] placeholder-[var(--sc-text-muted)] outline-none transition-colors"
+        placeholder=" Search"
       />
-      {query && (
-        <button onClick={() => { setQuery(""); setIsOpen(false); }} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-          <X size={16} />
-        </button>
-      )}
 
       {showDropdown && (
         <div className="absolute top-full mt-2 w-full bg-white border border-[var(--sc-border)] rounded-2xl shadow-xl overflow-hidden z-50 max-h-[420px] flex flex-col">
