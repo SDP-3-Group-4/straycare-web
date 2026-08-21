@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './PostCard.css';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, BadgeCheck, Pencil, Trash2, UserPlus, User } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, BadgeCheck, Pencil, Trash2, UserPlus, User, Loader2 } from "lucide-react";
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { toggleLike, fetchLikeStatus, toggleBookmark, fetchBookmarkStatus, deletePost, updatePost, donateToPost, requestConnection, fetchConnectionStatus } from '../../../services/api';
@@ -188,12 +188,13 @@ export default function PostCard({
   };
 
   return (
-    <article className="bg-white rounded-2xl p-3.5 sm:p-5 mb-3 sm:mb-4 border border-[var(--sc-border)] overflow-hidden w-full max-w-full box-border">
+    <article className="bg-white rounded-2xl p-3.5 sm:p-5 mb-3 sm:mb-4 border border-[var(--sc-border)] overflow-hidden w-full max-w-full box-border shadow-xs">
       {/* Header */}
-      <div className="flex justify-between items-start mb-3 gap-2">
+      <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <Link to={`/profile?id=${authorId}`} className="flex-shrink-0 cursor-pointer relative block">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0 hover:opacity-80 transition-opacity ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`}>
+          {/* Avatar */}
+          <Link to={`/profile?id=${authorId}`} className="shrink-0 relative block">
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0 ${isVerified ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : ''}`}>
               {(authorId === user?.uid ? (user?.photoURL || user?.photoUrl || authorAvatar) : authorAvatar) ? (
                 <img 
                   src={(authorId === user?.uid ? (user?.photoURL || user?.photoUrl || authorAvatar) : authorAvatar) || undefined} 
@@ -206,33 +207,39 @@ export default function PostCard({
               )}
             </div>
             {isVerified && (
-              <div className="absolute -bottom-1 -right-1 bg-white rounded-full shadow-xs z-10 border border-white">
+              <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-xs">
                 <BadgeCheck size={13} className="text-[var(--sc-brand-500)]" />
               </div>
             )}
           </Link>
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Link to={`/profile?id=${authorId}`} className="font-bold text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] hover:underline truncate max-w-[160px] sm:max-w-none">
+
+          {/* Author Name + Category + Subtitle */}
+          <div className="flex flex-col min-w-0 flex-1 justify-center">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Link to={`/profile?id=${authorId}`} className="font-bold text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] hover:underline truncate">
                 {authorName}
               </Link>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] sm:text-[13px] flex-wrap leading-tight text-[var(--sc-text-muted)]">
-              <span>{timeAgo}</span>
-              {location && (
-                <span className="truncate max-w-[120px] sm:max-w-[200px]">• {location}</span>
-              )}
-              <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${cat.colorClass}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0 ${cat.colorClass}`}>
                 {cat.label}
               </span>
+            </div>
+            
+            <div className="flex items-center gap-1 text-[11px] sm:text-[12px] text-[var(--sc-text-muted)] truncate mt-0.5">
+              <span className="shrink-0">{timeAgo}</span>
+              {location && (
+                <>
+                  <span className="shrink-0">•</span>
+                  <span className="truncate">{location}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Right header actions: Connect & Options menu */}
+        <div className="flex items-center gap-1 shrink-0">
           {user && user.uid !== authorId && (
-            <div 
-              className={`flex items-center gap-1.5 ${connectionStatus === 'none' && !isConnecting ? 'cursor-pointer group' : 'opacity-70 cursor-default'}`} 
+            <button
               onClick={async () => {
                 if (connectionStatus !== 'none' || isConnecting) return;
                 setIsConnecting(true);
@@ -245,26 +252,30 @@ export default function PostCard({
                   setIsConnecting(false);
                 }
               }}
+              disabled={connectionStatus !== 'none' || isConnecting}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 shrink-0 ${
+                connectionStatus === 'none'
+                  ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)]'
+                  : connectionStatus === 'pending'
+                    ? 'bg-amber-50 text-amber-600'
+                    : connectionStatus === 'accepted'
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+              }`}
             >
-              <span className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-brand-600)] transition-colors hidden md:block">
-                {isConnecting ? 'Connecting...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Connected' : 'Connect'}
+              {isConnecting ? <Loader2 size={11} className="animate-spin" /> : connectionStatus === 'none' ? <UserPlus size={11} /> : null}
+              <span>
+                {isConnecting ? '...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Friends' : 'Connect'}
               </span>
-              <button 
-                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors shadow-xs ${connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] group-hover:bg-[var(--sc-brand-700)]' : 'bg-[var(--sc-brand-300)]'}`}
-                disabled={connectionStatus !== 'none' || isConnecting}
-                title="Connect"
-              >
-                <UserPlus size={14} className="text-white" />
-              </button>
-            </div>
+            </button>
           )}
-          
+
           {user?.uid === authorId && (
             <div className="relative">
               <button 
-                className="text-gray-400 hover:text-[var(--sc-brand-600)] transition-colors p-1 rounded-full hover:bg-[var(--sc-brand-50)]"
+                className="text-gray-400 hover:text-[var(--sc-brand-600)] transition-colors p-1.5 rounded-full hover:bg-[var(--sc-brand-50)]"
                 onClick={() => setShowActions(!showActions)}
-                aria-label="Post actions"
+                aria-label="Post options"
               >
                 <MoreHorizontal size={18} />
               </button>
@@ -407,38 +418,46 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex justify-between items-center text-[var(--sc-text-secondary)] text-xs sm:text-sm font-medium pt-2 border-t border-gray-100 gap-1 sm:gap-2">
-        <div className="flex items-center gap-2 sm:gap-5 flex-1 min-w-0">
-          <button 
-            onClick={handleLike}
-            className={`flex items-center gap-1.5 transition-colors p-1 sm:p-0 ${isLiked ? 'text-red-500 font-bold' : 'hover:text-red-500'}`}
-            title="Like"
-          >
-            <Heart size={17} fill={isLiked ? "currentColor" : "none"} />
-            <span>{likesCount} <span className="hidden xs:inline sm:inline">Likes</span></span>
-          </button>
-          <button 
-            onClick={() => setIsCommentSheetOpen(true)}
-            className="flex items-center gap-1.5 hover:text-gray-700 transition-colors p-1 sm:p-0"
-            title="Comments"
-          >
-            <MessageCircle size={17} />
-            <span>{commentsCount} <span className="hidden xs:inline sm:inline">Comments</span></span>
-          </button>
-          <button 
-            onClick={handleShare}
-            className="flex items-center gap-1.5 hover:text-gray-700 transition-colors p-1 sm:p-0"
-            title="Share"
-          >
-            <Share2 size={17} />
-            <span className="hidden sm:inline">Share</span>
-          </button>
-        </div>
+      {/* Modern Compact Actions Bar */}
+      <div className="flex items-center justify-between text-[var(--sc-text-secondary)] text-xs pt-2.5 mt-1 border-t border-gray-100 px-1">
+        {/* Like Button */}
+        <button 
+          onClick={handleLike}
+          className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full transition-colors whitespace-nowrap ${
+            isLiked ? 'text-red-500 font-bold bg-red-50' : 'hover:text-red-500 hover:bg-gray-50'
+          }`}
+          title="Like"
+        >
+          <Heart size={17} fill={isLiked ? "currentColor" : "none"} />
+          <span className="font-semibold text-[13px]">{likesCount}</span>
+        </button>
+
+        {/* Comment Button */}
+        <button 
+          onClick={() => setIsCommentSheetOpen(true)}
+          className="flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-colors whitespace-nowrap"
+          title="Comments"
+        >
+          <MessageCircle size={17} />
+          <span className="font-semibold text-[13px]">{commentsCount}</span>
+        </button>
+
+        {/* Share Button */}
+        <button 
+          onClick={handleShare}
+          className="flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          title="Share"
+        >
+          <Share2 size={17} />
+        </button>
+
+        {/* Bookmark Button */}
         <button 
           onClick={handleBookmark}
-          className={`p-1.5 transition-colors shrink-0 ${isBookmarked ? 'text-[var(--sc-brand-500)]' : 'hover:text-[var(--sc-brand-500)]'}`}
-          title="Save post"
+          className={`py-1.5 px-3 rounded-full transition-colors ${
+            isBookmarked ? 'text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]' : 'hover:text-[var(--sc-brand-600)] hover:bg-gray-50'
+          }`}
+          title="Bookmark"
         >
           <Bookmark size={17} fill={isBookmarked ? "currentColor" : "none"} />
         </button>
