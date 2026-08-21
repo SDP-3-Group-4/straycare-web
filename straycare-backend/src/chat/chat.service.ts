@@ -136,12 +136,13 @@ export class ChatService implements OnModuleInit {
     // Enforce per-user message rate limit (cost-abuse guardrail)
     this.assertWithinRateLimit(userId);
 
+    const normalizedContent = content.normalize('NFC');
     // Create message
     const message = await this.prisma.message.create({
       data: {
         conversationId,
         senderId: userId,
-        content,
+        content: normalizedContent,
         imageUrl,
       },
       include: {

@@ -179,19 +179,28 @@ export class NimService {
       });
 
       if (!res.ok) {
-        const body = await res.text();
+        const buf = await res.arrayBuffer();
+        const body = new TextDecoder('utf-8', { fatal: false }).decode(buf);
         this.logger.error(`NIM API error ${res.status}: ${body}`);
         throw new Error(`NIM API error: ${res.status}`);
       }
 
-      const data = (await res.json()) as {
+      const buf = await res.arrayBuffer();
+      const text = new TextDecoder('utf-8', { fatal: false }).decode(buf);
+      const data = JSON.parse(text) as {
         choices?: { message?: { content?: string } }[];
       };
       let content = data.choices?.[0]?.message?.content?.trim();
       if (!content) throw new Error('Empty response from NIM');
-      if (/[≡ƒΓ£¿]/.test(content)) {
+      if (/[≡ƒΓ£¿�]/.test(content)) {
         try {
-          content = Buffer.from(content, 'latin1').toString('utf8');
+          const bytes = Uint8Array.from(content, (c) => c.charCodeAt(0) & 0xff);
+          const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+          if (decoded && !decoded.includes('�') && decoded !== content) content = decoded;
+        } catch {}
+        try {
+          const fixed = Buffer.from(content, 'latin1').toString('utf8');
+          if (fixed && !fixed.includes('�') && fixed !== content) content = fixed;
         } catch {}
       }
       return content.normalize('NFC');
