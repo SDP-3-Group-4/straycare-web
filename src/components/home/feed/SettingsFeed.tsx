@@ -13,6 +13,8 @@ import VetVerificationModal from './VetVerificationModal';
 import PasswordSecurityModal from '../../common/PasswordSecurityModal';
 import BlockedUsersModal from '../../common/BlockedUsersModal';
 import PolicyModal, { type PolicyType } from '../../common/PolicyModal';
+import PaymentMethodsModal from '../../common/PaymentMethodsModal';
+import { getSavedPaymentMethods, type SavedPaymentMethod } from '../../../services/payments';
 
 const LANGUAGES = [
   { code: 'en', name: 'English (US)', flag: '🇺🇸' },
@@ -31,19 +33,29 @@ export default function SettingsFeed() {
   const [isVetModalOpen, setIsVetModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>(getSavedPaymentMethods());
   const [policyModalType, setPolicyModalType] = useState<PolicyType | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [dataExported, setDataExported] = useState(false);
 
   const isVerifiedVet = Boolean(user?.isVet || user?.verifiedStatus);
+  const primaryMethod = savedMethods.find((m) => m.isDefault) || savedMethods[0];
 
   useEffect(() => {
     const handlePrefsChange = (e: any) => {
       if (e.detail) setPrefs(e.detail);
     };
+    const handlePaymentsChange = (e: any) => {
+      if (e.detail) setSavedMethods(e.detail);
+    };
     window.addEventListener('straycare:preferences-changed', handlePrefsChange);
-    return () => window.removeEventListener('straycare:preferences-changed', handlePrefsChange);
+    window.addEventListener('straycare:payment-methods-updated', handlePaymentsChange);
+    return () => {
+      window.removeEventListener('straycare:preferences-changed', handlePrefsChange);
+      window.removeEventListener('straycare:payment-methods-updated', handlePaymentsChange);
+    };
   }, []);
 
   const handleLocationChange = (mode: 'precise' | 'city' | 'hidden') => {
@@ -223,6 +235,32 @@ export default function SettingsFeed() {
                 <div>
                   <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Password & Credentials</span>
                   <span className="text-xs text-gray-500">Dispatch secure password reset link or update credentials</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+            </button>
+
+            {/* Payment Methods & Wallet */}
+            <button
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors group"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-pink-50 text-pink-600 shrink-0">
+                  <Smartphone size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)]">Payment Methods & Wallet</span>
+                    {primaryMethod && (
+                      <span className="px-2 py-0.5 bg-purple-50 text-[var(--sc-brand-700)] border border-purple-200 text-[10px] font-bold rounded-md truncate max-w-[140px]">
+                        {primaryMethod.title}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500 truncate block">
+                    Manage bKash, Nagad, Card gateways & donation receipts ({savedMethods.length} saved)
+                  </span>
                 </div>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
@@ -839,6 +877,14 @@ export default function SettingsFeed() {
         <BlockedUsersModal
           isOpen={isBlockedModalOpen}
           onClose={() => setIsBlockedModalOpen(false)}
+        />
+      )}
+
+      {/* Payment Methods & Wallet Modal */}
+      {isPaymentModalOpen && (
+        <PaymentMethodsModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
         />
       )}
 

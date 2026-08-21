@@ -14,12 +14,14 @@ import {
   Check,
   X,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { avatarOnError } from '../../constants';
 import { getStoredPreferences, savePreferences, type UserPreferences } from '../../services/preferences';
 import VetVerificationModal from '../home/feed/VetVerificationModal';
+import PaymentMethodsModal from './PaymentMethodsModal';
 
 interface ProfileFlyoutMenuProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
   const [prefs, setPrefs] = useState<UserPreferences>(getStoredPreferences());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [vetModalOpen, setVetModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     const handlePrefsChange = (e: any) => {
@@ -277,6 +280,25 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
                 <ChevronRight size={15} className="text-gray-400 group-hover:text-gray-700" />
               </button>
 
+              {/* Payment Methods & Wallet Entry */}
+              <button
+                onClick={() => setPaymentModalOpen(true)}
+                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors border border-[var(--sc-border)] text-left group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-xl bg-pink-50 text-pink-600">
+                    <CreditCard size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-[var(--sc-text-primary)]">Payment Methods & Wallet</span>
+                    <span className="text-[11px] text-gray-500">
+                      bKash, Nagad & Cards for donations
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight size={15} className="text-gray-400 group-hover:text-gray-700" />
+              </button>
+
               {/* Full Settings Page Link */}
               <Link
                 to="/settings"
@@ -347,6 +369,14 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
           userId={user.uid}
           email={user.email}
           displayName={user.displayName}
+        />
+      )}
+
+      {/* Payment Methods Modal */}
+      {paymentModalOpen && (
+        <PaymentMethodsModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
         />
       )}
     </>
