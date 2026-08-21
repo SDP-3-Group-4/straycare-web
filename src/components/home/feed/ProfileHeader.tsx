@@ -22,6 +22,7 @@ interface ProfileHeaderProps {
     pets?: { name: string; type: string; age?: string }[];
   };
   onProfileUpdate?: () => void;
+  onConnectionsClick?: () => void;
   connectionsCount?: number;
   fundraisersCount?: number;
   totalRaised?: number;
@@ -30,7 +31,7 @@ interface ProfileHeaderProps {
   isOwnProfile?: boolean;
 }
 
-export default function ProfileHeader({ user, onProfileUpdate, connectionsCount = 0, fundraisersCount = 0, totalRaised = 0, totalDonors = 0, totalGoal = 0, isOwnProfile = true }: ProfileHeaderProps) {
+export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClick, connectionsCount = 0, fundraisersCount = 0, totalRaised = 0, totalDonors = 0, totalGoal = 0, isOwnProfile = true }: ProfileHeaderProps) {
   const { user: authUser, updateLocalUser } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -177,7 +178,7 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
             )}
           </div>
           
-          <div className="flex items-center gap-3 mr-2">
+          <div className="flex items-center gap-3">
             {isOwnProfile ? (
               <button 
                 onClick={() => setIsEditModalOpen(true)}
@@ -264,10 +265,10 @@ export default function ProfileHeader({ user, onProfileUpdate, connectionsCount 
         
         {/* Stats */}
         <div className="flex items-center gap-6 mt-6">
-          <div className="flex items-center gap-1.5 cursor-pointer hover:underline">
+          <button onClick={onConnectionsClick} className="flex items-center gap-1.5 hover:underline text-left disabled:cursor-default" disabled={!onConnectionsClick}>
             <span className="font-bold text-[var(--sc-text-primary)]">{connectionsCount}</span>
             <span className="text-gray-500 font-medium">Connections</span>
-          </div>
+          </button>
         </div>
 
         {/* Holistic Fundraising Overview */}

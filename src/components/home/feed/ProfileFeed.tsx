@@ -139,6 +139,12 @@ export default function ProfileFeed() {
       <ProfileHeader 
         user={profileData} 
         onProfileUpdate={loadData} 
+        onConnectionsClick={() => {
+          if (isOwnProfile) {
+            setActiveTab('connections');
+            setTimeout(() => window.scrollTo({ top: 400, behavior: 'smooth' }), 100);
+          }
+        }}
         connectionsCount={connections.length}
         fundraisersCount={fundraiserStats.count}
         totalRaised={fundraiserStats.raised}
