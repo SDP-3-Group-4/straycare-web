@@ -99,7 +99,7 @@ export default function MarketplaceCheckoutModal({ isOpen, onClose, total }: Mar
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">Total to Pay</span>
-                <span className="font-bold text-[20px] text-[var(--sc-brand-600)]">৳{total.toLocaleString()}</span>
+                <span className="font-bold text-[20px] text-[var(--sc-brand-600)] notranslate" translate="no">৳{total.toLocaleString()} BDT</span>
               </div>
               
               <div className="flex flex-col gap-3">

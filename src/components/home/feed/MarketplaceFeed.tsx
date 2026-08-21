@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ShoppingBag, ArrowRight } from 'lucide-react';
 import MarketItemCard from './MarketItemCard';
 import type { MarketItem } from './MarketItemCard';
 import MarketplaceProductModal from './MarketplaceProductModal';
+import MobileCartModal from '../../mobile/MobileCartModal';
 import { fetchMarketplaceItems } from '../../../services/api';
 import { useCart } from '../../../contexts/CartContext';
 
@@ -15,9 +16,11 @@ export default function MarketplaceFeed() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MarketItem | null>(null);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [items, setItems] = useState<MarketItem[]>([]);
   const [, setLoading] = useState(true);
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems, total: cartTotal } = useCart();
+  const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     fetchMarketplaceItems()
@@ -122,11 +125,44 @@ export default function MarketplaceFeed() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Product Detail Modal */}
       <MarketplaceProductModal 
         item={selectedItem} 
         isOpen={selectedItem !== null} 
         onClose={() => setSelectedItem(null)} 
+      />
+
+      {/* Floating Mobile Cart Action Bar */}
+      {cartItems.length > 0 && (
+        <div className="lg:hidden fixed bottom-16 left-3 right-3 sm:left-6 sm:right-6 z-30 animate-in slide-in-from-bottom-5 duration-300">
+          <button
+            onClick={() => setIsMobileCartOpen(true)}
+            className="w-full bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white p-3 sm:p-3.5 rounded-2xl shadow-xl shadow-[var(--sc-brand-600)]/30 flex items-center justify-between transition-all active:scale-[0.98] border border-white/20 backdrop-blur-md"
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative bg-white/20 p-2 rounded-xl">
+                <ShoppingBag size={18} className="text-white" />
+                <span className="absolute -top-1.5 -right-1.5 bg-white text-[var(--sc-brand-700)] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {cartItemCount}
+                </span>
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[11px] text-white/80 font-medium">{cartItemCount} {cartItemCount === 1 ? 'item' : 'items'} in Cart</span>
+                <span className="text-sm font-extrabold notranslate" translate="no">৳{cartTotal.toLocaleString()} BDT</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold text-xs bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-colors">
+              <span>View Cart</span>
+              <ArrowRight size={14} />
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Cart Modal */}
+      <MobileCartModal
+        isOpen={isMobileCartOpen}
+        onClose={() => setIsMobileCartOpen(false)}
       />
 
     </div>

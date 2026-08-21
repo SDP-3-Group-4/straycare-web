@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Cross, MessageSquare, X, User, BadgeCheck } from 'lucide-react';
+import { Search, Cross, MessageSquare, X, User, BadgeCheck, ShoppingBag } from 'lucide-react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import { avatarOnError } from '../../constants';
 import { fetchChats } from '../../services/api';
 import SearchBar from '../home/feed/SearchBar';
 import NearbyClinicsWidget from '../home/sidebar/NearbyClinicsWidget';
 import ChatWidget from '../home/panel/ChatWidget';
 import ProfileFlyoutMenu from '../common/ProfileFlyoutMenu';
+import MobileCartModal from './MobileCartModal';
 
 export default function MobileHeader() {
   const { user } = useAuth();
@@ -16,7 +18,10 @@ export default function MobileHeader() {
   const [showClinicsModal, setShowClinicsModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showProfileFlyout, setShowProfileFlyout] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const { items } = useCart();
+  const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const isVerifiedVet = Boolean(user?.isVet || user?.verifiedStatus);
 
@@ -77,6 +82,25 @@ export default function MobileHeader() {
             {unreadMessages > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
                 {unreadMessages}
+              </span>
+            )}
+          </button>
+
+          {/* Cart Button */}
+          <button
+            onClick={() => setShowCartModal(true)}
+            className={`p-2 rounded-full transition-all relative ${
+              cartItemCount > 0
+                ? 'text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]'
+                : 'text-gray-600 hover:text-[var(--sc-brand-600)] hover:bg-gray-100'
+            }`}
+            title="Cart"
+            aria-label={`Shopping cart with ${cartItemCount} items`}
+          >
+            <ShoppingBag size={19} />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-[var(--sc-brand-600)] text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-2xs animate-in zoom-in-50">
+                {cartItemCount > 9 ? '9+' : cartItemCount}
               </span>
             )}
           </button>
@@ -165,6 +189,12 @@ export default function MobileHeader() {
           </div>
         </div>
       )}
+
+      {/* Mobile Cart Sheet / Modal */}
+      <MobileCartModal
+        isOpen={showCartModal}
+        onClose={() => setShowCartModal(false)}
+      />
     </>
   );
 }

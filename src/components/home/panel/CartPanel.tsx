@@ -33,8 +33,8 @@ export default function CartPanel() {
                   <h4 className="font-semibold text-[13px] text-[var(--sc-text-primary)] leading-tight line-clamp-2">
                     {item.title}
                   </h4>
-                  <div className="font-bold text-[14px] text-[var(--sc-brand-600)] mt-1">
-                    {item.currency}{item.price.toLocaleString()}
+                  <div className="font-bold text-[14px] text-[var(--sc-brand-600)] mt-1 notranslate" translate="no">
+                    ৳{item.price.toLocaleString()} <span className="text-[10px] text-gray-400">BDT</span>
                   </div>
                   
                   <div className="flex items-center justify-between mt-2">
@@ -76,16 +76,16 @@ export default function CartPanel() {
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex justify-between text-[13px] text-gray-500">
                 <span>Subtotal</span>
-                <span className="font-medium text-[var(--sc-text-primary)]">৳{subtotal.toLocaleString()}</span>
+                <span className="font-medium text-[var(--sc-text-primary)] notranslate" translate="no">৳{subtotal.toLocaleString()} BDT</span>
               </div>
               <div className="flex justify-between text-[13px] text-gray-500">
                 <span>Tax (5%)</span>
-                <span className="font-medium text-[var(--sc-text-primary)]">৳{tax.toLocaleString()}</span>
+                <span className="font-medium text-[var(--sc-text-primary)] notranslate" translate="no">৳{tax.toLocaleString()} BDT</span>
               </div>
               <div className="h-px bg-[var(--sc-border)] my-1"></div>
               <div className="flex justify-between items-center">
                 <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">Total</span>
-                <span className="font-bold text-[18px] text-[var(--sc-brand-600)]">৳{total.toLocaleString()}</span>
+                <span className="font-bold text-[18px] text-[var(--sc-brand-600)] notranslate" translate="no">৳{total.toLocaleString()} BDT</span>
               </div>
             </div>
             

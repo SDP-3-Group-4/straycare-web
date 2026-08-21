@@ -83,9 +83,9 @@ export default function MarketItemCard({ item, onClick, onAdd }: MarketItemCardP
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
           <div className="flex flex-col">
             <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Price</span>
-            <div className="font-extrabold text-[18px] text-[var(--sc-brand-700)] leading-none mt-0.5">
-              <span className="text-[14px] font-bold mr-0.5">{item.currency}</span> 
-              {item.price.toLocaleString()}
+            <div className="font-extrabold text-[18px] text-[var(--sc-brand-700)] leading-none mt-0.5 notranslate" translate="no">
+              <span className="text-[14px] font-bold mr-0.5">{item.currency || '৳'}</span> 
+              {item.price.toLocaleString()} <span className="text-[11px] font-semibold text-gray-400 ml-0.5">BDT</span>
             </div>
           </div>
           

@@ -78,9 +78,10 @@ export default function MarketplaceProductModal({ item, isOpen, onClose }: Marke
             <div className="w-full md:w-64 shrink-0 flex flex-col gap-4">
               <div className="bg-gray-50 rounded-2xl p-5 border border-[var(--sc-border)]">
                 <div className="text-[12px] text-gray-400 font-bold uppercase tracking-wider mb-1">Price</div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-xl font-bold text-[var(--sc-brand-700)]">{item.currency}</span>
+                <div className="flex items-baseline gap-1 mb-4 notranslate" translate="no">
+                  <span className="text-xl font-bold text-[var(--sc-brand-700)]">{item.currency || '৳'}</span>
                   <span className="text-3xl font-extrabold text-[var(--sc-brand-700)]">{item.price.toLocaleString()}</span>
+                  <span className="text-xs font-semibold text-gray-400 ml-1">BDT</span>
                 </div>
                 
                 {item.isService ? (
