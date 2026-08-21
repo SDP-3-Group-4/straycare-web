@@ -4,6 +4,7 @@ import LeftSidebar from '../components/home/sidebar/LeftSidebar';
 import RightPanel from '../components/home/panel/RightPanel';
 import CartPanel from '../components/home/panel/CartPanel';
 import MobileBanner from '../components/mobile/MobileBanner';
+import MobileHeader from '../components/mobile/MobileHeader';
 import MobileNav from '../components/mobile/MobileNav';
 
 export default function HomeFeedPage() {
@@ -13,6 +14,7 @@ export default function HomeFeedPage() {
   return (
     <div className="home-feed-page">
       <MobileBanner />
+      <MobileHeader />
       <div className="home-feed-page__container">
         <aside className="home-feed-page__left">
           <LeftSidebar />
