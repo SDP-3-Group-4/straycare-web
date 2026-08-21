@@ -110,17 +110,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const buildHandle = async (displayName: string, email: string | null) => {
     const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
     const baseSlug = base || 'user';
-    let handle = `@${baseSlug}`;
+    let handle = baseSlug;
     try {
       const users = await fetchUsers();
-      const taken = new Set(users.map((u: any) => u.handle).filter(Boolean));
+      const taken = new Set(users.map((u: any) => (u.handle || '').replace(/^@+/, '')).filter(Boolean));
       let i = 2;
       while (taken.has(handle)) {
-        handle = `@${baseSlug}${i}`;
+        handle = `${baseSlug}${i}`;
         i += 1;
       }
     } catch {
-      handle = `@${baseSlug}${Date.now().toString(36).slice(-4)}`;
+      handle = `${baseSlug}${Date.now().toString(36).slice(-4)}`;
     }
     return handle;
   };
@@ -188,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         bio: dbUser.bio || '',
         location: dbUser.location || '',
         website: dbUser.website || '',
-        handle: dbUser.handle || '',
+        handle: (dbUser.handle || '').replace(/^@+/, ''),
         phone: dbUser.phone || extra?.phone || '',
         referralCode: dbUser.referralCode || extra?.referralCode || '',
         emailVerified: initialData.emailVerified || dbUser.emailVerified || false,
@@ -352,6 +352,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser((prev) => {
       if (!prev) return null;
       const updated = { ...prev, ...data };
+      if (data.handle !== undefined) {
+        updated.handle = (data.handle || '').replace(/^@+/, '');
+      }
       if (data.photoUrl && !data.photoURL) {
         updated.photoURL = data.photoUrl;
       }

@@ -3,7 +3,7 @@ import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pen
 import EditProfileModal from './EditProfileModal';
 import { updateUserProfile, requestConnection, fetchConnectionStatus, disconnectConnection, fetchMutualConnections, fetchGraphDegree } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
-import { avatarOnError } from '../../../constants';
+import { avatarOnError, formatHandle } from '../../../constants';
 import { Link } from 'react-router-dom';
 
 interface ProfileHeaderProps {
@@ -244,7 +244,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
             )}
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm notranslate" translate="no">{user.handle}</p>
+            <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm notranslate" translate="no">{formatHandle(user.handle)}</p>
             {!isOwnProfile && graphDegree && (
               <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border ${
                 graphDegree.degree === 1

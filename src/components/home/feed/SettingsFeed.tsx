@@ -7,7 +7,7 @@ import {
   MessageSquare, HeartHandshake, Shield, Smartphone, Trash2, Sliders, Type, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { avatarOnError } from '../../../constants';
+import { avatarOnError, formatHandle } from '../../../constants';
 import { getStoredPreferences, savePreferences, type UserPreferences } from '../../../services/preferences';
 import EditProfileModal from './EditProfileModal';
 import VetVerificationModal from './VetVerificationModal';
@@ -184,8 +184,8 @@ export default function SettingsFeed() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[var(--sc-text-secondary)] truncate">
-                  {(user as any).handle ? `@${(user as any).handle}` : user.email}
+                <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
+                  {(user as any).handle ? formatHandle((user as any).handle) : user.email}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                   {user.email}

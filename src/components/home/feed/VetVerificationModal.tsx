@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { submitVetApplication } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
-import { avatarOnError } from '../../../constants';
+import { avatarOnError, formatHandle } from '../../../constants';
 
 interface VetVerificationModalProps {
   isOpen: boolean;
@@ -189,7 +189,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-extrabold text-[17px] truncate leading-tight notranslate" translate="no">{displayName || 'Dr. Practitioner'}</h3>
-                  <p className="text-emerald-100 text-xs font-medium truncate mt-0.5 notranslate" translate="no">{(user as any)?.handle ? `@${(user as any).handle}` : email}</p>
+                  <p className="text-emerald-100 text-xs font-medium truncate mt-0.5 notranslate" translate="no">{(user as any)?.handle ? formatHandle((user as any).handle) : email}</p>
                   <p className="text-[11px] text-emerald-200 mt-0.5 flex items-center gap-1">
                     <Stethoscope size={11} /> Certified Veterinary Doctor
                   </p>

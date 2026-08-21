@@ -18,7 +18,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { avatarOnError } from '../../constants';
+import { avatarOnError, formatHandle } from '../../constants';
 import { getStoredPreferences, savePreferences, type UserPreferences } from '../../services/preferences';
 import VetVerificationModal from '../home/feed/VetVerificationModal';
 import PaymentMethodsModal from './PaymentMethodsModal';
@@ -132,7 +132,7 @@ export default function ProfileFlyoutMenu({ isOpen, onClose }: ProfileFlyoutMenu
                   )}
                 </div>
                 <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
-                  {(user as any).handle ? `@${(user as any).handle}` : user.email}
+                  {(user as any).handle ? formatHandle((user as any).handle) : user.email}
                 </p>
               </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, User, Bookmark, Store, Bell, Settings, Home, ShieldCheck } from "lucide-react";
 import { fetchUsers } from "../../../services/api";
-import { avatarOnError } from "../../../constants";
+import { avatarOnError, formatHandle } from "../../../constants";
 
 type SearchUser = { id: string; displayName: string; handle: string; photoUrl?: string; bio?: string };
 const SETTINGS_OPTIONS = [
@@ -107,7 +107,7 @@ export default function SearchBar() {
                         )}
                         <div className="flex flex-col flex-1 min-w-0">
                           <span className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate">{u.displayName}</span>
-                          <span className="text-[12px] text-gray-500 truncate">@{u.handle}</span>
+                          <span className="text-[12px] text-gray-500 truncate notranslate" translate="no">{formatHandle(u.handle)}</span>
                         </div>
                       </button>
                     ))}

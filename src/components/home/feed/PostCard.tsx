@@ -6,7 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { toggleLike, fetchLikeStatus, toggleBookmark, fetchBookmarkStatus, deletePost, updatePost, donateToPost, requestConnection, fetchConnectionStatus } from '../../../services/api';
 import CommentSheet from './CommentSheet';
 import { Link } from 'react-router-dom';
-import { avatarOnError } from '../../../constants';
+import { avatarOnError, formatHandle } from '../../../constants';
 
 interface PostCardProps {
   id: string;
@@ -66,8 +66,8 @@ export default function PostCard({
   const displayAvatar = (isOwnPost && (user?.photoURL || user?.photoUrl)) ? (user?.photoURL || user?.photoUrl) : authorAvatar;
   const rawHandle = (isOwnPost && (user as any)?.handle) 
     ? (user as any).handle 
-    : (authorHandle || `@${displayAuthorName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`);
-  const displayHandle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
+    : (authorHandle || displayAuthorName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user');
+  const displayHandle = formatHandle(rawHandle);
 
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(initialLikesCount);

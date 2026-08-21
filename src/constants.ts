@@ -9,3 +9,14 @@ export function avatarOnError(e: SyntheticEvent<HTMLImageElement>) {
     img.src = DEFAULT_AVATAR;
   }
 }
+
+export function formatHandle(handle?: string | null, fallback = ''): string {
+  const raw = (handle || fallback || '').trim();
+  if (!raw) return '';
+  // If it's an email address and no separate handle
+  if (raw.includes('@') && raw.includes('.') && !handle) {
+    return raw;
+  }
+  const clean = raw.replace(/^@+/, '');
+  return clean ? `@${clean}` : '';
+}

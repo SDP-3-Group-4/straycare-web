@@ -6,7 +6,7 @@ import PostCard from './PostCard';
 import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus, UserPlus, Compass, Share2 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT, disconnectConnection, fetchNetworkSuggestions, requestConnection } from '../../../services/api';
-import { avatarOnError } from '../../../constants';
+import { avatarOnError, formatHandle } from '../../../constants';
 
 export default function ProfileFeed() {
   const { user } = useAuth();
@@ -410,8 +410,8 @@ export default function ProfileFeed() {
                           </p>
                           <span className="px-1.5 py-0.2 bg-purple-50 text-[var(--sc-brand-700)] border border-[var(--sc-brand-200)] text-[10px] font-bold rounded-md">1st</span>
                         </div>
-                        <p className="text-xs text-[var(--sc-text-secondary)] truncate">
-                          {otherUser.handle ? (otherUser.handle.startsWith('@') ? otherUser.handle : `@${otherUser.handle}`) : `@${otherUser.displayName?.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`}
+                        <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
+                          {formatHandle(otherUser.handle, otherUser.displayName)}
                         </p>
                       </div>
                     </Link>
@@ -481,8 +481,8 @@ export default function ProfileFeed() {
                                   {suggested.degree === 2 ? '2nd' : '3rd+'}
                                 </span>
                               </div>
-                              <p className="text-xs text-[var(--sc-text-secondary)] truncate">
-                                @{suggested.handle || 'user'}
+                              <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
+                                {formatHandle(suggested.handle || 'user')}
                               </p>
                             </Link>
 
