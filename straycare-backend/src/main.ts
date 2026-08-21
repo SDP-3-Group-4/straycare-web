@@ -9,7 +9,18 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter(Boolean);
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return cb(null, true);
+      if (corsOrigins.includes(origin) || corsOrigins.includes('*')) return cb(null, true);
+      if (origin.endsWith('.vercel.app')) return cb(null, true);
+      const wildcardAllowed = corsOrigins.some((p) => {
+        if (!p.includes('*')) return false;
+        const re = new RegExp('^' + p.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+        return re.test(origin);
+      });
+      if (wildcardAllowed) return cb(null, true);
+      return cb(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     credentials: true,
