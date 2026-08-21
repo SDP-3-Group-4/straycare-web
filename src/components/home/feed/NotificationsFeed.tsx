@@ -80,30 +80,22 @@ export default function NotificationsFeed() {
         console.error("Failed to mark read:", err);
       }
     }
-    
-    // Link to post if it has one
-    if (notif.postId) {
-      // In a real app we might use react-router navigate here
-      // For now, if we are in tabs we could set a state, or just alert since there isn't a dedicated post page yet
-      // Actually, if we have a post page, window.location.href = `/post/${notif.postId}`
-      console.log(`Navigate to post ${notif.postId}`);
-      // Assuming no router setup for single post view yet, just log or trigger a modal
-    }
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto pb-20 pt-[112px]">
-      <div className="flex justify-end pb-2 px-4 sm:px-0">
+    <div className="flex flex-col w-full max-w-2xl mx-auto pb-24 pt-3 sm:pt-6 lg:pt-[74px] px-1 sm:px-0">
+      <div className="flex items-center justify-between pb-3 px-2 sm:px-0">
+        <h2 className="text-lg sm:text-xl font-bold text-[var(--sc-text-primary)]">Notifications</h2>
         <button 
           onClick={handleMarkAllRead}
-          className="flex items-center gap-1.5 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] text-[13px] font-bold py-1.5 px-4 rounded-full transition-all"
+          className="flex items-center gap-1.5 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-full transition-all"
         >
           <Check size={14} strokeWidth={3} />
           Mark all as read
         </button>
       </div>
       
-      <div className="flex flex-col pt-4 px-4 sm:px-0 gap-3">
+      <div className="flex flex-col gap-2.5 sm:gap-3">
         {notifications.map((notif) => {
           const { icon: Icon, color, bg } = getTypeConfig(notif.type);
           const timeString = new Date(notif.createdAt).toLocaleDateString();
@@ -113,42 +105,42 @@ export default function NotificationsFeed() {
             <div 
               key={notif.id} 
               onClick={() => handleNotificationClick(notif)}
-              className={`flex items-start gap-4 p-4 rounded-2xl transition-all cursor-pointer border ${
+              className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl transition-all cursor-pointer border ${
                 !notif.isRead 
-                  ? 'bg-[var(--sc-brand-50)] border-transparent' 
+                  ? 'bg-[var(--sc-brand-50)]/70 border-transparent shadow-xs' 
                   : 'bg-white border-[var(--sc-border)] hover:bg-gray-50'
               }`}
             >
-              <div className="relative">
+              <div className="relative shrink-0">
                 {notif.sender?.photoUrl ? (
-                  <img src={notif.sender?.photoUrl} alt={notif.sender?.displayName || 'User'} onError={avatarOnError} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={notif.sender?.photoUrl} alt={notif.sender?.displayName || 'User'} onError={avatarOnError} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User size={20} className="text-gray-400" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={18} className="text-gray-400" />
                   </div>
                 )}
-                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ${bg}`}>
-                  <Icon size={12} className={color} fill="currentColor" />
+                <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 border-white ${bg}`}>
+                  <Icon size={11} className={color} fill="currentColor" />
                 </div>
               </div>
               
-              <div className="flex flex-col flex-1">
-                <div className="text-[15px] text-[var(--sc-text-primary)]">
+              <div className="flex flex-col flex-1 min-w-0">
+                <div className="text-[13px] sm:text-[15px] text-[var(--sc-text-primary)] leading-snug">
                   <span className="font-bold">{senderName}</span> {notif.content}
                 </div>
-                <span className="text-[13px] text-gray-500 mt-0.5">{timeString}</span>
+                <span className="text-[11px] sm:text-[12px] text-gray-400 mt-1">{timeString}</span>
                 
                 {notif.type === 'connection' && (
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2 mt-2.5">
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleConnectionAction(notif.id, 'accept', notif.senderId); }}
-                      className="bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[14px] font-bold py-1.5 px-4 rounded-xl transition-colors"
+                      className="bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-colors active:scale-95"
                     >
                       Accept
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleConnectionAction(notif.id, 'decline', notif.senderId); }}
-                      className="bg-gray-100 hover:bg-gray-200 text-[var(--sc-text-secondary)] text-[14px] font-bold py-1.5 px-4 rounded-xl transition-colors"
+                      className="bg-gray-100 hover:bg-gray-200 text-[var(--sc-text-secondary)] text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-colors active:scale-95"
                     >
                       Decline
                     </button>
@@ -157,15 +149,17 @@ export default function NotificationsFeed() {
               </div>
               
               {!notif.isRead && (
-                <div className="w-2.5 h-2.5 bg-[var(--sc-brand-500)] rounded-full mt-2"></div>
+                <div className="w-2.5 h-2.5 bg-[var(--sc-brand-500)] rounded-full mt-2 shrink-0"></div>
               )}
             </div>
           );
         })}
         
         {notifications.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No notifications yet.
+          <div className="text-center py-16 bg-white rounded-2xl border border-[var(--sc-border)] text-gray-500">
+            <Bell size={28} className="mx-auto mb-2 text-gray-300" />
+            <p className="font-semibold text-sm">No notifications yet</p>
+            <p className="text-xs text-gray-400 mt-0.5">We'll alert you when there are updates on your posts or connections.</p>
           </div>
         )}
       </div>

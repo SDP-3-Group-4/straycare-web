@@ -135,21 +135,21 @@ export default function ProfileFeed() {
   if (loading) {
     return (
       <div className="flex h-64 w-full items-center justify-center">
-        <Loader2 className="animate-spin text-[var(--sc-primary)]" size={40} />
+        <Loader2 className="animate-spin text-[var(--sc-brand-600)]" size={36} />
       </div>
     );
   }
 
   if (!profileData) {
     return (
-      <div className="flex h-64 w-full items-center justify-center text-gray-500">
+      <div className="flex h-64 w-full items-center justify-center text-gray-500 bg-white rounded-2xl border border-[var(--sc-border)] m-4">
         Could not load profile.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col max-w-[600px] w-full pt-4 pb-20 sm:pb-4 mx-auto relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col max-w-[640px] w-full pt-3 sm:pt-4 pb-24 sm:pb-8 mx-auto relative animate-in fade-in duration-300 box-border px-1 sm:px-0">
       
       {/* Profile Header Block */}
       <ProfileHeader 
@@ -158,7 +158,7 @@ export default function ProfileFeed() {
         onConnectionsClick={() => {
           if (isOwnProfile) {
             setActiveTab('connections');
-            setTimeout(() => window.scrollTo({ top: 400, behavior: 'smooth' }), 100);
+            setTimeout(() => window.scrollTo({ top: 380, behavior: 'smooth' }), 100);
           }
         }}
         connectionsCount={connections.length}
@@ -171,14 +171,14 @@ export default function ProfileFeed() {
 
       {/* Account & Verification (own profile) */}
       {isOwnProfile && (
-        <div className="bg-white border border-[var(--sc-border)] rounded-2xl mb-6 overflow-hidden">
+        <div className="bg-white border border-[var(--sc-border)] rounded-2xl mb-4 sm:mb-6 overflow-hidden shadow-xs">
           <button
             onClick={() => setAccountOpen(!accountOpen)}
-            className="w-full p-3.5 flex items-center justify-between bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] transition-colors border-b border-[var(--sc-border)]"
+            className="w-full p-3 sm:p-3.5 flex items-center justify-between bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] transition-colors border-b border-[var(--sc-border)] text-left"
           >
-            <span className="text-[13px] font-bold text-white">Account & Verification</span>
-            <span className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-white/80">Grow your profile</span>
+            <span className="text-[12px] sm:text-[13px] font-bold text-white">Account & Verification</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-white/80 hidden xs:inline">Grow profile</span>
               {accountOpen ? (
                 <ChevronUp size={16} className="text-white/80" />
               ) : (
@@ -189,36 +189,36 @@ export default function ProfileFeed() {
 
           {accountOpen && (
             <>
-              {/* Apply for Vet Verification (hidden for accounts that already have the vet badge) */}
+              {/* Apply for Vet Verification */}
               {!user?.isVet && !user?.verifiedStatus && (
                 <>
                   <button
                     onClick={() => setVetModalOpen(true)}
-                    className="w-full flex items-center gap-3 p-3.5 hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0">
-                      <ShieldCheck size={20} />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0">
+                      <ShieldCheck size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[var(--sc-text-primary)] text-[14px]">
+                      <p className="font-bold text-[var(--sc-text-primary)] text-[13px] sm:text-[14px]">
                         {vetStatus === 'approved' ? 'Verified Vet' : 'Apply for Vet Verification'}
                       </p>
-                      <p className="text-[12px] text-gray-500 truncate">
+                      <p className="text-[11px] sm:text-[12px] text-gray-500 truncate">
                         {vetStatus === 'approved'
                           ? 'You are verified — thank you for keeping pets safe'
                           : vetStatus === 'pending'
-                            ? 'Application under review — we will get back to you'
+                            ? 'Application under review'
                             : 'Get a verified badge with authentic credentials'}
                       </p>
                     </div>
                     {vetStatus === 'approved' ? (
-                      <span className="flex items-center gap-1 shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                      <span className="flex items-center gap-1 shrink-0 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                         <ShieldCheck size={12} /> Verified
                       </span>
                     ) : vetStatus === 'pending' ? (
-                      <span className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Pending</span>
+                      <span className="shrink-0 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Pending</span>
                     ) : (
-                      <ChevronRight size={18} className="shrink-0 text-gray-300" />
+                      <ChevronRight size={16} className="shrink-0 text-gray-300" />
                     )}
                   </button>
 
@@ -229,17 +229,17 @@ export default function ProfileFeed() {
               {/* Become a Merchant */}
               <button
                 onClick={() => setMerchantToast(true)}
-                className="w-full flex items-center gap-3 p-3.5 hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 hover:bg-gray-50 transition-colors text-left"
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Store size={20} />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Store size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[var(--sc-text-primary)] text-[14px]">Become a Merchant</p>
-                  <p className="text-[12px] text-gray-500 truncate">Sell pet products to the community</p>
+                  <p className="font-bold text-[var(--sc-text-primary)] text-[13px] sm:text-[14px]">Become a Merchant</p>
+                  <p className="text-[11px] sm:text-[12px] text-gray-500 truncate">Sell pet supplies to the community</p>
                 </div>
-                <span className="flex items-center gap-1 shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                  <Sparkles size={12} /> Coming soon
+                <span className="flex items-center gap-1 shrink-0 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                  <Sparkles size={11} /> Soon
                 </span>
               </button>
             </>
@@ -248,42 +248,42 @@ export default function ProfileFeed() {
       )}
 
       {/* Tabs */}
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[var(--sc-border)] mb-6 flex items-center justify-between shadow-sm rounded-2xl px-2 py-2 mt-2">
+      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-[var(--sc-border)] mb-4 sm:mb-6 flex items-center justify-between shadow-xs rounded-2xl p-1.5 mt-1">
         <div className="flex items-center gap-1 w-full">
           <button 
             onClick={() => setActiveTab('posts')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-[12px] sm:text-[14px] transition-all ${
               activeTab === 'posts' 
-                ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
+                ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] shadow-xs' 
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
-            <LayoutList size={18} />
-            {isOwnProfile ? 'My Posts' : 'Posts'}
+            <LayoutList size={16} />
+            <span className="truncate">{isOwnProfile ? 'My Posts' : 'Posts'}</span>
           </button>
           {isOwnProfile && (
             <>
               <button 
                 onClick={() => setActiveTab('orders')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-[12px] sm:text-[14px] transition-all ${
                   activeTab === 'orders' 
-                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
+                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] shadow-xs' 
                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                 }`}
               >
-                <Package size={18} />
-                Order History
+                <Package size={16} />
+                <span className="truncate">Orders</span>
               </button>
               <button 
                 onClick={() => setActiveTab('connections')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[14px] transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-[12px] sm:text-[14px] transition-all ${
                   activeTab === 'connections' 
-                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' 
+                    ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] shadow-xs' 
                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                 }`}
               >
-                <Users size={18} />
-                Connections
+                <Users size={16} />
+                <span className="truncate">Network</span>
               </button>
             </>
           )}
@@ -291,7 +291,7 @@ export default function ProfileFeed() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3 sm:gap-5">
         {activeTab === 'posts' && (
           <>
             {userPosts.length > 0 ? userPosts.map(post => (
@@ -315,77 +315,78 @@ export default function ProfileFeed() {
                 isVerified={post.author.verifiedStatus}
               />
             )) : (
-              <div className="text-center py-8 text-gray-500 border border-[var(--sc-border)] rounded-2xl bg-white">
-                No posts yet.
+              <div className="text-center py-12 text-gray-500 border border-[var(--sc-border)] rounded-2xl bg-white p-6">
+                <p className="font-semibold text-sm">No posts yet</p>
+                <p className="text-xs text-gray-400 mt-1">Posts by this user will appear here.</p>
               </div>
             )}
           </>
         )}
 
         {activeTab === 'orders' && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {orders.length > 0 ? orders.map(order => (
-              <div key={order.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-[var(--sc-text-primary)]">Order #{order.id.slice(-8)}</p>
-                  <p className="text-sm text-[var(--sc-text-secondary)]">{new Date(order.createdAt).toLocaleDateString()}</p>
+              <div key={order.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                <div className="min-w-0 pr-2">
+                  <p className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate">Order #{order.id.slice(-8)}</p>
+                  <p className="text-xs text-[var(--sc-text-secondary)]">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-[var(--sc-brand-600)]">৳{order.total.toFixed(2)}</p>
-                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg uppercase tracking-wider mt-1">{order.status}</span>
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-[15px] text-[var(--sc-brand-600)]">৳{order.total.toFixed(2)}</p>
+                  <span className="inline-block px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-lg uppercase tracking-wider mt-1">{order.status}</span>
                 </div>
               </div>
             )) : (
-              <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Package className="text-gray-400" size={32} />
+              <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-10 flex flex-col items-center justify-center text-center">
+                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                  <Package className="text-gray-400" size={28} />
                 </div>
-                <h3 className="text-lg font-bold text-[var(--sc-text-primary)] mb-2">No orders yet</h3>
-                <p className="text-[var(--sc-text-secondary)]">You haven't placed any orders in the marketplace.</p>
+                <h3 className="text-base font-bold text-[var(--sc-text-primary)] mb-1">No orders yet</h3>
+                <p className="text-xs text-[var(--sc-text-secondary)]">Items purchased in the marketplace will show up here.</p>
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'connections' && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {connections.length > 0 ? connections.map(conn => {
               const isRequester = conn.requesterId === user?.uid;
               const otherUser = isRequester ? conn.recipient : conn.requester;
               if (!otherUser) return null;
               const isOwn = isOwnProfile;
               return (
-                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-                  <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
+                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors shadow-xs">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
                     {otherUser.photoUrl ? (
                       <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <User size={22} className="text-gray-400" />
+                      <User size={20} className="text-gray-400" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
-                    <p className="text-sm text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
+                    <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
+                    <p className="text-xs text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
                   </div>
                   {isOwn ? (
                     <button
                       onClick={() => setDisconnectConfirm(otherUser.id)}
-                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0"
+                      className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0 active:scale-95"
                     >
                       <UserMinus size={12} /> Disconnect
                     </button>
                   ) : (
-                    <span className="ml-auto px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
+                    <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
                   )}
                 </div>
               );
             }) : (
-              <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Users className="text-gray-400" size={32} />
+              <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-10 flex flex-col items-center justify-center text-center">
+                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                  <Users className="text-gray-400" size={28} />
                 </div>
-                <h3 className="text-lg font-bold text-[var(--sc-text-primary)] mb-2">No connections</h3>
-                <p className="text-[var(--sc-text-secondary)]">Start interacting with other users to build your network.</p>
+                <h3 className="text-base font-bold text-[var(--sc-text-primary)] mb-1">No connections yet</h3>
+                <p className="text-xs text-[var(--sc-text-secondary)]">Connect with other rescuers, pet parents, and clinics.</p>
               </div>
             )}
           </div>
@@ -404,8 +405,8 @@ export default function ProfileFeed() {
 
         {/* Merchant coming-soon toast */}
         {merchantToast && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-2xl">
+          <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center gap-2 bg-gray-900 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-2xl shadow-2xl">
               <Store size={16} className="text-amber-400" />
               Become a Merchant: Coming soon!
             </div>
@@ -415,15 +416,15 @@ export default function ProfileFeed() {
         {disconnectConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDisconnectConfirm(null)} />
-            <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
+            <div className="relative bg-white rounded-2xl p-5 sm:p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
               <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
                 <UserMinus size={20} />
               </div>
-              <h3 className="font-bold text-[16px]">Disconnect?</h3>
-              <p className="text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setDisconnectConfirm(null)} className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]">Cancel</button>
-                <button onClick={() => handleDisconnect(disconnectConfirm)} className="flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white bg-red-600 hover:bg-red-700">Disconnect</button>
+              <h3 className="font-bold text-[15px] sm:text-[16px]">Disconnect?</h3>
+              <p className="text-xs sm:text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
+              <div className="flex gap-2.5 mt-4">
+                <button onClick={() => setDisconnectConfirm(null)} className="flex-1 py-2 rounded-xl border border-[var(--sc-border)] font-bold text-[13px] sm:text-[14px]">Cancel</button>
+                <button onClick={() => handleDisconnect(disconnectConfirm)} className="flex-1 py-2 rounded-xl font-bold text-[13px] sm:text-[14px] text-white bg-red-600 hover:bg-red-700">Disconnect</button>
               </div>
             </div>
           </div>

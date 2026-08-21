@@ -145,13 +145,13 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
 
   return (
     <>
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2 pb-2 mb-2 px-1 text-[var(--sc-brand-600)]">
-          <SquarePen size={20} />
-          <h3 className="font-bold text-[18px] text-[var(--sc-text-primary)]">Create Post</h3>
+      <div className="flex flex-col w-full box-border">
+        <div className="flex items-center gap-2 pb-2 mb-1 px-1 text-[var(--sc-brand-600)]">
+          <SquarePen size={18} />
+          <h3 className="font-bold text-[16px] sm:text-[18px] text-[var(--sc-text-primary)]">Create Post</h3>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-[var(--sc-border)] flex flex-col gap-3">
-          <div className="flex gap-3">
+        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-[var(--sc-border)] flex flex-col gap-3 w-full box-border">
+          <div className="flex gap-2.5 sm:gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
               {user?.photoURL || user?.photoUrl ? (
                 <img 
@@ -163,10 +163,10 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
                 <User size={16} className="text-gray-400" />
               )}
             </div>
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1 min-w-0 flex flex-col gap-2">
               <textarea 
-                className="w-full bg-transparent outline-none text-[15px] text-[var(--sc-text-primary)] placeholder-gray-400 resize-none min-h-[74px] pt-1"
-                placeholder="What's on your mind?"
+                className="w-full bg-transparent outline-none text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] placeholder-gray-400 resize-none min-h-[60px] sm:min-h-[74px] pt-0.5"
+                placeholder="What's happening with stray pets?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 disabled={isSubmitting}
@@ -174,30 +174,30 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
               
               {/* Previews */}
               {(media.length > 0 || location) && (
-                <div className="flex flex-col gap-2 mt-2">
+                <div className="flex flex-col gap-2 mt-1">
                   {media.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {media.map((m, idx) => (
                         <div key={idx} className="relative group">
                           {m.type === 'video' ? (
-                            <video src={m.url} className="w-full h-24 object-cover rounded-lg border border-[var(--sc-border)]" muted />
+                            <video src={m.url} className="w-full h-20 sm:h-24 object-cover rounded-lg border border-[var(--sc-border)]" muted />
                           ) : (
-                            <img src={m.url} alt={`media ${idx}`} className="w-full h-24 object-cover rounded-lg border border-[var(--sc-border)]" />
+                            <img src={m.url} alt={`media ${idx}`} className="w-full h-20 sm:h-24 object-cover rounded-lg border border-[var(--sc-border)]" />
                           )}
-                          <button onClick={() => setMedia(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-90">
-                            <X size={12} />
+                          <button onClick={() => setMedia(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-90 shadow-xs">
+                            <X size={10} />
                           </button>
-                          <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">{m.type === 'video' ? 'VIDEO' : 'IMAGE'}</span>
+                          <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] px-1 py-0.2 rounded font-semibold">{m.type === 'video' ? 'VIDEO' : 'IMG'}</span>
                         </div>
                       ))}
                     </div>
                   )}
-                  {media.length > 0 && <p className="text-[11px] text-gray-400">{media.length}/6 • first is cover</p>}
+                  {media.length > 0 && <p className="text-[10px] text-gray-400">{media.length}/6 • first image is cover</p>}
                   {location && (
-                    <div className="flex items-center gap-1 text-[13px] text-gray-500 bg-gray-50 w-fit px-2 py-1 rounded-md border border-[var(--sc-border)]">
-                      <MapPin size={12} />
-                      {location}
-                      <button onClick={() => setLocation("")} className="ml-1 hover:text-red-500"><X size={12} /></button>
+                    <div className="flex items-center gap-1 text-[12px] text-gray-500 bg-gray-50 w-fit px-2 py-0.5 rounded-md border border-[var(--sc-border)] max-w-full">
+                      <MapPin size={11} className="shrink-0" />
+                      <span className="truncate">{location}</span>
+                      <button onClick={() => setLocation("")} className="ml-1 hover:text-red-500 shrink-0"><X size={11} /></button>
                     </div>
                   )}
                 </div>
@@ -205,7 +205,7 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
 
               {category === "fundraise" && (
                 <div className="mt-2 p-3 bg-[var(--sc-brand-50)] border border-[var(--sc-brand-100)] rounded-xl">
-                  <label className="text-[13px] font-bold text-[var(--sc-brand-800)] mb-1 block">Fundraise Goal (৳)</label>
+                  <label className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-brand-800)] mb-1 block">Fundraise Goal (৳)</label>
                   <input
                     type="number"
                     placeholder="e.g. 5000"
@@ -219,7 +219,7 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3 relative">
+          <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 relative gap-2 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-1 text-[var(--sc-brand-500)] flex-wrap">
               <input 
                 type="file" 
@@ -229,35 +229,33 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
                 ref={fileInputRef} 
                 onChange={handleFileChange} 
               />
-              <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors relative" title="Add images/videos (up to 6)">
+              <button onClick={() => fileInputRef.current?.click()} className="p-1.5 sm:p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors relative" title="Add images/videos (up to 6)">
                 <ImagePlus size={18} />
-                {media.length > 0 && <span className="absolute -top-1 -right-1 bg-[var(--sc-brand-600)] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{media.length}</span>}
+                {media.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[var(--sc-brand-600)] text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{media.length}</span>}
               </button>
-              <button onClick={handleAddLocation} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors" disabled={isGettingLocation}>
+              <button onClick={handleAddLocation} className="p-1.5 sm:p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors" disabled={isGettingLocation} title="Add location">
                 {isGettingLocation ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
               </button>
               
-              <div ref={emojiRef}>
-                <button onClick={() => setIsEmojiOpen(!isEmojiOpen)} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors"><Smile size={18} /></button>
+              <div ref={emojiRef} className="relative">
+                <button onClick={() => setIsEmojiOpen(!isEmojiOpen)} className="p-1.5 sm:p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors" title="Insert Emoji"><Smile size={18} /></button>
                 {isEmojiOpen && (
-                  <div className="absolute top-full left-0 mt-2 z-50">
-                    <EmojiPicker onEmojiClick={(e) => setContent(prev => prev + e.emoji)} />
+                  <div className="fixed inset-x-2 top-20 sm:absolute sm:top-full sm:left-0 sm:inset-x-auto mt-2 z-50 shadow-2xl rounded-2xl overflow-hidden max-w-[340px]">
+                    <EmojiPicker onEmojiClick={(e) => setContent(prev => prev + e.emoji)} width="100%" height={360} />
                   </div>
                 )}
               </div>
               
-              <div className="h-4 w-px bg-gray-200 mx-1 hidden sm:block"></div>
-              
               <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`flex items-center gap-1 text-[13px] font-bold px-3 py-1.5 rounded-full transition-colors sm:ml-1 ${activeCategory.activeClass}`}
+                  className={`flex items-center gap-1 text-[11px] sm:text-[13px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full transition-colors ${activeCategory.activeClass}`}
                 >
-                  {activeCategory.label} <ChevronDown size={14} />
+                  {activeCategory.label} <ChevronDown size={12} />
                 </button>
                 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-[var(--sc-border)] rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 mt-2 w-36 sm:w-40 bg-white border border-[var(--sc-border)] rounded-xl shadow-lg z-50 overflow-hidden">
                     {CATEGORIES.map((cat) => (
                       <button
                         key={cat.key}
@@ -265,7 +263,7 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
                           setCategory(cat.key);
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-[14px] transition-colors ${category === cat.key ? `font-bold ${cat.activeClass}` : 'text-gray-700 hover:bg-gray-50'}`}
+                        className={`w-full text-left px-3.5 py-2 text-[13px] sm:text-[14px] transition-colors ${category === cat.key ? `font-bold ${cat.activeClass}` : 'text-gray-700 hover:bg-gray-50'}`}
                       >
                         {cat.label}
                       </button>
@@ -278,9 +276,9 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
             <button 
               onClick={handlePost}
               disabled={!content.trim() || isSubmitting}
-              className={`transition-colors text-white font-bold py-1.5 px-4 rounded-full flex items-center gap-2 shrink-0 ${!content.trim() || isSubmitting ? 'bg-gray-300 cursor-not-allowed' : 'bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)]'}`}
+              className={`transition-all text-white font-bold py-1.5 px-4 rounded-full flex items-center gap-1.5 shrink-0 text-xs sm:text-sm active:scale-95 ${!content.trim() || isSubmitting ? 'bg-gray-300 cursor-not-allowed' : 'bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] shadow-xs'}`}
             >
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Post"}
+              {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Post"}
             </button>
           </div>
         </div>
@@ -290,27 +288,27 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
           <div className="relative bg-white rounded-3xl w-full max-w-sm overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-xl animate-in fade-in zoom-in duration-200">
-            <div className="flex flex-col items-center justify-center p-8 text-center gap-4">
+            <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center gap-3">
               {feedbackTitle === "Error" ? (
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-                  <AlertCircle size={32} />
+                <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                  <AlertCircle size={28} />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                  <CheckCircle size={32} />
+                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                  <CheckCircle size={28} />
                 </div>
               )}
               
               <div>
-                <h2 className="text-xl font-bold text-[var(--sc-text-primary)] mb-2">{feedbackTitle}</h2>
-                <p className="text-gray-600">{feedbackMessage}</p>
+                <h2 className="text-lg sm:text-xl font-bold text-[var(--sc-text-primary)] mb-1">{feedbackTitle}</h2>
+                <p className="text-sm text-gray-600">{feedbackMessage}</p>
               </div>
             </div>
             
             <div className="p-4 border-t border-[var(--sc-border)] bg-gray-50/50">
               <button 
                 onClick={() => setIsOpen(false)}
-                className={`w-full py-3 text-[15px] font-bold text-white rounded-xl transition-colors ${
+                className={`w-full py-2.5 sm:py-3 text-[14px] sm:text-[15px] font-bold text-white rounded-xl transition-colors ${
                   feedbackTitle === "Error" ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
                 }`}
               >

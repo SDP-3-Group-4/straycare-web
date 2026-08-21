@@ -103,6 +103,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
@@ -111,6 +112,11 @@ body {
   color: var(--sc-text-primary);
   line-height: 1.6;
   min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+img, video {
+  max-width: 100%;
 }
 
 #root {

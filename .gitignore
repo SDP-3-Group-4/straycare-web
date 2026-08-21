@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
 
 # Environment variables
 .env
@@ -31,3 +32,9 @@ straycare-backend/firebase-service-account.json
 *.sw?
 
 .vercel
+
+# Hide markdown files except team onboarding
+*.md
+**/*.md
+!team_onboarding.md
+!**/team_onboarding.md
