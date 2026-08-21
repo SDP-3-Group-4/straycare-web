@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Cross, MessageSquare, X, User } from 'lucide-react';
+import { Search, Cross, MessageSquare, X, User, BadgeCheck } from 'lucide-react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../contexts/AuthContext';
 import { avatarOnError } from '../../constants';
@@ -8,13 +8,17 @@ import { fetchChats } from '../../services/api';
 import SearchBar from '../home/feed/SearchBar';
 import NearbyClinicsWidget from '../home/sidebar/NearbyClinicsWidget';
 import ChatWidget from '../home/panel/ChatWidget';
+import ProfileFlyoutMenu from '../common/ProfileFlyoutMenu';
 
 export default function MobileHeader() {
   const { user } = useAuth();
   const [showSearch, setShowSearch] = useState(false);
   const [showClinicsModal, setShowClinicsModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showProfileFlyout, setShowProfileFlyout] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+
+  const isVerifiedVet = Boolean(user?.isVet || user?.verifiedStatus);
 
   useEffect(() => {
     if (user?.uid) {
@@ -77,9 +81,16 @@ export default function MobileHeader() {
             )}
           </button>
 
-          {/* User Profile Thumbnail */}
-          <Link to="/profile" className="ml-1 shrink-0">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+          {/* User Profile DP Button with Vet Ring, Badge & Settings Flyout Trigger */}
+          <button
+            onClick={() => setShowProfileFlyout(true)}
+            className="ml-1 shrink-0 relative p-0.5 rounded-full transition-transform active:scale-95 focus:outline-none"
+            aria-label="Open settings and profile menu"
+            title="Settings & Profile"
+          >
+            <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
+              isVerifiedVet ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : 'border border-gray-200'
+            }`}>
               {user?.photoURL || user?.photoUrl ? (
                 <img
                   src={user?.photoURL || user?.photoUrl || undefined}
@@ -91,9 +102,20 @@ export default function MobileHeader() {
                 <User size={16} className="text-gray-400" />
               )}
             </div>
-          </Link>
+            {isVerifiedVet && (
+              <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-xs">
+                <BadgeCheck size={11} className="text-[var(--sc-brand-500)]" />
+              </div>
+            )}
+          </button>
         </div>
       </header>
+
+      {/* Profile & Settings Flyout Menu */}
+      <ProfileFlyoutMenu
+        isOpen={showProfileFlyout}
+        onClose={() => setShowProfileFlyout(false)}
+      />
 
       {/* Expandable Search Input on Mobile */}
       {showSearch && (

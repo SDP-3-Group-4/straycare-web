@@ -32,8 +32,10 @@ export default function UserProfileCard() {
         }`}
       >
         <div className="flex items-center gap-3 relative z-10">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 flex items-center justify-center bg-white/10">
+          <div className="flex-shrink-0 relative">
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 ${
+              (user.isVet || user.verifiedStatus) ? 'ring-2 ring-white ring-offset-2 ring-offset-[var(--sc-brand-500)]' : 'border-2 border-white/20'
+            }`}>
               {user.photoURL || user.photoUrl ? (
                 <img 
                   src={user.photoURL || user.photoUrl || undefined} 
@@ -45,9 +47,19 @@ export default function UserProfileCard() {
                 <User size={20} className="text-white/80" />
               )}
             </div>
+            {(user.isVet || user.verifiedStatus) && (
+              <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-xs">
+                <span className="text-[10px] leading-none">🛡️</span>
+              </div>
+            )}
           </div>
           <div className="hidden xl:flex flex-col">
-            <span className="font-bold text-white text-[15px] truncate max-w-[120px]">{user.displayName || 'User'}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-white text-[15px] truncate max-w-[110px]">{user.displayName || 'User'}</span>
+              {(user.isVet || user.verifiedStatus) && (
+                <span className="px-1 py-0.2 bg-white/20 text-white text-[9px] font-bold uppercase rounded">Vet</span>
+              )}
+            </div>
             <span className="text-white/80 text-[13px] font-medium">View Profile</span>
           </div>
         </div>
