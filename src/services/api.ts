@@ -1,4 +1,19 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const getBaseApiUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) {
+      return envUrl || 'http://localhost:3000';
+    }
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl;
+    }
+    return 'https://straycare-backend-se6q.onrender.com';
+  }
+  return envUrl || 'https://straycare-backend-se6q.onrender.com';
+};
+
+const API_URL = getBaseApiUrl();
 
 import { getAuthToken } from '../firebase';
 

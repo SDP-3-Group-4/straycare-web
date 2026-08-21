@@ -12,7 +12,16 @@ async function bootstrap() {
     origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
       if (!origin) return cb(null, true);
       if (corsOrigins.includes(origin) || corsOrigins.includes('*')) return cb(null, true);
-      if (origin.endsWith('.vercel.app')) return cb(null, true);
+      if (
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.web.app') ||
+        origin.endsWith('.firebaseapp.com') ||
+        origin.endsWith('.pages.dev') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        return cb(null, true);
+      }
       const wildcardAllowed = corsOrigins.some((p) => {
         if (!p.includes('*')) return false;
         const re = new RegExp('^' + p.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
