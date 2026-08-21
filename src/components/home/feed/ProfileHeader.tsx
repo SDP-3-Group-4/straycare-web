@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User, UserMinus } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
-import { updateUserProfile, requestConnection, fetchConnectionStatus, disconnectConnection } from '../../../services/api';
+import { updateUserProfile, requestConnection, fetchConnectionStatus, disconnectConnection, fetchMutualConnections, fetchGraphDegree } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { avatarOnError } from '../../../constants';
+import { Link } from 'react-router-dom';
 
 interface ProfileHeaderProps {
   user: {
@@ -42,6 +43,8 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [mutualsData, setMutualsData] = useState<{ count: number; mutuals: any[] }>({ count: 0, mutuals: [] });
+  const [graphDegree, setGraphDegree] = useState<{ degree: number; label: string }>({ degree: 3, label: 'Rescue Network' });
 
   useEffect(() => {
     setLocalAvatar(null);
@@ -58,6 +61,14 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
     if (authUser && user.id && !isOwnProfile) {
       fetchConnectionStatus(authUser.uid, user.id).then(data => {
         setConnectionStatus(data.status);
+      }).catch(console.error);
+
+      fetchMutualConnections(authUser.uid, user.id).then(data => {
+        if (data) setMutualsData(data);
+      }).catch(console.error);
+
+      fetchGraphDegree(authUser.uid, user.id).then(deg => {
+        if (deg) setGraphDegree(deg);
       }).catch(console.error);
     }
   }, [authUser, user.id, isOwnProfile]);
@@ -232,7 +243,20 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
               </span>
             )}
           </div>
-          <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm">{user.handle}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-[var(--sc-text-secondary)] font-medium text-xs sm:text-sm">{user.handle}</p>
+            {!isOwnProfile && graphDegree && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border ${
+                graphDegree.degree === 1
+                  ? 'bg-purple-50 text-[var(--sc-brand-700)] border-[var(--sc-brand-200)]'
+                  : graphDegree.degree === 2
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}>
+                {graphDegree.degree === 1 ? '1st' : graphDegree.degree === 2 ? '2nd' : '3rd+'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Bio */}
@@ -275,12 +299,32 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
           </div>
         </div>
         
-        {/* Stats */}
-        <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-100">
+        {/* Stats & Mutual Connections */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-gray-100">
           <button onClick={onConnectionsClick} className="flex items-center gap-1.5 hover:underline text-left disabled:cursor-default" disabled={!onConnectionsClick}>
             <span className="font-bold text-[var(--sc-text-primary)] text-sm sm:text-base">{connectionsCount}</span>
             <span className="text-gray-500 font-medium text-xs sm:text-sm">Connections</span>
           </button>
+
+          {!isOwnProfile && mutualsData.count > 0 && (
+            <div className="flex items-center gap-2 bg-blue-50/70 border border-blue-100 px-3 py-1.5 rounded-xl">
+              <div className="flex -space-x-2 overflow-hidden">
+                {mutualsData.mutuals.slice(0, 3).map((m: any) => (
+                  <div key={m.id} className="inline-block h-5 w-5 rounded-full ring-2 ring-white overflow-hidden bg-gray-200">
+                    {m.photoUrl ? (
+                      <img src={m.photoUrl} alt={m.displayName} onError={avatarOnError} className="h-full w-full object-cover" />
+                    ) : (
+                      <User size={12} className="text-gray-400 p-0.5" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <span className="text-[12px] font-semibold text-blue-900">
+                {mutualsData.count} mutual connection{mutualsData.count > 1 ? 's' : ''}
+                {mutualsData.mutuals[0] ? ` including ${mutualsData.mutuals[0].displayName}` : ''}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Holistic Fundraising Overview */}

@@ -6,10 +6,11 @@ import {
   Param,
   Body,
   Req,
-  ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ConnectionsService } from './connections.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('connections')
 export class ConnectionsController {
@@ -42,11 +43,41 @@ export class ConnectionsController {
     return this.connectionsService.declineConnection(requesterId, req.user!.uid);
   }
 
+  @Public()
+  @Get('graph/mutuals/:userId1/:userId2')
+  async getMutualConnections(
+    @Param('userId1') userId1: string,
+    @Param('userId2') userId2: string,
+  ) {
+    return this.connectionsService.getMutualConnections(userId1, userId2);
+  }
+
+  @Public()
+  @Get('graph/suggestions/:userId')
+  async getNetworkSuggestions(
+    @Param('userId') userId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const lim = limit ? parseInt(limit, 10) : 8;
+    return this.connectionsService.getNetworkSuggestions(userId, lim);
+  }
+
+  @Public()
+  @Get('graph/degree/:userId1/:userId2')
+  async getGraphDegree(
+    @Param('userId1') userId1: string,
+    @Param('userId2') userId2: string,
+  ) {
+    return this.connectionsService.getGraphDegree(userId1, userId2);
+  }
+
+  @Public()
   @Get(':userId')
   async getUserConnections(@Param('userId') userId: string) {
     return this.connectionsService.getUserConnections(userId);
   }
 
+  @Public()
   @Get('status/:userId1/:userId2')
   async getConnectionStatus(
     @Param('userId1') userId1: string,

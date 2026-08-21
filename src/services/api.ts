@@ -125,6 +125,15 @@ export const fetchConnections = (userId: string) => request(`/connections/${user
 export const fetchConnectionStatus = (userId1: string, userId2: string) =>
   request(`/connections/status/${userId1}/${userId2}`);
 
+export const fetchMutualConnections = (userId1: string, userId2: string) =>
+  request(`/connections/graph/mutuals/${userId1}/${userId2}`);
+
+export const fetchNetworkSuggestions = (userId: string, limit: number = 8) =>
+  request(`/connections/graph/suggestions/${userId}?limit=${limit}`);
+
+export const fetchGraphDegree = (userId1: string, userId2: string) =>
+  request(`/connections/graph/degree/${userId1}/${userId2}`);
+
 export const requestConnection = (recipientId: string) =>
   postJson('/connections/request', { recipientId });
 

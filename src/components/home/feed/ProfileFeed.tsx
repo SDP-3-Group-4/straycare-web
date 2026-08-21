@@ -3,9 +3,9 @@ import { useSearchParams, Link } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
-import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus } from 'lucide-react';
+import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus, UserPlus, Compass, Share2 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT, disconnectConnection } from '../../../services/api';
+import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT, disconnectConnection, fetchNetworkSuggestions, requestConnection } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
 
 export default function ProfileFeed() {
@@ -19,6 +19,9 @@ export default function ProfileFeed() {
   const [profileData, setProfileData] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
+  const [networkSuggestions, setNetworkSuggestions] = useState<any[]>([]);
+  const [connectingMap, setConnectingMap] = useState<Record<string, boolean>>({});
+  const [requestedMap, setRequestedMap] = useState<Record<string, boolean>>({});
   const [orders, setOrders] = useState<any[]>([]);
   const [fundraiserStats, setFundraiserStats] = useState({ count: 0, raised: 0, donors: 0, goal: 0 });
   const [loading, setLoading] = useState(true);
@@ -49,14 +52,16 @@ export default function ProfileFeed() {
     setLoading(true);
     const connPromise = fetchConnections(targetUserId).catch(() => []);
     const ordersPromise = isOwnProfile ? fetchUserOrders(targetUserId).catch(() => []) : Promise.resolve([]);
+    const suggestionsPromise = fetchNetworkSuggestions(targetUserId).catch(() => []);
     
     Promise.all([
       fetchUserProfile(targetUserId),
       fetchPosts(),
       connPromise,
-      ordersPromise
+      ordersPromise,
+      suggestionsPromise
     ])
-    .then(([profile, allPosts, userConns, userOrders]) => {
+    .then(([profile, allPosts, userConns, userOrders, netSuggestions]) => {
       // Format profile to match expected structure
       const formattedProfile = {
         id: profile.id,
@@ -82,6 +87,7 @@ export default function ProfileFeed() {
       
       setConnections(userConns || []);
       setOrders(userOrders || []);
+      setNetworkSuggestions(netSuggestions || []);
 
       const fundraiserPosts = filtered.filter((p: any) => p.fundraiseGoal != null);
       setFundraiserStats({
@@ -105,7 +111,10 @@ export default function ProfileFeed() {
 
   useEffect(() => {
     const handler = () => {
-      if (targetUserId) fetchConnections(targetUserId).then(setConnections).catch(console.error);
+      if (targetUserId) {
+        fetchConnections(targetUserId).then(setConnections).catch(console.error);
+        fetchNetworkSuggestions(targetUserId).then(setNetworkSuggestions).catch(console.error);
+      }
     };
     window.addEventListener(CONNECTIONS_UPDATED_EVENT, handler);
     return () => window.removeEventListener(CONNECTIONS_UPDATED_EVENT, handler);
@@ -114,8 +123,23 @@ export default function ProfileFeed() {
   useEffect(() => {
     if (activeTab === 'connections' && targetUserId) {
       fetchConnections(targetUserId).then(setConnections).catch(console.error);
+      fetchNetworkSuggestions(targetUserId).then(setNetworkSuggestions).catch(console.error);
     }
   }, [activeTab, targetUserId]);
+
+  const handleRequestSuggestion = async (recipientId: string) => {
+    if (!recipientId || connectingMap[recipientId]) return;
+    setConnectingMap(prev => ({ ...prev, [recipientId]: true }));
+    try {
+      await requestConnection(recipientId);
+      setRequestedMap(prev => ({ ...prev, [recipientId]: true }));
+      window.dispatchEvent(new Event(CONNECTIONS_UPDATED_EVENT));
+    } catch (e: any) {
+      alert(e.message || 'Failed to send connection request');
+    } finally {
+      setConnectingMap(prev => ({ ...prev, [recipientId]: false }));
+    }
+  };
 
   const handleDisconnect = async (otherUserId: string) => {
     if (!otherUserId) return;
@@ -350,55 +374,174 @@ export default function ProfileFeed() {
         )}
 
         {activeTab === 'connections' && (
-          <div className="flex flex-col gap-3">
-            {connections.length > 0 ? connections.map(conn => {
-              const isRequester = conn.requesterId === (user?.uid || targetUserId);
-              const otherUser = isRequester ? conn.recipient : conn.requester;
-              if (!otherUser) return null;
-              const isOwn = isOwnProfile;
-              return (
-                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-gray-50/80 transition-all shadow-xs">
-                  <Link 
-                    to={`/profile?id=${otherUser.id}`}
-                    className="flex items-center gap-3 min-w-0 flex-1 group"
-                  >
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0 group-hover:ring-2 group-hover:ring-[var(--sc-brand-500)] transition-all">
-                      {otherUser.photoUrl ? (
-                        <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
-                      ) : (
-                        <User size={20} className="text-gray-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] group-hover:text-[var(--sc-brand-600)] group-hover:underline truncate transition-colors">
-                        {otherUser.displayName}
-                      </p>
-                      <p className="text-xs text-[var(--sc-text-secondary)] truncate">
-                        {otherUser.handle ? (otherUser.handle.startsWith('@') ? otherUser.handle : `@${otherUser.handle}`) : `@${otherUser.displayName?.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`}
-                      </p>
-                    </div>
-                  </Link>
-                  {isOwn ? (
-                    <button
-                      onClick={() => setDisconnectConfirm(otherUser.id)}
-                      className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0 active:scale-95 transition-all"
+          <div className="flex flex-col gap-6">
+            
+            {/* Direct Connections Section */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-[13px] sm:text-[14px] font-bold text-[var(--sc-text-primary)] flex items-center gap-1.5">
+                  <Users size={16} className="text-[var(--sc-brand-600)]" />
+                  Direct Connections ({connections.length})
+                </h3>
+              </div>
+
+              {connections.length > 0 ? connections.map(conn => {
+                const isRequester = conn.requesterId === (user?.uid || targetUserId);
+                const otherUser = isRequester ? conn.recipient : conn.requester;
+                if (!otherUser) return null;
+                const isOwn = isOwnProfile;
+                return (
+                  <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-gray-50/80 transition-all shadow-xs">
+                    <Link 
+                      to={`/profile?id=${otherUser.id}`}
+                      className="flex items-center gap-3 min-w-0 flex-1 group"
                     >
-                      <UserMinus size={12} /> Disconnect
-                    </button>
-                  ) : (
-                    <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
-                  )}
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0 group-hover:ring-2 group-hover:ring-[var(--sc-brand-500)] transition-all">
+                        {otherUser.photoUrl ? (
+                          <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <User size={20} className="text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] group-hover:text-[var(--sc-brand-600)] group-hover:underline truncate transition-colors">
+                            {otherUser.displayName}
+                          </p>
+                          <span className="px-1.5 py-0.2 bg-purple-50 text-[var(--sc-brand-700)] border border-[var(--sc-brand-200)] text-[10px] font-bold rounded-md">1st</span>
+                        </div>
+                        <p className="text-xs text-[var(--sc-text-secondary)] truncate">
+                          {otherUser.handle ? (otherUser.handle.startsWith('@') ? otherUser.handle : `@${otherUser.handle}`) : `@${otherUser.displayName?.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user'}`}
+                        </p>
+                      </div>
+                    </Link>
+                    {isOwn ? (
+                      <button
+                        onClick={() => setDisconnectConfirm(otherUser.id)}
+                        className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0 active:scale-95 transition-all"
+                      >
+                        <UserMinus size={12} /> Disconnect
+                      </button>
+                    ) : (
+                      <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
+                    )}
+                  </div>
+                );
+              }) : (
+                <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-2.5">
+                    <Users className="text-gray-400" size={24} />
+                  </div>
+                  <h3 className="text-sm font-bold text-[var(--sc-text-primary)] mb-0.5">No direct connections yet</h3>
+                  <p className="text-xs text-[var(--sc-text-secondary)]">Explore the suggestions below to expand your rescue network.</p>
                 </div>
-              );
-            }) : (
-              <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-10 flex flex-col items-center justify-center text-center">
-                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <Users className="text-gray-400" size={28} />
+              )}
+            </div>
+
+            {/* Rescue Network Graph Suggestions (2nd-Degree Mutual Discovery) */}
+            {networkSuggestions.length > 0 && isOwnProfile && (
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-1.5">
+                    <Compass size={16} className="text-[var(--sc-brand-600)]" />
+                    <h3 className="text-[13px] sm:text-[14px] font-bold text-[var(--sc-text-primary)]">
+                      Rescue Network Suggestions
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-bold text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)] border border-[var(--sc-brand-100)] px-2 py-0.5 rounded-full">
+                    Graph Discovery
+                  </span>
                 </div>
-                <h3 className="text-base font-bold text-[var(--sc-text-primary)] mb-1">No connections yet</h3>
-                <p className="text-xs text-[var(--sc-text-secondary)]">Connect with other rescuers, pet parents, and clinics.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {networkSuggestions.map(suggested => {
+                    const isRequested = requestedMap[suggested.id];
+                    const isConnecting = connectingMap[suggested.id];
+
+                    return (
+                      <div key={suggested.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-xs hover:border-[var(--sc-brand-200)] transition-all">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Link to={`/profile?id=${suggested.id}`} className="shrink-0">
+                            <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 hover:ring-2 hover:ring-[var(--sc-brand-500)] transition-all">
+                              {suggested.photoUrl ? (
+                                <img src={suggested.photoUrl} alt={suggested.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
+                              ) : (
+                                <User size={22} className="text-gray-400" />
+                              )}
+                            </div>
+                          </Link>
+
+                          <div className="flex-1 min-w-0">
+                            <Link to={`/profile?id=${suggested.id}`} className="block group">
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-bold text-[13px] sm:text-[14px] text-[var(--sc-text-primary)] group-hover:text-[var(--sc-brand-600)] group-hover:underline truncate transition-colors">
+                                  {suggested.displayName}
+                                </p>
+                                <span className="px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold rounded-md shrink-0">
+                                  {suggested.degree === 2 ? '2nd' : '3rd+'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-[var(--sc-text-secondary)] truncate">
+                                @{suggested.handle || 'user'}
+                              </p>
+                            </Link>
+
+                            {/* Mutuals Bridge Preview */}
+                            {suggested.mutualCount > 0 ? (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-blue-700 font-medium bg-blue-50/70 px-2 py-0.5 rounded-lg">
+                                <div className="flex -space-x-1.5 overflow-hidden shrink-0">
+                                  {suggested.mutuals?.slice(0, 2).map((m: any) => (
+                                    <div key={m.id} className="inline-block h-3.5 w-3.5 rounded-full ring-1 ring-white overflow-hidden bg-gray-200">
+                                      {m.photoUrl ? (
+                                        <img src={m.photoUrl} alt={m.displayName} onError={avatarOnError} className="h-full w-full object-cover" />
+                                      ) : (
+                                        <User size={8} className="text-gray-400" />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                <span className="truncate">{suggested.mutualCount} mutual connection{suggested.mutualCount > 1 ? 's' : ''}</span>
+                              </div>
+                            ) : suggested.isVet ? (
+                              <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded-lg">
+                                <ShieldCheck size={11} /> Verified Vet
+                              </span>
+                            ) : (
+                              <span className="inline-block mt-1 text-[11px] text-gray-500 font-medium">
+                                Active in Rescue Network
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Connect Button */}
+                        <button
+                          onClick={() => handleRequestSuggestion(suggested.id)}
+                          disabled={isRequested || isConnecting}
+                          className={`w-full py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-98 ${
+                            isRequested
+                              ? 'bg-amber-100 text-amber-700 border border-amber-200 cursor-default'
+                              : 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white shadow-xs'
+                          }`}
+                        >
+                          {isConnecting ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : isRequested ? (
+                            'Request Pending'
+                          ) : (
+                            <>
+                              <UserPlus size={13} />
+                              Connect
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
+
           </div>
         )}
 
