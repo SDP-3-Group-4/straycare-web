@@ -84,4 +84,16 @@ export class ChatController {
   async fixEmoji() {
     return this.chatService.fixAllEmojiMojibake();
   }
+
+  @Post('debug/fix-emoji/:id')
+  @Public()
+  async fixOne(@Param('id') id: string) {
+    return this.chatService.fixOneEmoji(id);
+  }
+
+  @Get('debug/test-fix')
+  @Public()
+  async testFix(@Query('s') s: string) {
+    return this.chatService.testFix(s ?? 'isnΓÇÖt');
+  }
 }

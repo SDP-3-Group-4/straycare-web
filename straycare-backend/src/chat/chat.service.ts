@@ -342,6 +342,60 @@ export class ChatService implements OnModuleInit {
     return { total: messages.length, fixed: fixedCount };
   }
 
+  async fixOneEmoji(id: string) {
+    const iconv = await import('iconv-lite');
+    const msg = await this.prisma.message.findUnique({ where: { id } });
+    if (!msg) return { error: 'not found' };
+    const s = msg.content;
+    let fixed = s;
+    let debug: any = { original: s, originalHex: Buffer.from(s, 'utf8').toString('hex'), originalCodePoints: [...s].map((c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase()}`) };
+    if (/[Γ≡ƒÇÖÖ£¿]/.test(s) || /Ã/.test(s)) {
+      try {
+        const bytes = (iconv as any).encode(s, 'cp437');
+        debug.cp437BytesHex = bytes.toString('hex');
+        const decoded = (iconv as any).decode(bytes, 'utf8');
+        debug.decoded = decoded;
+        debug.decodedHex = decoded ? Buffer.from(decoded, 'utf8').toString('hex') : null;
+        debug.decodedCodePoints = decoded ? [...decoded].map((c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase()}`) : null;
+        if (decoded && decoded !== s && !decoded.includes('�') && decoded.length < s.length * 2) fixed = decoded;
+      } catch (e: any) {
+        debug.cp437Error = e.message;
+      }
+      if (fixed === s) {
+        try {
+          const bytes2 = Buffer.from(s, 'latin1');
+          debug.latin1BytesHex = bytes2.toString('hex');
+          const decoded2 = bytes2.toString('utf8');
+          debug.latin1Decoded = decoded2;
+          if (decoded2 && decoded2 !== s && !decoded2.includes('�')) fixed = decoded2;
+        } catch (e: any) {
+          debug.latin1Error = e.message;
+        }
+      }
+    }
+    debug.fixed = fixed;
+    debug.fixedHex = Buffer.from(fixed, 'utf8').toString('hex');
+    debug.willUpdate = fixed !== s;
+    if (fixed !== s) {
+      await this.prisma.message.update({ where: { id }, data: { content: fixed } });
+      debug.updated = true;
+    }
+    return debug;
+  }
+
+  async testFix(s: string) {
+    const iconv = await import('iconv-lite');
+    const bytes = (iconv as any).encode(s, 'cp437');
+    const decoded = (iconv as any).decode(bytes, 'utf8');
+    return {
+      input: s,
+      inputHex: Buffer.from(s, 'utf8').toString('hex'),
+      bytesHex: bytes.toString('hex'),
+      decoded,
+      decodedHex: decoded ? Buffer.from(decoded, 'utf8').toString('hex') : null,
+    };
+  }
+
   // Setup AI Bot user (delegated to NimService for a single source of truth)
   async ensureAiUserExists() {
     return this.nimService.ensureAiUserExists();
