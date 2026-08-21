@@ -10,21 +10,30 @@ export class FirebaseService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     const projectId = process.env.FIREBASE_PROJECT_ID;
     const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    const serviceAccountB64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
-    if (!projectId || !serviceAccountPath) {
+    if (!projectId || (!serviceAccountPath && !serviceAccountJson && !serviceAccountB64)) {
       throw new Error(
-        'FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_PATH must be set in .env',
-      );
-    }
-    if (!fs.existsSync(serviceAccountPath)) {
-      throw new Error(
-        `Firebase service account file not found: ${serviceAccountPath}`,
+        'FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON/BASE64 must be set',
       );
     }
 
-    const serviceAccount = JSON.parse(
-      fs.readFileSync(serviceAccountPath, 'utf8'),
-    );
+    let serviceAccount: any;
+    if (serviceAccountJson) {
+      serviceAccount = JSON.parse(serviceAccountJson);
+    } else if (serviceAccountB64) {
+      serviceAccount = JSON.parse(Buffer.from(serviceAccountB64, 'base64').toString('utf8'));
+    } else {
+      if (!fs.existsSync(serviceAccountPath!)) {
+        throw new Error(
+          `Firebase service account file not found: ${serviceAccountPath}`,
+        );
+      }
+      serviceAccount = JSON.parse(
+        fs.readFileSync(serviceAccountPath!, 'utf8'),
+      );
+    }
     this.app = initializeApp({
       credential: cert(serviceAccount),
       projectId,

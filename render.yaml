@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: straycare-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./straycare-backend/Dockerfile
+    dockerContext: ./straycare-backend
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        value: straycare-dev
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PORT
+        value: 10000
