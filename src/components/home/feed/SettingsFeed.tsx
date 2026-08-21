@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Key, Bell, Moon, Sun, Monitor, Globe,
   ShieldAlert, EyeOff, Eye, FileText, HelpCircle, ChevronRight,
@@ -27,6 +28,7 @@ const LANGUAGES = [
 ];
 
 export default function SettingsFeed() {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [prefs, setPrefs] = useState<UserPreferences>(getStoredPreferences());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -192,10 +194,11 @@ export default function SettingsFeed() {
             </div>
 
             <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="px-3.5 py-2 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] rounded-xl text-xs font-bold shrink-0 transition-all active:scale-95"
+              onClick={() => navigate('/profile')}
+              className="px-3.5 py-2 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] rounded-xl text-xs font-bold shrink-0 transition-all active:scale-95 flex items-center gap-1.5 shadow-xs"
             >
-              Edit Profile
+              Go to Profile
+              <ExternalLink size={13} />
             </button>
           </div>
         )}
