@@ -2,7 +2,7 @@
 @import "@heroui/styles";
 
 /* ─────────────────────────────────────────────────────
-   StrayCare Design Tokens (Light Theme)
+   StrayCare Design Tokens (Light Theme Default)
    ───────────────────────────────────────────────────── */
 
 :root {
@@ -22,7 +22,7 @@
 
   /* Surfaces */
   --sc-bg:          #FFFFFF;
-  --sc-bg-subtle:   #FAFAFE;
+  --sc-bg-subtle:   #F8F9FC;
   --sc-bg-panel:    #F7F0FF;
   --sc-surface:     #FFFFFF;
   --sc-surface-alt: #F9FAFB;
@@ -78,52 +78,75 @@
    Deep Luxury Dark Theme System
    ───────────────────────────────────────────────────── */
 html.dark {
-  --sc-bg:          #0B0B0F;
-  --sc-bg-subtle:   #121218;
-  --sc-bg-panel:    #161620;
-  --sc-surface:     #161620;
-  --sc-surface-alt: #1F1F2C;
+  /* Brand accents tailored for deep dark mode */
+  --sc-brand-500: #8F4FFC;
+  --sc-brand-400: #A773FD;
+  --sc-brand-300: #C9A5FE;
+  --sc-brand-200: #4A1D96;
+  --sc-brand-100: rgba(143, 79, 252, 0.24);
+  --sc-brand-50:  rgba(143, 79, 252, 0.16);
+  --sc-brand-600: #B78AFE;
+  --sc-brand-700: #D8B4FE;
 
+  /* Surfaces */
+  --sc-bg:          #09090D;
+  --sc-bg-subtle:   #0D0D14;
+  --sc-bg-panel:    #151520;
+  --sc-surface:     #151520;
+  --sc-surface-alt: #1D1D2B;
+
+  /* Text */
   --sc-text-primary:   #F4F4F6;
-  --sc-text-secondary: #A0A0B2;
-  --sc-text-muted:     #6E6E82;
+  --sc-text-secondary: #9E9EB2;
+  --sc-text-muted:     #707086;
 
-  --sc-border:        #252533;
+  /* Borders & shadows */
+  --sc-border:        #252536;
   --sc-border-focus:  var(--sc-brand-400);
   --sc-ring:          rgba(143, 79, 252, 0.35);
   color-scheme: dark;
 }
 
-html.dark body {
-  background-color: #0B0B0F !important;
+/* Global Root & Page Background in Dark Mode */
+html.dark,
+html.dark body,
+html.dark #root,
+html.dark .home-feed-page {
+  background-color: #09090D !important;
   color: #F4F4F6 !important;
 }
 
+/* Cards & Surfaces */
 html.dark .bg-white {
-  background-color: #161620 !important;
+  background-color: #151520 !important;
   color: #F4F4F6;
 }
 
 html.dark .bg-white\/90,
 html.dark .bg-white\/95 {
-  background-color: rgba(22, 22, 32, 0.94) !important;
+  background-color: rgba(21, 21, 32, 0.95) !important;
 }
 
 html.dark .bg-gray-50,
 html.dark .bg-gray-50\/50,
 html.dark .bg-gray-50\/70,
 html.dark .bg-gray-50\/80 {
-  background-color: #1B1B26 !important;
+  background-color: #1D1D2B !important;
 }
 
 html.dark .bg-gray-100 {
-  background-color: #242433 !important;
+  background-color: #242436 !important;
 }
 
 html.dark .bg-gray-200 {
-  background-color: #2D2D40 !important;
+  background-color: #2E2E42 !important;
 }
 
+/* Text Hierarchy */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
 html.dark .text-gray-900,
 html.dark .text-gray-800,
 html.dark .text-gray-700,
@@ -136,40 +159,58 @@ html.dark .text-gray-600,
 html.dark .text-gray-500,
 html.dark .text-slate-600,
 html.dark .text-slate-500 {
-  color: #A0A0B2 !important;
+  color: #9E9EB2 !important;
 }
 
 html.dark .text-gray-400 {
   color: #727288 !important;
 }
 
+/* Borders & Dividers */
 html.dark .border-gray-100,
 html.dark .border-gray-200,
-html.dark .border-gray-300 {
-  border-color: #252533 !important;
+html.dark .border-gray-300,
+html.dark [class*="border-[var(--sc-border)]"] {
+  border-color: #252536 !important;
 }
 
+/* Inputs, Textareas & Forms */
 html.dark input,
 html.dark textarea,
 html.dark select {
-  background-color: #1B1B26 !important;
+  background-color: #1D1D2B !important;
   color: #F4F4F6 !important;
-  border-color: #2A2A3A !important;
+  border-color: #2E2E42 !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #646478 !important;
+  color: #6A6A80 !important;
 }
 
+/* Hover States */
 html.dark .hover\:bg-gray-50:hover,
 html.dark .hover\:bg-gray-100:hover {
-  background-color: #242433 !important;
+  background-color: #242436 !important;
+}
+
+html.dark .hover\:bg-gray-200:hover {
+  background-color: #2E2E42 !important;
+}
+
+/* Brand Accent Overrides in Dark Mode */
+html.dark .bg-\[var\(--sc-brand-50\)\] {
+  background-color: rgba(143, 79, 252, 0.16) !important;
+}
+
+html.dark .text-\[var\(--sc-brand-600\)\],
+html.dark .text-\[var\(--sc-brand-700\)\] {
+  color: #C9A5FE !important;
 }
 
 html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
 html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #252533 !important;
+  border-color: #252536 !important;
 }
 
 /* Accessibility Typography Scale */
