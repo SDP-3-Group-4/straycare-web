@@ -2,7 +2,13 @@ export type UserPreferences = {
   locationPrivacy: 'precise' | 'city' | 'hidden';
   blurSensitiveMedia: boolean;
   theme: 'light' | 'dark' | 'system';
+  language: string;
+  fontSize: 'normal' | 'large';
   emergencyAlerts: boolean;
+  postInteractionAlerts: boolean;
+  donationAlerts: boolean;
+  emailAlerts: boolean;
+  whoCanMessage: 'anyone' | 'connections';
   defaultFeedTab: 'explore' | 'nearby';
 };
 
@@ -10,8 +16,39 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   locationPrivacy: 'city',
   blurSensitiveMedia: false,
   theme: 'light',
+  language: 'en',
+  fontSize: 'normal',
   emergencyAlerts: true,
+  postInteractionAlerts: true,
+  donationAlerts: true,
+  emailAlerts: true,
+  whoCanMessage: 'anyone',
   defaultFeedTab: 'explore',
+};
+
+export const applyThemeDOM = (theme: 'light' | 'dark' | 'system') => {
+  try {
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+export const applyLanguageTranslation = (langCode: string) => {
+  try {
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+    if (select) {
+      select.value = langCode;
+      select.dispatchEvent(new Event('change'));
+    }
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 export const getStoredPreferences = (): UserPreferences => {
@@ -32,6 +69,14 @@ export const savePreferences = (prefs: Partial<UserPreferences>): UserPreference
   } catch (e) {
     console.error(e);
   }
+
+  if (prefs.theme) {
+    applyThemeDOM(prefs.theme);
+  }
+  if (prefs.language) {
+    applyLanguageTranslation(prefs.language);
+  }
+
   window.dispatchEvent(new CustomEvent('straycare:preferences-changed', { detail: updated }));
   return updated;
 };

@@ -11,8 +11,15 @@ import {
   Upload,
   User as UserIcon,
   X,
+  ShieldCheck,
+  CheckCircle2,
+  Award,
+  Sparkles,
+  MapPin,
 } from 'lucide-react';
 import { submitVetApplication } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import { avatarOnError } from '../../../constants';
 
 interface VetVerificationModalProps {
   isOpen: boolean;
@@ -39,7 +46,8 @@ const eighteenYearsAgo = () => {
   return d.toISOString().split('T')[0];
 };
 
-export default function VetVerificationModal({ isOpen, onClose, email, displayName }: VetVerificationModalProps) {
+export default function VetVerificationModal({ isOpen, onClose, email, displayName, userId }: VetVerificationModalProps) {
+  const { user } = useAuth();
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');
   const [clinic, setClinic] = useState('');
@@ -51,6 +59,8 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
   const [submitted, setSubmitted] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
+
+  const isAlreadyVerified = Boolean(user?.isVet || user?.verifiedStatus);
 
   useEffect(() => {
     if (isOpen) {
@@ -131,24 +141,102 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-3xl w-full max-w-md overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-xl animate-in fade-in zoom-in duration-200 max-h-[90vh]">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl w-full max-w-md overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--sc-border)] bg-gray-50/50">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-gray-50/70">
           <div className="flex items-center gap-2">
-            <BadgeCheck size={20} className="text-[var(--sc-brand-600)]" />
-            <h2 className="text-lg font-bold text-[var(--sc-text-primary)]">Vet Verification</h2>
+            <div className="p-1.5 rounded-xl bg-green-50 text-green-700">
+              <ShieldCheck size={18} />
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-[var(--sc-text-primary)]">
+              {isAlreadyVerified ? 'Verified Practitioner Credential' : 'Veterinary Verification'}
+            </h2>
           </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 p-2 rounded-full transition-colors border border-[var(--sc-border)]"
           >
-            <X size={18} />
+            <X size={17} />
           </button>
         </div>
 
-        {submitted ? (
-          /* Success state */
+        {/* ALREADY VERIFIED STATE: Display Official Certificate Card */}
+        {isAlreadyVerified ? (
+          <div className="p-5 sm:p-6 overflow-y-auto flex flex-col gap-4">
+            
+            {/* Credential Certificate Card */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-indigo-900 text-white p-5 shadow-xl border border-white/20">
+              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Award size={20} className="text-amber-300" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-100">Official Certification</span>
+                </div>
+                <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                  <CheckCircle2 size={12} className="text-emerald-300" /> Active
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5 mb-4">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/40 bg-white/10 shrink-0 flex items-center justify-center">
+                  {user?.photoURL || user?.photoUrl ? (
+                    <img src={user.photoURL || user.photoUrl} alt={displayName} onError={avatarOnError} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon size={28} className="text-white/70" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-extrabold text-[17px] truncate leading-tight">{displayName || 'Dr. Practitioner'}</h3>
+                  <p className="text-emerald-100 text-xs font-medium truncate mt-0.5">{(user as any)?.handle ? `@${(user as any).handle}` : email}</p>
+                  <p className="text-[11px] text-emerald-200 mt-0.5 flex items-center gap-1">
+                    <Stethoscope size={11} /> Certified Veterinary Doctor
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-emerald-200 text-[10px] uppercase font-bold block">License ID</span>
+                  <span className="font-mono font-bold text-white text-[12px]">SC-VET-{(userId || '2026').slice(-6).toUpperCase()}</span>
+                </div>
+                <div>
+                  <span className="text-emerald-200 text-[10px] uppercase font-bold block">Status</span>
+                  <span className="font-bold text-white text-[12px]">Practitioner Tier</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Privileges List */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-[var(--sc-border)] flex flex-col gap-2.5">
+              <span className="text-xs font-bold text-[var(--sc-text-primary)] uppercase tracking-wider">Your Verified Privileges</span>
+              
+              <div className="flex items-start gap-2.5 text-xs text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Special Profile Ring & Badge:</strong> Highlighted verified badge displayed on your profile, feed cards, and comments.</span>
+              </div>
+              
+              <div className="flex items-start gap-2.5 text-xs text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Community Medical Advisory:</strong> Your responses in rescue and pet advice discussions carry official clinical authority.</span>
+              </div>
+
+              <div className="flex items-start gap-2.5 text-xs text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Emergency Direct Dispatch:</strong> Priority notifications when injured stray animals require urgent care nearby.</span>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-full py-3 font-bold text-white bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] rounded-xl transition-all shadow-xs"
+            >
+              Done
+            </button>
+          </div>
+        ) : submitted ? (
+          /* Submission Received State */
           <div className="p-8 flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4">
               <BadgeCheck size={32} />
@@ -165,6 +253,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
             </button>
           </div>
         ) : (
+          /* Application Form State */
           <>
             {/* Body */}
             <div className="p-5 overflow-y-auto flex flex-col gap-4">
@@ -314,7 +403,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full py-3 font-bold text-white bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-3 font-bold text-white bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-xs"
               >
                 {submitting ? (
                   <>
