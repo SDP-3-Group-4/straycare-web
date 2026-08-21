@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, Plus, Trash2, Loader2, User, AtSign, MapPin, Globe, Sparkles, Camera } from 'lucide-react';
+import { X, Save, Plus, Trash2, Loader2, User, AtSign, MapPin, Globe, Camera, Lock, Upload, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { updateUserProfile } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { avatarOnError } from '../../../constants';
@@ -27,23 +27,58 @@ interface EditProfileModalProps {
 export default function EditProfileModal({ isOpen, onClose, user: propUser, onProfileUpdate }: EditProfileModalProps) {
   const { user: authUser, updateLocalUser } = useAuth();
   const effectiveUser = propUser || (authUser as any) || {};
+  const userId = effectiveUser.id || authUser?.uid || '';
+
+  const initialHandle = (effectiveUser.handle || (authUser as any)?.handle || '').trim();
+  const isHandleLocked = Boolean(initialHandle || localStorage.getItem(`straycare_handle_locked_${userId}`));
 
   const [name, setName] = useState(effectiveUser.name || effectiveUser.displayName || '');
-  const [handle, setHandle] = useState(effectiveUser.handle || '');
+  const [handle, setHandle] = useState(initialHandle);
   const [bio, setBio] = useState(effectiveUser.bio || '');
   const [avatar, setAvatar] = useState(effectiveUser.avatar || effectiveUser.photoUrl || effectiveUser.photoURL || '');
   const [coverImage, setCoverImage] = useState(effectiveUser.coverImage || effectiveUser.coverImageUrl || '');
   const [location, setLocation] = useState(effectiveUser.location || '');
   const [website, setWebsite] = useState(effectiveUser.website || '');
   const [pets, setPets] = useState<{ name: string; type: string; age?: string }[]>(effectiveUser.pets || []);
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newPetName, setNewPetName] = useState('');
   const [newPetType, setNewPetType] = useState('dog');
   const [newPetAge, setNewPetAge] = useState('');
 
   if (!isOpen) return null;
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size limit (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Selected image exceeds 10MB limit. Please choose a smaller photo.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setAvatar(dataUrl);
+        setError(null);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatar('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleAddPet = () => {
     if (newPetName.trim()) {
@@ -58,12 +93,12 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
   };
 
   const handleSave = async () => {
-    const userId = effectiveUser.id || authUser?.uid;
     if (!userId) return;
     setLoading(true);
     setError(null);
     try {
       const sanitizedHandle = handle.trim().replace(/^@/, '').toLowerCase();
+      
       await updateUserProfile(userId, {
         displayName: name.trim(),
         handle: sanitizedHandle || undefined,
@@ -74,6 +109,10 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
         website: website.trim(),
         pets,
       });
+
+      if (sanitizedHandle) {
+        localStorage.setItem(`straycare_handle_locked_${userId}`, 'true');
+      }
 
       updateLocalUser({
         displayName: name.trim(),
@@ -101,7 +140,7 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={onClose} />
 
       {/* Modal Content */}
       <div className="relative w-full max-w-lg bg-white rounded-3xl border border-[var(--sc-border)] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[88vh]">
@@ -129,27 +168,81 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
             </div>
           )}
 
-          {/* Avatar Preview & URL */}
-          <div className="flex items-center gap-3.5 p-3 bg-gray-50 rounded-2xl border border-[var(--sc-border)]">
-            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-xs shrink-0 bg-gray-200 flex items-center justify-center">
-              {avatar ? (
-                <img src={avatar} alt="Avatar" onError={avatarOnError} className="w-full h-full object-cover" />
-              ) : (
-                <User size={24} className="text-gray-400" />
-              )}
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageFileChange}
+            accept="image/png, image/jpeg, image/webp, image/gif"
+            className="hidden"
+          />
+
+          {/* Abstracted Avatar Photo Uploader */}
+          <div className="p-4 bg-gray-50/80 rounded-2xl border border-[var(--sc-border)] flex flex-col gap-3">
+            <div className="flex items-center gap-4">
+              {/* Clickable Avatar Circle with Camera Overlay */}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="relative group w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0 bg-gray-200 cursor-pointer flex items-center justify-center"
+                title="Click to upload profile photo"
+              >
+                {avatar ? (
+                  <img src={avatar} alt="Profile Avatar" onError={avatarOnError} className="w-full h-full object-cover group-hover:opacity-75 transition-opacity" />
+                ) : (
+                  <User size={28} className="text-gray-400 group-hover:scale-105 transition-transform" />
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                  <Camera size={18} />
+                </div>
+              </div>
+
+              {/* Action Buttons & Description */}
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-bold text-[var(--sc-text-primary)] block">Profile Picture</span>
+                <p className="text-[11px] text-gray-500 mb-2">PNG, JPG, or WEBP. Max size 10MB.</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] rounded-xl text-xs font-bold transition-colors shadow-xs active:scale-95"
+                  >
+                    <Upload size={13} />
+                    {avatar ? 'Change Photo' : 'Upload Photo'}
+                  </button>
+                  {avatar && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-red-500 hover:bg-red-50 rounded-xl text-xs font-semibold transition-colors active:scale-95"
+                    >
+                      <Trash2 size={13} />
+                      Remove
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 underline ml-auto transition-colors"
+                  >
+                    {showUrlInput ? 'Hide link' : 'Use web link'}
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Avatar Image URL
-              </label>
-              <input
-                type="text"
-                value={avatar}
-                onChange={(e) => setAvatar(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-3 py-1.5 bg-white border border-[var(--sc-border)] rounded-lg text-xs outline-none focus:border-[var(--sc-brand-400)]"
-              />
-            </div>
+
+            {/* Optional Collapsible Web Link Input */}
+            {showUrlInput && (
+              <div className="pt-2 border-t border-[var(--sc-border)] flex items-center gap-2">
+                <LinkIcon size={14} className="text-gray-400 shrink-0" />
+                <input
+                  type="url"
+                  value={avatar.startsWith('data:') ? '' : avatar}
+                  onChange={(e) => setAvatar(e.target.value)}
+                  placeholder="Paste image link (https://...)"
+                  className="w-full px-3 py-1.5 bg-white border border-[var(--sc-border)] rounded-lg text-xs outline-none focus:border-[var(--sc-brand-400)]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Name & Handle Grid */}
@@ -162,25 +255,46 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder="Your full name"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-[var(--sc-border)] rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[var(--sc-brand-400)] focus:bg-white transition-all"
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Username Handle
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  Username Handle
+                </label>
+                {isHandleLocked && (
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                    <Lock size={10} /> Locked (1-time)
+                  </span>
+                )}
+              </div>
               <div className="relative">
-                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                {isHandleLocked ? (
+                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-600" />
+                ) : (
+                  <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                )}
                 <input
                   type="text"
+                  disabled={isHandleLocked}
                   value={handle}
                   onChange={(e) => setHandle(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                   placeholder="username"
-                  className="w-full pl-8 pr-3.5 py-2.5 bg-gray-50 border border-[var(--sc-border)] rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[var(--sc-brand-400)] focus:bg-white transition-all"
+                  className={`w-full pl-8 pr-3.5 py-2.5 border border-[var(--sc-border)] rounded-xl text-xs sm:text-sm font-medium outline-none transition-all ${
+                    isHandleLocked
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed select-none opacity-85'
+                      : 'bg-gray-50 focus:border-[var(--sc-brand-400)] focus:bg-white'
+                  }`}
                 />
               </div>
+              <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                {isHandleLocked 
+                  ? "🔒 Username handle cannot be changed once established to protect your verified badge identity."
+                  : "⚠️ Note: Username handle can only be set once and cannot be modified later."}
+              </p>
             </div>
           </div>
 
