@@ -12,6 +12,47 @@ const CATEGORIES = [
   { key: "fundraise", label: "Fundraise", activeClass: "bg-[var(--sc-brand-100)] text-[var(--sc-brand-700)]" }
 ];
 
+const PROMPTS_BY_CATEGORY: Record<string, string[]> = {
+  adoption: [
+    "Looking for a loving home for a rescued puppy or kitten?",
+    "Share an adoption profile for a sweet community pet...",
+    "Foster parent needed! Who can offer temporary shelter?",
+    "Ready to find forever families for rescued stray babies?",
+    "What's happening with stray pets?"
+  ],
+  rescue: [
+    "Spotted an injured dog or cat needing urgent rescue?",
+    "Emergency rescue alert: Describe location & condition...",
+    "Need volunteers with a rescue cage or transport vehicle?",
+    "Found an abandoned animal in need of emergency care?",
+    "What's happening with stray pets?"
+  ],
+  fundraise: [
+    "Need community support for a stray's surgery & medicines?",
+    "Start a medical fundraise for life-saving veterinary treatment...",
+    "Share vet clinic estimate & target goal for injured stray...",
+    "Help us fund post-op shelter and food for rescued animals...",
+    "What's happening with stray pets?"
+  ],
+  fun: [
+    "Share a heartwarming stray transformation or funny moment!",
+    "Post a sweet photo of your neighborhood community strays...",
+    "Tell us about your daily stray feeding routine...",
+    "Celebrate a healthy recovery or playful rescue milestone!",
+    "What's happening with stray pets?"
+  ]
+};
+
+const GENERAL_PROMPTS = [
+  "What's happening with stray pets?",
+  "Spotted an injured animal or need rescue backup?",
+  "Looking for loving adopters or foster homes?",
+  "Share a heartwarming stray rescue story or update...",
+  "Need community advice or veterinary guidance?",
+  "Found a puppy or kitten that needs emergency care?",
+  "Share local feeding or shelter spots in your city..."
+];
+
 export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () => void }) {
   const { user } = useAuth();
   const [content, setContent] = useState("");
@@ -22,6 +63,19 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [fundraiseGoal, setFundraiseGoal] = useState("");
+  
+  const [promptIndex, setPromptIndex] = useState(0);
+
+  useEffect(() => {
+    const list = PROMPTS_BY_CATEGORY[category] || GENERAL_PROMPTS;
+    const interval = setInterval(() => {
+      setPromptIndex((prev) => (prev + 1) % list.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [category]);
+
+  const activePrompts = PROMPTS_BY_CATEGORY[category] || GENERAL_PROMPTS;
+  const currentPlaceholder = activePrompts[promptIndex % activePrompts.length] || "What's happening with stray pets?";
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
@@ -165,8 +219,8 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-2">
               <textarea 
-                className="w-full bg-transparent outline-none text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] placeholder-gray-400 resize-none min-h-[60px] sm:min-h-[74px] pt-0.5"
-                placeholder="What's happening with stray pets?"
+                className="w-full bg-transparent outline-none text-[14px] sm:text-[15px] text-[var(--sc-text-primary)] placeholder-gray-400/90 resize-none min-h-[60px] sm:min-h-[74px] pt-0.5 transition-all duration-300"
+                placeholder={currentPlaceholder}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 disabled={isSubmitting}
