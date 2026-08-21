@@ -57,6 +57,20 @@ export class ConnectionsService {
       data: { status: 'accepted' },
     });
 
+    // Update recipient's connection request notification to accepted
+    await this.prisma.notification.updateMany({
+      where: {
+        userId: recipientId,
+        senderId: requesterId,
+        type: 'connection',
+      },
+      data: {
+        type: 'connection_accepted',
+        content: 'is now connected with you.',
+        isRead: true,
+      },
+    });
+
     // Create notification for original requester
     await this.notificationsService.createNotification({
       userId: connection.requesterId,
@@ -75,10 +89,26 @@ export class ConnectionsService {
 
     if (!existing) throw new NotFoundException('Connection request not found');
 
-    return this.prisma.connection.update({
+    const connection = await this.prisma.connection.update({
       where: { id: existing.id },
       data: { status: 'rejected' },
     });
+
+    // Update recipient's connection request notification
+    await this.prisma.notification.updateMany({
+      where: {
+        userId: recipientId,
+        senderId: requesterId,
+        type: 'connection',
+      },
+      data: {
+        type: 'connection_declined',
+        content: 'connection request was removed.',
+        isRead: true,
+      },
+    });
+
+    return connection;
   }
 
   async getUserConnections(userId: string) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell, User } from "lucide-react";
+import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell, User, Loader2 } from "lucide-react";
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead, acceptConnection, declineConnection, CONNECTIONS_UPDATED_EVENT } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
@@ -9,15 +9,37 @@ const getTypeConfig = (type: string) => {
     case 'like': return { icon: Heart, color: 'text-red-500', bg: 'bg-red-50' };
     case 'comment': return { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-50' };
     case 'connection': return { icon: UserPlus, color: 'text-green-500', bg: 'bg-green-50' };
-    case 'connection_accepted': return { icon: UserPlus, color: 'text-green-500', bg: 'bg-green-50' };
+    case 'connection_accepted': return { icon: UserPlus, color: 'text-green-600', bg: 'bg-green-100' };
+    case 'connection_declined': return { icon: UserPlus, color: 'text-gray-400', bg: 'bg-gray-100' };
     case 'donation': return { icon: DollarSign, color: 'text-[var(--sc-brand-500)]', bg: 'bg-[var(--sc-brand-50)]' };
     default: return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-50' };
+  }
+};
+
+const getResolvedMap = (): Record<string, 'accepted' | 'declined'> => {
+  try {
+    const raw = localStorage.getItem('straycare_resolved_notifications');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error(e);
+  }
+  return {};
+};
+
+const saveResolvedMap = (id: string, status: 'accepted' | 'declined') => {
+  try {
+    const current = getResolvedMap();
+    current[id] = status;
+    localStorage.setItem('straycare_resolved_notifications', JSON.stringify(current));
+  } catch (e) {
+    console.error(e);
   }
 };
 
 export default function NotificationsFeed() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -29,7 +51,18 @@ export default function NotificationsFeed() {
     if (!user) return;
     try {
       const data = await fetchNotifications(user.uid);
-      setNotifications(data);
+      const resolved = getResolvedMap();
+      const mapped = (data || []).map((n: any) => {
+        const localStatus = resolved[n.id] || (n.senderId ? resolved[n.senderId] : null);
+        if (localStatus === 'accepted') {
+          return { ...n, type: 'connection_accepted', isRead: true, content: 'is now connected with you.' };
+        }
+        if (localStatus === 'declined') {
+          return { ...n, type: 'connection_declined', isRead: true, content: 'connection request was removed.' };
+        }
+        return n;
+      });
+      setNotifications(mapped);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
@@ -46,27 +79,49 @@ export default function NotificationsFeed() {
   };
 
   const handleConnectionAction = async (id: string, action: 'accept' | 'decline', requesterId: string) => {
-    if (!user) return;
-    const notif = notifications.find(n => n.id === id);
-    const senderName = notif?.sender?.displayName || 'User';
+    if (!user || pendingActionId) return;
+    setPendingActionId(id);
+
     try {
       if (action === 'accept') {
         await acceptConnection(requesterId);
       } else {
         await declineConnection(requesterId);
       }
+
+      // Mark notification as read on backend
+      markNotificationRead(id).catch(console.error);
+
+      // Persist local resolved state
+      saveResolvedMap(id, action === 'accept' ? 'accepted' : 'declined');
+      if (requesterId) {
+        saveResolvedMap(requesterId, action === 'accept' ? 'accepted' : 'declined');
+      }
+
+      // Instant optimistic update
       setNotifications(prev => prev.map(n => 
         n.id === id ? { 
           ...n, 
           type: action === 'accept' ? 'connection_accepted' : 'connection_declined', 
           isRead: true,
-          content: action === 'accept' ? `You accepted ${senderName}'s connection request.` : `You declined ${senderName}'s connection request.`
+          content: action === 'accept' ? 'is now connected with you.' : 'connection request was removed.'
         } : n
       ));
+
       window.dispatchEvent(new Event(CONNECTIONS_UPDATED_EVENT));
     } catch (err: any) {
       console.error(`Failed to ${action} connection:`, err);
-      alert(err?.message || `Failed to ${action} connection`);
+      // If error indicates already accepted/handled, resolve state cleanly
+      if (err?.message && (err.message.includes('already') || err.message.includes('not found'))) {
+        saveResolvedMap(id, 'accepted');
+        setNotifications(prev => prev.map(n => 
+          n.id === id ? { ...n, type: 'connection_accepted', isRead: true, content: 'is now connected with you.' } : n
+        ));
+      } else {
+        alert(err?.message || `Failed to ${action} connection`);
+      }
+    } finally {
+      setPendingActionId(null);
     }
   };
 
@@ -99,7 +154,7 @@ export default function NotificationsFeed() {
         {notifications.map((notif) => {
           const { icon: Icon, color, bg } = getTypeConfig(notif.type);
           const timeString = new Date(notif.createdAt).toLocaleDateString();
-          const senderName = notif.sender?.displayName || 'Someone';
+          const senderName = notif.sender?.displayName || 'User';
           
           return (
             <div 
@@ -113,7 +168,7 @@ export default function NotificationsFeed() {
             >
               <div className="relative shrink-0">
                 {notif.sender?.photoUrl ? (
-                  <img src={notif.sender?.photoUrl} alt={notif.sender?.displayName || 'User'} onError={avatarOnError} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
+                  <img src={notif.sender?.photoUrl} alt={senderName} onError={avatarOnError} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
                     <User size={18} className="text-gray-400" />
@@ -126,24 +181,42 @@ export default function NotificationsFeed() {
               
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="text-[13px] sm:text-[15px] text-[var(--sc-text-primary)] leading-snug">
-                  <span className="font-bold">{senderName}</span> {notif.content}
+                  <span className="font-bold notranslate" translate="no">{senderName}</span> {notif.content}
                 </div>
                 <span className="text-[11px] sm:text-[12px] text-gray-400 mt-1">{timeString}</span>
                 
+                {/* Connection Request Pending Actions */}
                 {notif.type === 'connection' && (
-                  <div className="flex gap-2 mt-2.5">
+                  <div className="flex items-center gap-2 mt-2.5">
                     <button 
+                      disabled={pendingActionId === notif.id}
                       onClick={(e) => { e.stopPropagation(); handleConnectionAction(notif.id, 'accept', notif.senderId); }}
-                      className="bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-colors active:scale-95"
+                      className="bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5 shadow-xs"
                     >
+                      {pendingActionId === notif.id ? <Loader2 size={13} className="animate-spin" /> : null}
                       Accept
                     </button>
                     <button 
+                      disabled={pendingActionId === notif.id}
                       onClick={(e) => { e.stopPropagation(); handleConnectionAction(notif.id, 'decline', notif.senderId); }}
-                      className="bg-gray-100 hover:bg-gray-200 text-[var(--sc-text-secondary)] text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-colors active:scale-95"
+                      className="bg-gray-100 hover:bg-gray-200 text-[var(--sc-text-secondary)] text-[12px] sm:text-[13px] font-bold py-1.5 px-3.5 rounded-xl transition-all active:scale-95 disabled:opacity-50"
                     >
                       Decline
                     </button>
+                  </div>
+                )}
+
+                {/* Connection Accepted Status Pill */}
+                {notif.type === 'connection_accepted' && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-xl mt-2 w-fit">
+                    <Check size={13} /> Connected
+                  </div>
+                )}
+
+                {/* Connection Declined Status Tag */}
+                {notif.type === 'connection_declined' && (
+                  <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-xl mt-2 w-fit">
+                    Request Declined
                   </div>
                 )}
               </div>
