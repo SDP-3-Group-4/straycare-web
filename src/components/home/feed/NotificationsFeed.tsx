@@ -47,6 +47,8 @@ export default function NotificationsFeed() {
 
   const handleConnectionAction = async (id: string, action: 'accept' | 'decline', requesterId: string) => {
     if (!user) return;
+    const notif = notifications.find(n => n.id === id);
+    const senderName = notif?.sender?.displayName || 'User';
     try {
       if (action === 'accept') {
         await acceptConnection(requesterId);
@@ -54,7 +56,12 @@ export default function NotificationsFeed() {
         await declineConnection(requesterId);
       }
       setNotifications(prev => prev.map(n => 
-        n.id === id ? { ...n, type: action === 'accept' ? 'connection_accepted' : 'connection_declined', isRead: true } : n
+        n.id === id ? { 
+          ...n, 
+          type: action === 'accept' ? 'connection_accepted' : 'connection_declined', 
+          isRead: true,
+          content: action === 'accept' ? `You accepted ${senderName}'s connection request.` : `You declined ${senderName}'s connection request.`
+        } : n
       ));
       window.dispatchEvent(new Event(CONNECTIONS_UPDATED_EVENT));
     } catch (err: any) {

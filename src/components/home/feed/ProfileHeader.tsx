@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User } from 'lucide-react';
+import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User, UserMinus } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
-import { updateUserProfile, requestConnection, fetchConnectionStatus } from '../../../services/api';
+import { updateUserProfile, requestConnection, fetchConnectionStatus, disconnectConnection } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { avatarOnError } from '../../../constants';
 
@@ -41,6 +41,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
   
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   useEffect(() => {
     setLocalAvatar(null);
@@ -99,14 +100,20 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
   };
 
   const handleConnect = async () => {
-    if (!authUser || !user.id || connectionStatus !== 'none') return;
+    if (!authUser || !user.id) return;
     setIsConnecting(true);
     try {
-      await requestConnection(user.id);
-      setConnectionStatus('pending');
+      if (connectionStatus === 'none') {
+        await requestConnection(user.id);
+        setConnectionStatus('pending');
+      } else if (connectionStatus === 'accepted') {
+        await disconnectConnection(user.id);
+        setConnectionStatus('none');
+        setShowDisconnectConfirm(false);
+      }
     } catch (e: any) {
       console.error(e);
-      alert(e.message || 'Failed to send connection request or already sent.');
+      alert(e.message || 'Failed to update connection.');
     } finally {
       setIsConnecting(false);
     }
@@ -178,7 +185,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 -mr-2">
             {isOwnProfile ? (
               <button 
                 onClick={() => setIsEditModalOpen(true)}
@@ -189,12 +196,16 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
               </button>
             ) : (
               <button 
-                onClick={handleConnect}
-                disabled={connectionStatus !== 'none' || isConnecting}
-                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl transition-colors disabled:opacity-50 shadow-sm ${connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white' : 'bg-gray-200 text-gray-600'}`}
+                onClick={() => connectionStatus === 'accepted' ? setShowDisconnectConfirm(true) : handleConnect()}
+                disabled={isConnecting || connectionStatus === 'pending'}
+                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl transition-colors shadow-sm ${
+                  connectionStatus === 'none' ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white' :
+                  connectionStatus === 'pending' ? 'bg-amber-100 text-amber-700 cursor-default' :
+                  'bg-white border border-red-200 text-red-600 hover:bg-red-50'
+                } disabled:opacity-60`}
               >
-                {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-                {isConnecting ? 'Connecting...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Connected' : 'Connect'}
+                {isConnecting ? <Loader2 size={16} className="animate-spin" /> : connectionStatus === 'accepted' ? <UserMinus size={16} /> : <UserPlus size={16} />}
+                {isConnecting ? 'Processing...' : connectionStatus === 'pending' ? 'Pending' : connectionStatus === 'accepted' ? 'Disconnect' : 'Connect'}
               </button>
             )}
           </div>
@@ -329,6 +340,25 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
         }}
         onProfileUpdate={onProfileUpdate}
       />
+
+      {showDisconnectConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDisconnectConfirm(false)} />
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+              <UserMinus size={20} />
+            </div>
+            <h3 className="font-bold text-[16px] text-[var(--sc-text-primary)]">Disconnect from {user.name}?</h3>
+            <p className="text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowDisconnectConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]">Cancel</button>
+              <button onClick={handleConnect} disabled={isConnecting} className="flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white bg-red-600 hover:bg-red-700 disabled:opacity-60">
+                {isConnecting ? 'Processing...' : 'Disconnect'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

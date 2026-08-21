@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Param,
   Body,
   Req,
@@ -52,5 +53,10 @@ export class ConnectionsController {
     @Param('userId2') userId2: string,
   ) {
     return this.connectionsService.getConnectionStatus(userId1, userId2);
+  }
+
+  @Delete(':userId')
+  async disconnect(@Param('userId') userId: string, @Req() req: Request) {
+    return this.connectionsService.disconnect(req.user!.uid, userId);
   }
 }

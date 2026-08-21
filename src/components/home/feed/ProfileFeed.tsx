@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
-import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT } from '../../../services/api';
+import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT, disconnectConnection } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
 
 export default function ProfileFeed() {
@@ -26,6 +26,7 @@ export default function ProfileFeed() {
   const [merchantToast, setMerchantToast] = useState(false);
   const [accountOpen, setAccountOpen] = useState(true);
   const [vetStatus, setVetStatus] = useState<string | null>(null);
+  const [disconnectConfirm, setDisconnectConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOwnProfile && user?.uid) {
@@ -115,6 +116,21 @@ export default function ProfileFeed() {
       fetchConnections(targetUserId).then(setConnections).catch(console.error);
     }
   }, [activeTab, targetUserId]);
+
+  const handleDisconnect = async (otherUserId: string) => {
+    if (!otherUserId) return;
+    try {
+      await disconnectConnection(otherUserId);
+      setConnections(prev => prev.filter(c => {
+        const other = c.requesterId === user?.uid ? c.recipient : c.requester;
+        return other?.id !== otherUserId;
+      }));
+      setDisconnectConfirm(null);
+      window.dispatchEvent(new Event(CONNECTIONS_UPDATED_EVENT));
+    } catch (e: any) {
+      alert(e.message || 'Failed to disconnect');
+    }
+  };
 
   if (loading) {
     return (
@@ -336,6 +352,7 @@ export default function ProfileFeed() {
               const isRequester = conn.requesterId === user?.uid;
               const otherUser = isRequester ? conn.recipient : conn.requester;
               if (!otherUser) return null;
+              const isOwn = isOwnProfile;
               return (
                 <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                   <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
@@ -349,7 +366,16 @@ export default function ProfileFeed() {
                     <p className="font-bold text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
                     <p className="text-sm text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
                   </div>
-                  <span className="ml-auto inline-block px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
+                  <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
+                  {isOwn && (
+                    <button
+                      onClick={() => setDisconnectConfirm(otherUser.id)}
+                      className="ml-2 p-2 rounded-xl bg-white border border-red-100 text-red-600 hover:bg-red-50 transition-colors shrink-0"
+                      title="Disconnect"
+                    >
+                      <UserMinus size={14} />
+                    </button>
+                  )}
                 </div>
               );
             }) : (
@@ -381,6 +407,23 @@ export default function ProfileFeed() {
             <div className="flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-2xl">
               <Store size={16} className="text-amber-400" />
               Become a Merchant: Coming soon!
+            </div>
+          </div>
+        )}
+
+        {disconnectConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDisconnectConfirm(null)} />
+            <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
+              <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+                <UserMinus size={20} />
+              </div>
+              <h3 className="font-bold text-[16px]">Disconnect?</h3>
+              <p className="text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setDisconnectConfirm(null)} className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]">Cancel</button>
+                <button onClick={() => handleDisconnect(disconnectConfirm)} className="flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white bg-red-600 hover:bg-red-700">Disconnect</button>
+              </div>
             </div>
           </div>
         )}

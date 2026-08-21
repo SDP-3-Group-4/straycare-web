@@ -134,6 +134,9 @@ export const acceptConnection = (requesterId: string) =>
 export const declineConnection = (requesterId: string) =>
   postJson(`/connections/${requesterId}/decline`, {});
 
+export const disconnectConnection = (userId: string) =>
+  request(`/connections/${userId}`, { method: 'DELETE' });
+
 export const fetchComments = (postId: string, userId?: string) => {
   const queryString = userId ? `?userId=${userId}` : '';
   return request(`/posts/${postId}/comments${queryString}`);

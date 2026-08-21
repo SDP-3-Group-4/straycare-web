@@ -116,4 +116,17 @@ export class ConnectionsService {
       recipientId: connection.recipientId,
     };
   }
+
+  async disconnect(userId1: string, userId2: string) {
+    const connection = await this.prisma.connection.findFirst({
+      where: {
+        OR: [
+          { requesterId: userId1, recipientId: userId2 },
+          { requesterId: userId2, recipientId: userId1 },
+        ],
+      },
+    });
+    if (!connection) throw new NotFoundException('Connection not found');
+    return this.prisma.connection.delete({ where: { id: connection.id } });
+  }
 }
