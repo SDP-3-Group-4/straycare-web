@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { Bot, MessageSquare, ChevronUp, ChevronDown, Plus, ChevronRight, Sparkles, User } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bot, MessageSquare, ChevronUp, ChevronDown, Plus, ChevronRight, Sparkles, User, MoreVertical, Trash2, BellOff, Bell, MessageSquareOff, ShieldAlert, Info } from "lucide-react";
 import ChatConversation from "./ChatConversation";
 import NewChatModal from "./NewChatModal";
+import ChatInfoModal from "./ChatInfoModal";
 import { avatarOnError } from "../../../constants";
 import { useAuth } from "../../../contexts/AuthContext";
-import { fetchChats, createChat } from "../../../services/api";
+import { fetchChats, createChat, deleteChat, clearChat, blockChat } from "../../../services/api";
 import { presenceText } from "../../../utils/presence";
 
 export type Chat = {
@@ -27,12 +28,54 @@ export default function ChatWidget() {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [now, setNow] = useState(Date.now());
+  const [menuChatId, setMenuChatId] = useState<string | null>(null);
+  const [confirmChat, setConfirmChat] = useState<Chat | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'delete' | 'clear' | 'block' | null>(null);
+  const [infoChat, setInfoChat] = useState<Chat | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
   useEffect(() => {
     const tick = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(tick);
   }, []);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuChatId(null);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const isMuted = (id: string) => {
+    try { return !!JSON.parse(localStorage.getItem('sc_muted_chats') || '{}')[id]; } catch { return false; }
+  };
+  const toggleMute = (c: Chat) => {
+    const m = JSON.parse(localStorage.getItem('sc_muted_chats') || '{}');
+    if (m[c.id]) delete m[c.id]; else m[c.id] = true;
+    localStorage.setItem('sc_muted_chats', JSON.stringify(m));
+    setMenuChatId(null);
+  };
+  const handleDelete = async () => {
+    if (!confirmChat) return;
+    try {
+      await deleteChat(confirmChat.id);
+      setChats(prev => prev.filter(x => x.id !== confirmChat.id));
+      if (activeChat?.id === confirmChat.id) setActiveChat(null);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Delete failed'); }
+    setConfirmChat(null); setConfirmAction(null);
+  };
+  const handleClear = async () => {
+    if (!confirmChat) return;
+    try { await clearChat(confirmChat.id); setChats(prev => prev.map(x => x.id === confirmChat.id ? { ...x, message: 'No messages yet.' } : x)); } catch (e) { alert('Clear failed'); }
+    setConfirmChat(null); setConfirmAction(null);
+  };
+  const handleBlock = async () => {
+    if (!confirmChat) return;
+    try { await blockChat(confirmChat.id); setChats(prev => prev.filter(x => x.id !== confirmChat.id)); if (activeChat?.id === confirmChat.id) setActiveChat(null); } catch (e) { alert('Block failed'); }
+    setConfirmChat(null); setConfirmAction(null);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -171,12 +214,13 @@ export default function ChatWidget() {
             </div>
 
             {/* Chat List */}
-            <div className="flex flex-col px-3 pb-2 overflow-y-auto flex-1">
+            <div ref={menuRef} className="flex flex-col px-3 pb-2 overflow-y-auto flex-1">
               {humanChats.map((chat) => (
-                <button 
+                <div 
                   key={chat.id} 
                   onClick={() => setActiveChat(chat)}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left w-full mb-1"
+                  onContextMenu={(e) => { e.preventDefault(); setMenuChatId(menuChatId === chat.id ? null : chat.id); }}
+                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left w-full mb-1 cursor-pointer relative"
                 >
                   <div className="relative flex-shrink-0">
                     {chat.avatar && !chat.isAiBot ? (
@@ -193,12 +237,23 @@ export default function ChatWidget() {
                         {chat.unread}
                       </span>
                     )}
+                    {isMuted(chat.id) && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-100 border border-white rounded-full flex items-center justify-center">
+                        <BellOff size={10} className="text-amber-600" />
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-col flex-1 overflow-hidden">
                     <div className="flex justify-between items-center mb-0.5">
                       <span className="font-bold text-[var(--sc-text-primary)] text-[14px] truncate">{chat.name}</span>
                       <div className="flex items-center gap-2 shrink-0 ml-2">
                         <span className="text-gray-400 text-[12px]">{chat.time}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setMenuChatId(menuChatId === chat.id ? null : chat.id); }}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all"
+                        >
+                          <MoreVertical size={14} />
+                        </button>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -211,7 +266,29 @@ export default function ChatWidget() {
                       </span>
                     </div>
                   </div>
-                </button>
+                  {menuChatId === chat.id && (
+                    <div className="absolute right-2 top-12 w-48 bg-white border border-[var(--sc-border)] rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-top-1">
+                      <button onClick={(e) => { e.stopPropagation(); setInfoChat(chat); setMenuChatId(null); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
+                        <Info size={15} className="text-gray-500" /> View Info
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); toggleMute(chat); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
+                        {isMuted(chat.id) ? <Bell size={15} className="text-gray-500" /> : <BellOff size={15} className="text-gray-500" />} {isMuted(chat.id) ? 'Unmute' : 'Mute'}
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('clear'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
+                        <MessageSquareOff size={15} className="text-gray-500" /> Clear Chat
+                      </button>
+                      {!chat.isAiBot && (
+                        <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('block'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-red-50 text-red-600 text-left">
+                          <ShieldAlert size={15} /> Block
+                        </button>
+                      )}
+                      <div className="h-px bg-gray-100 my-1" />
+                      <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('delete'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-bold hover:bg-red-50 text-red-600 text-left">
+                        <Trash2 size={15} /> Delete Chat
+                      </button>
+                    </div>
+                  )}
+                </div>
               ))}
               {humanChats.length === 0 && (
                 <div className="text-center text-gray-400 py-8 text-sm">
@@ -242,6 +319,27 @@ export default function ChatWidget() {
           setActiveChat(chat);
         }}
       />
+
+      {confirmChat && confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setConfirmChat(null); setConfirmAction(null); }} />
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm text-center border border-[var(--sc-border)]">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${confirmAction === 'delete' || confirmAction === 'block' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+              {confirmAction === 'delete' ? <Trash2 size={20} /> : confirmAction === 'block' ? <ShieldAlert size={20} /> : <MessageSquareOff size={20} />}
+            </div>
+            <h3 className="font-bold text-[16px]">{confirmAction === 'delete' ? 'Delete chat?' : confirmAction === 'clear' ? 'Clear messages?' : 'Block user?'}</h3>
+            <p className="text-[13px] text-gray-500 mt-1">{confirmAction === 'delete' ? `Delete conversation with ${confirmChat.name}?` : confirmAction === 'clear' ? 'All messages will be removed.' : `Block ${confirmChat.name}?`}</p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setConfirmChat(null); setConfirmAction(null); }} className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]">Cancel</button>
+              <button onClick={() => { if (confirmAction === 'delete') handleDelete(); else if (confirmAction === 'clear') handleClear(); else handleBlock(); }} className={`flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white ${confirmAction === 'delete' || confirmAction === 'block' ? 'bg-red-600 hover:bg-red-700' : 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)]'}`}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {infoChat && (
+        <ChatInfoModal isOpen={!!infoChat} onClose={() => setInfoChat(null)} chat={infoChat} onDeleted={() => { setChats(prev => prev.filter(x => x.id !== infoChat.id)); setInfoChat(null); if (activeChat?.id === infoChat.id) setActiveChat(null); }} />
+      )}
     </>
   );
 }

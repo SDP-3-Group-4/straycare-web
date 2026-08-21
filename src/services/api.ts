@@ -3,6 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 import { getAuthToken } from '../firebase';
 
 export const UNAUTHORIZED_EVENT = 'straycare:unauthorized';
+export const CONNECTIONS_UPDATED_EVENT = 'straycare:connections-updated';
 
 async function request(path: string, init: RequestInit = {}): Promise<any> {
   const token = await getAuthToken();
@@ -89,6 +90,17 @@ export const fetchMessages = (userId: string, chatId: string) =>
 export const sendMessage = (chatId: string, content: string, imageUrl?: string) =>
   postJson(`/chat/${chatId}/messages`, { content, imageUrl });
 
+export const deleteChat = (chatId: string) =>
+  request(`/chat/${chatId}`, { method: 'DELETE' });
+
+export const clearChat = (chatId: string) =>
+  postJson(`/chat/${chatId}/clear`, {});
+
+export const blockChat = (chatId: string) =>
+  postJson(`/chat/${chatId}/block`, {});
+
+export const leaveChat = deleteChat;
+
 export const toggleBookmark = (postId: string) => postJson(`/bookmarks/${postId}`, {});
 
 export const fetchBookmarks = (userId: string) => request(`/bookmarks/${userId}`);
@@ -116,11 +128,11 @@ export const fetchConnectionStatus = (userId1: string, userId2: string) =>
 export const requestConnection = (recipientId: string) =>
   postJson('/connections/request', { recipientId });
 
-export const acceptConnection = (recipientId: string) =>
-  postJson(`/connections/${recipientId}/accept`, {});
+export const acceptConnection = (requesterId: string) =>
+  postJson(`/connections/${requesterId}/accept`, {});
 
-export const declineConnection = (recipientId: string) =>
-  postJson(`/connections/${recipientId}/decline`, {});
+export const declineConnection = (requesterId: string) =>
+  postJson(`/connections/${requesterId}/decline`, {});
 
 export const fetchComments = (postId: string, userId?: string) => {
   const queryString = userId ? `?userId=${userId}` : '';

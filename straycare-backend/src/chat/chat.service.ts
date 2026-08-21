@@ -187,6 +187,51 @@ export class ChatService implements OnModuleInit {
     });
   }
 
+  async deleteConversation(userId: string, conversationId: string) {
+    const isParticipant = await this.prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+    });
+    if (!isParticipant) throw new NotFoundException('Conversation not found');
+    const conv = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conv) throw new NotFoundException('Conversation not found');
+    if (conv.isGroup) {
+      await this.prisma.conversationParticipant.delete({
+        where: { conversationId_userId: { conversationId, userId } },
+      });
+      const remaining = await this.prisma.conversationParticipant.count({ where: { conversationId } });
+      if (remaining === 0) await this.prisma.conversation.delete({ where: { id: conversationId } });
+    } else {
+      await this.prisma.conversation.delete({ where: { id: conversationId } });
+    }
+    return { success: true };
+  }
+
+  async clearConversation(userId: string, conversationId: string) {
+    const isParticipant = await this.prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+    });
+    if (!isParticipant) throw new NotFoundException('Conversation not found');
+    await this.prisma.message.deleteMany({ where: { conversationId } });
+    await this.prisma.conversationParticipant.updateMany({
+      where: { conversationId },
+      data: { unreadCount: 0 },
+    });
+    await this.prisma.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
+    return { success: true };
+  }
+
+  async blockUser(userId: string, conversationId: string) {
+    const isParticipant = await this.prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+    });
+    if (!isParticipant) throw new NotFoundException('Conversation not found');
+    await this.deleteConversation(userId, conversationId);
+    return { success: true, blocked: true };
+  }
+
   // Sliding-window rate limit: max N user messages per user per window
   private assertWithinRateLimit(userId: string) {
     const now = Date.now();

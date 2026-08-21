@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell, User } from "lucide-react";
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchNotifications, markNotificationRead, markAllNotificationsRead, acceptConnection, declineConnection } from '../../../services/api';
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead, acceptConnection, declineConnection, CONNECTIONS_UPDATED_EVENT } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
 
 const getTypeConfig = (type: string) => {
@@ -53,13 +53,13 @@ export default function NotificationsFeed() {
       } else {
         await declineConnection(requesterId);
       }
-      
-      // Update local state to remove the actions
       setNotifications(prev => prev.map(n => 
         n.id === id ? { ...n, type: action === 'accept' ? 'connection_accepted' : 'connection_declined', isRead: true } : n
       ));
-    } catch (err) {
+      window.dispatchEvent(new Event(CONNECTIONS_UPDATED_EVENT));
+    } catch (err: any) {
       console.error(`Failed to ${action} connection:`, err);
+      alert(err?.message || `Failed to ${action} connection`);
     }
   };
 

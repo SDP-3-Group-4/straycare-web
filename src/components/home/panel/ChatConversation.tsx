@@ -358,7 +358,8 @@ export default function ChatConversation({ chat, onBack }: ChatConversationProps
       <ChatInfoModal 
         isOpen={isInfoOpen} 
         onClose={() => setIsInfoOpen(false)} 
-        chat={chat} 
+        chat={chat}
+        onDeleted={() => onBack()}
       />
     </div>
   );

@@ -5,7 +5,7 @@ import VetVerificationModal from './VetVerificationModal';
 import PostCard from './PostCard';
 import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus } from '../../../services/api';
+import { fetchUserProfile, fetchPosts, fetchConnections, fetchUserOrders, fetchVetApplicationStatus, CONNECTIONS_UPDATED_EVENT } from '../../../services/api';
 import { avatarOnError } from '../../../constants';
 
 export default function ProfileFeed() {
@@ -99,6 +99,20 @@ export default function ProfileFeed() {
   useEffect(() => {
     loadData();
   }, [user, targetUserId]);
+
+  useEffect(() => {
+    const handler = () => {
+      if (targetUserId) fetchConnections(targetUserId).then(setConnections).catch(console.error);
+    };
+    window.addEventListener(CONNECTIONS_UPDATED_EVENT, handler);
+    return () => window.removeEventListener(CONNECTIONS_UPDATED_EVENT, handler);
+  }, [targetUserId]);
+
+  useEffect(() => {
+    if (activeTab === 'connections' && targetUserId) {
+      fetchConnections(targetUserId).then(setConnections).catch(console.error);
+    }
+  }, [activeTab, targetUserId]);
 
   if (loading) {
     return (
@@ -311,9 +325,11 @@ export default function ProfileFeed() {
         {activeTab === 'connections' && (
           <div className="flex flex-col gap-4">
             {connections.length > 0 ? connections.map(conn => {
-              const otherUser = conn.initiatorId === user?.uid ? conn.receiver : conn.initiator;
+              const isRequester = conn.requesterId === user?.uid;
+              const otherUser = isRequester ? conn.recipient : conn.requester;
+              if (!otherUser) return null;
               return (
-                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center gap-4">
+                <div key={conn.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                   <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
                     {otherUser.photoUrl ? (
                       <img src={otherUser.photoUrl} alt={otherUser.displayName} onError={avatarOnError} className="w-full h-full object-cover rounded-full" />
@@ -321,11 +337,11 @@ export default function ProfileFeed() {
                       <User size={22} className="text-gray-400" />
                     )}
                   </div>
-                  <div>
-                    <p className="font-bold text-[var(--sc-text-primary)]">{otherUser.displayName}</p>
-                    <p className="text-sm text-[var(--sc-text-secondary)]">{otherUser.handle}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
+                    <p className="text-sm text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
                   </div>
-                  <span className="ml-auto inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider">{conn.status}</span>
+                  <span className="ml-auto inline-block px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
                 </div>
               );
             }) : (

@@ -25,33 +25,20 @@ export class ConnectionsController {
     );
   }
 
-  @Post(':recipientId/accept')
+  @Post(':requesterId/accept')
   async acceptConnection(
-    @Param('recipientId') recipientId: string,
+    @Param('requesterId') requesterId: string,
     @Req() req: Request,
   ) {
-    if (recipientId !== req.user!.uid) {
-      throw new ForbiddenException(
-        'You can only accept connections addressed to you',
-      );
-    }
-    return this.connectionsService.acceptConnection(req.user!.uid, recipientId);
+    return this.connectionsService.acceptConnection(requesterId, req.user!.uid);
   }
 
-  @Post(':recipientId/decline')
+  @Post(':requesterId/decline')
   async declineConnection(
-    @Param('recipientId') recipientId: string,
+    @Param('requesterId') requesterId: string,
     @Req() req: Request,
   ) {
-    if (recipientId !== req.user!.uid) {
-      throw new ForbiddenException(
-        'You can only decline connections addressed to you',
-      );
-    }
-    return this.connectionsService.declineConnection(
-      req.user!.uid,
-      recipientId,
-    );
+    return this.connectionsService.declineConnection(requesterId, req.user!.uid);
   }
 
   @Get(':userId')

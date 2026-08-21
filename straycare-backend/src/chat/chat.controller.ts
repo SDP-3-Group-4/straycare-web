@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -62,5 +63,20 @@ export class ChatController {
   @Post(':id/read')
   markAsRead(@Param('id') id: string, @Req() req: Request) {
     return this.chatService.markAsRead(req.user!.uid, id);
+  }
+
+  @Delete(':id')
+  deleteConversation(@Param('id') id: string, @Req() req: Request) {
+    return this.chatService.deleteConversation(req.user!.uid, id);
+  }
+
+  @Post(':id/clear')
+  clearConversation(@Param('id') id: string, @Req() req: Request) {
+    return this.chatService.clearConversation(req.user!.uid, id);
+  }
+
+  @Post(':id/block')
+  blockUser(@Param('id') id: string, @Req() req: Request) {
+    return this.chatService.blockUser(req.user!.uid, id);
   }
 }
