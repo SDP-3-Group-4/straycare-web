@@ -15,6 +15,9 @@ RUN npm run build
 FROM node:22-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PYTHONIOENCODING=utf-8
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist

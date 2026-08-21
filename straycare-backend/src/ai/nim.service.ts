@@ -165,7 +165,9 @@ export class NimService {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+          Accept: 'application/json',
+          'Accept-Charset': 'utf-8',
         },
         body: JSON.stringify({
           model: opts.model ?? this.model,
@@ -185,9 +187,14 @@ export class NimService {
       const data = (await res.json()) as {
         choices?: { message?: { content?: string } }[];
       };
-      const content = data.choices?.[0]?.message?.content?.trim();
+      let content = data.choices?.[0]?.message?.content?.trim();
       if (!content) throw new Error('Empty response from NIM');
-      return content;
+      if (/[≡ƒΓ£¿]/.test(content)) {
+        try {
+          content = Buffer.from(content, 'latin1').toString('utf8');
+        } catch {}
+      }
+      return content.normalize('NFC');
     } finally {
       clearTimeout(timer);
     }

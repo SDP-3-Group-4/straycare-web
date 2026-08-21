@@ -19,8 +19,20 @@ interface ChatBubbleProps {
   isBot?: boolean; // Styling for AI assistant messages
 }
 
+function fixMojibake(s: string): string {
+  if (/[≡ƒΓ£¿]/.test(s)) {
+    try {
+      const bytes = Uint8Array.from(s, (c) => c.charCodeAt(0) & 0xff);
+      const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+      if (decoded && decoded !== s && !decoded.includes('�')) return decoded;
+    } catch {}
+  }
+  return s;
+}
+
 function renderContent(content: string) {
-  const lines = content.split(/\n\n|\n/);
+  const fixed = fixMojibake(content);
+  const lines = fixed.split(/\n\n|\n/);
   return lines.map((line, i) => {
     const parts = line.split(/\*\*(.+?)\*\*/g);
     const nodes: ReactNode[] = [];

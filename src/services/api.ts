@@ -8,8 +8,10 @@ async function request(path: string, init: RequestInit = {}): Promise<any> {
   const token = await getAuthToken();
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${token}`);
+  headers.set('Accept', 'application/json');
+  headers.set('Accept-Charset', 'utf-8');
   if (init.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+    headers.set('Content-Type', 'application/json; charset=utf-8');
   }
 
   const response = await fetch(`${API_URL}${path}`, { ...init, headers });
@@ -36,13 +38,13 @@ async function request(path: string, init: RequestInit = {}): Promise<any> {
 }
 
 const postJson = (path: string, data: any) =>
-  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
 
 const putJson = (path: string, data: any) =>
-  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
 
 const deleteJson = (path: string, data: any) =>
-  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
 
 export const fetchPosts = (tab?: string, userId?: string, lat?: number, lng?: number) => {
   const queryParams = new URLSearchParams();
