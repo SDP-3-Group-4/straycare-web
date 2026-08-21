@@ -366,15 +366,15 @@ export default function ProfileFeed() {
                     <p className="font-bold text-[var(--sc-text-primary)] truncate">{otherUser.displayName}</p>
                     <p className="text-sm text-[var(--sc-text-secondary)] truncate">@{otherUser.handle}</p>
                   </div>
-                  <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
-                  {isOwn && (
+                  {isOwn ? (
                     <button
                       onClick={() => setDisconnectConfirm(otherUser.id)}
-                      className="ml-2 p-2 rounded-xl bg-white border border-red-100 text-red-600 hover:bg-red-50 transition-colors shrink-0"
-                      title="Disconnect"
+                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold shrink-0"
                     >
-                      <UserMinus size={14} />
+                      <UserMinus size={12} /> Disconnect
                     </button>
+                  ) : (
+                    <span className="ml-auto px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider shrink-0">{conn.status}</span>
                   )}
                 </div>
               );
