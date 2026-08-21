@@ -78,4 +78,10 @@ export class ChatController {
       createdAt: m.createdAt,
     }));
   }
+
+  @Post('debug/fix-emoji')
+  @Public()
+  async fixEmoji() {
+    return this.chatService.fixAllEmojiMojibake();
+  }
 }

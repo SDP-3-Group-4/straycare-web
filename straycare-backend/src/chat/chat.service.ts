@@ -301,6 +301,47 @@ export class ChatService implements OnModuleInit {
     });
   }
 
+  async fixAllEmojiMojibake() {
+    const iconv = await import('iconv-lite');
+    const fix = (s: string): string => {
+      if (!s) return s;
+      let fixed = s;
+      if (/[Γ≡ƒÇÖÖ£¿]/.test(s) || /Ã/.test(s)) {
+        try {
+          const bytes = (iconv as any).encode(s, 'cp437');
+          const decoded = (iconv as any).decode(bytes, 'utf8');
+          if (decoded && decoded !== s && !decoded.includes('�') && decoded.length < s.length * 2) fixed = decoded;
+        } catch {}
+        if (fixed === s) {
+          try {
+            const bytes2 = Buffer.from(s, 'latin1');
+            const decoded2 = bytes2.toString('utf8');
+            if (decoded2 && decoded2 !== s && !decoded2.includes('�')) fixed = decoded2;
+          } catch {}
+        }
+      }
+      try {
+        return fixed.normalize('NFC');
+      } catch {
+        return fixed;
+      }
+    };
+
+    const messages = await this.prisma.message.findMany({});
+    let fixedCount = 0;
+    for (const m of messages) {
+      const newContent = fix(m.content);
+      if (newContent !== m.content) {
+        await this.prisma.message.update({
+          where: { id: m.id },
+          data: { content: newContent },
+        });
+        fixedCount++;
+      }
+    }
+    return { total: messages.length, fixed: fixedCount };
+  }
+
   // Setup AI Bot user (delegated to NimService for a single source of truth)
   async ensureAiUserExists() {
     return this.nimService.ensureAiUserExists();
