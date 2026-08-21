@@ -20,7 +20,7 @@ export type Chat = {
   lastSeenAt?: string | null;
 };
 
-const AI_BOT_AVATAR = "data:image/png;base64,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";
+const AI_BOT_AVATAR = "/aivetbot.svg";
 
 export default function ChatWidget() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -195,8 +195,8 @@ export default function ChatWidget() {
               >
                 <div className="absolute -right-8 -top-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                 <div className="absolute -left-4 -bottom-10 w-20 h-20 bg-[var(--sc-brand-300)]/20 rounded-full blur-xl" />
-                <div className="relative bg-white/20 p-2.5 rounded-xl backdrop-blur-sm border border-white/25">
-                  <Bot size={22} className="text-white" />
+                <div className="relative bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-white/25 flex items-center justify-center w-11 h-11 shrink-0 shadow-xs">
+                  <img src="/aivetbot.svg" alt="AI Vet Bot" className="w-7 h-7 object-contain brightness-0 invert drop-shadow-sm" />
                 </div>
                 <div className="relative flex flex-col text-left flex-1 min-w-0">
                   <div className="flex items-center gap-2">
