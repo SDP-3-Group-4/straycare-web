@@ -65,18 +65,10 @@ export class ChatController {
     return this.chatService.markAsRead(req.user!.uid, id);
   }
 
-  @Get('debug/:id')
+  @Get('debug/test-fix')
   @Public()
-  async debugMessages(@Param('id') id: string) {
-    const messages = await this.chatService.getMessagesForDebug(id);
-    return messages.map((m: any) => ({
-      id: m.id,
-      content: m.content,
-      hex: Buffer.from(m.content, 'utf8').toString('hex'),
-      codePoints: [...m.content].map((c: string) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`),
-      senderId: m.senderId,
-      createdAt: m.createdAt,
-    }));
+  async testFix(@Query('s') s: string) {
+    return this.chatService.testFix(s ?? 'isnΓÇÖt');
   }
 
   @Post('debug/fix-emoji')
@@ -91,9 +83,17 @@ export class ChatController {
     return this.chatService.fixOneEmoji(id);
   }
 
-  @Get('debug/test-fix')
+  @Get('debug/:id')
   @Public()
-  async testFix(@Query('s') s: string) {
-    return this.chatService.testFix(s ?? 'isnΓÇÖt');
+  async debugMessages(@Param('id') id: string) {
+    const messages = await this.chatService.getMessagesForDebug(id);
+    return messages.map((m: any) => ({
+      id: m.id,
+      content: m.content,
+      hex: Buffer.from(m.content, 'utf8').toString('hex'),
+      codePoints: [...m.content].map((c: string) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`),
+      senderId: m.senderId,
+      createdAt: m.createdAt,
+    }));
   }
 }
