@@ -17,6 +17,7 @@ interface PostCardProps {
   category: 'adoption' | 'fun' | 'rescue' | 'fundraise' | string;
   content: string;
   imageUrl?: string;
+  media?: { url: string; type: 'image' | 'video' }[];
   location?: string;
   likesCount: number;
   commentsCount: number;
@@ -86,6 +87,8 @@ export default function PostCard({
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
+  const [activeMedia, setActiveMedia] = useState<number | null>(null);
+  const mediaList: { url: string; type: 'image' | 'video' }[] = (media && Array.isArray(media) && media.length ? media : imageUrl ? [{ url: imageUrl, type: 'image' as const }] : []) as any;
 
   useEffect(() => {
     if (user) {
@@ -306,14 +309,72 @@ export default function PostCard({
         <p className="text-[var(--sc-text-primary)] text-[15px] mb-4 whitespace-pre-wrap">{editContent}</p>
       )}
       
-      {/* Image */}
-      {imageUrl && !isEditing && (
+      {/* Media collage / carousel */}
+      {mediaList.length > 0 && !isEditing && (
         <div className="mb-4">
-          <img 
-            src={imageUrl} 
-            alt="Post content" 
-            className="w-full h-auto max-h-[500px] object-cover rounded-xl border border-gray-100"
-          />
+          {mediaList.length === 1 ? (
+            <div className="rounded-xl overflow-hidden border border-gray-100 cursor-pointer" onClick={() => setActiveMedia(0)}>
+              {mediaList[0].type === 'video' ? (
+                <video src={mediaList[0].url} controls className="w-full max-h-[500px] object-contain bg-black" />
+              ) : (
+                <img src={mediaList[0].url} alt="Post media" className="w-full h-auto max-h-[500px] object-cover" />
+              )}
+            </div>
+          ) : mediaList.length === 2 ? (
+            <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden border border-gray-100">
+              {mediaList.map((m, i) => (
+                <div key={i} className="cursor-pointer bg-black" onClick={() => setActiveMedia(i)}>
+                  {m.type === 'video' ? <video src={m.url} className="w-full h-48 object-cover" muted /> : <img src={m.url} alt={`media ${i}`} className="w-full h-48 object-cover" />}
+                </div>
+              ))}
+            </div>
+          ) : mediaList.length === 3 ? (
+            <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden border border-gray-100">
+              <div className="row-span-2 cursor-pointer bg-black min-h-[200px]" onClick={() => setActiveMedia(0)}>
+                {mediaList[0].type === 'video' ? <video src={mediaList[0].url} className="w-full h-full object-cover min-h-[200px]" muted /> : <img src={mediaList[0].url} alt="media 0" className="w-full h-full object-cover min-h-[200px]" />}
+              </div>
+              <div className="cursor-pointer bg-black h-24" onClick={() => setActiveMedia(1)}>
+                {mediaList[1].type === 'video' ? <video src={mediaList[1].url} className="w-full h-full object-cover" muted /> : <img src={mediaList[1].url} alt="media 1" className="w-full h-full object-cover" />}
+              </div>
+              <div className="cursor-pointer bg-black h-24 relative" onClick={() => setActiveMedia(2)}>
+                {mediaList[2].type === 'video' ? <video src={mediaList[2].url} className="w-full h-full object-cover" muted /> : <img src={mediaList[2].url} alt="media 2" className="w-full h-full object-cover" />}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden border border-gray-100">
+              {mediaList.slice(0, 4).map((m, i) => (
+                <div key={i} className="relative cursor-pointer bg-black h-48" onClick={() => setActiveMedia(i)}>
+                  {m.type === 'video' ? <video src={m.url} className="w-full h-full object-cover" muted /> : <img src={m.url} alt={`media ${i}`} className="w-full h-full object-cover" />}
+                  {i === 3 && mediaList.length > 4 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-xl">+{mediaList.length - 4}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {mediaList.length > 1 && <p className="text-[11px] text-gray-400 mt-1">{mediaList.length} media • tap to view carousel</p>}
+        </div>
+      )}
+      {activeMedia !== null && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setActiveMedia(null)}>
+          <button onClick={() => setActiveMedia(null)} className="absolute top-4 right-4 text-white bg-white/20 p-2 rounded-full hover:bg-white/30"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg></button>
+          <button onClick={(e) => { e.stopPropagation(); setActiveMedia(prev => (prev! > 0 ? prev! - 1 : mediaList.length - 1)); }} className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-white/20 p-3 rounded-full hover:bg-white/30 hidden sm:flex">‹</button>
+          <div className="max-w-3xl w-full max-h-[85vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            {mediaList[activeMedia].type === 'video' ? (
+              <video src={mediaList[activeMedia].url} controls autoPlay className="max-w-full max-h-[70vh] rounded-xl" />
+            ) : (
+              <img src={mediaList[activeMedia].url} alt={`media ${activeMedia}`} className="max-w-full max-h-[70vh] object-contain rounded-xl" />
+            )}
+            <div className="flex gap-2 mt-4 overflow-x-auto max-w-full pb-2">
+              {mediaList.map((m, i) => (
+                <button key={i} onClick={() => setActiveMedia(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 ${i === activeMedia ? 'border-white' : 'border-transparent opacity-60'}`}>
+                  {m.type === 'video' ? <video src={m.url} className="w-full h-full object-cover" muted /> : <img src={m.url} alt={`thumb ${i}`} className="w-full h-full object-cover" />}
+                </button>
+              ))}
+            </div>
+            <p className="text-white/60 text-xs mt-2">{activeMedia + 1} / {mediaList.length}</p>
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); setActiveMedia(prev => (prev! < mediaList.length - 1 ? prev! + 1 : 0)); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-white/20 p-3 rounded-full hover:bg-white/30 hidden sm:flex">›</button>
         </div>
       )}
 

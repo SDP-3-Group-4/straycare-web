@@ -3,6 +3,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import LeftSidebar from '../components/home/sidebar/LeftSidebar';
 import RightPanel from '../components/home/panel/RightPanel';
 import CartPanel from '../components/home/panel/CartPanel';
+import MobileBanner from '../components/mobile/MobileBanner';
+import MobileNav from '../components/mobile/MobileNav';
 
 export default function HomeFeedPage() {
   const location = useLocation();
@@ -10,12 +12,13 @@ export default function HomeFeedPage() {
 
   return (
     <div className="home-feed-page">
+      <MobileBanner />
       <div className="home-feed-page__container">
         <aside className="home-feed-page__left">
           <LeftSidebar />
         </aside>
         
-        <main className="home-feed-page__center min-h-screen">
+        <main className="home-feed-page__center min-h-screen pb-20 lg:pb-0">
           <Outlet />
         </main>
         
@@ -23,6 +26,7 @@ export default function HomeFeedPage() {
           {isMarketplace ? <CartPanel /> : <RightPanel />}
         </aside>
       </div>
+      <MobileNav />
     </div>
   );
 }

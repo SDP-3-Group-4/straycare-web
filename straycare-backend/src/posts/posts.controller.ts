@@ -22,11 +22,13 @@ export class PostsController {
   @Post()
   async createPost(@Body() data: any, @Req() req: Request) {
     try {
+      const media = data.media || (data.imageUrl ? [{ url: data.imageUrl, type: data.imageUrl.startsWith('data:video') ? 'video' : 'image' }] : undefined);
       return await this.postsService.createPost({
         content: data.content,
         category: data.category,
         author: { connect: { id: req.user!.uid } },
         imageUrl: data.imageUrl,
+        media: media as any,
         location: data.location,
         latitude: data.latitude,
         longitude: data.longitude,

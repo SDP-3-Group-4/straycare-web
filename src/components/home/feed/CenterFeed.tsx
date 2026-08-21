@@ -85,6 +85,7 @@ export default function CenterFeed() {
               category={post.category}
               content={post.content}
               imageUrl={post.imageUrl}
+              media={post.media}
               location={post.location}
               likesCount={post._count?.likes || 0}
               commentsCount={post._count?.comments || 0}

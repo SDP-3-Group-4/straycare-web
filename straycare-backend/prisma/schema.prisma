@@ -55,6 +55,7 @@ model Post {
   author        User      @relation(fields: [authorId], references: [id])
   content       String
   imageUrl      String?
+  media         Json?
   category      String
   location      String?
   latitude      Float?

@@ -17,7 +17,7 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [category, setCategory] = useState("adoption");
-  const [imageUrl, setImageUrl] = useState("");
+  const [media, setMedia] = useState<{url: string, type: 'image' | 'video'}[]>([]);
   const [location, setLocation] = useState("");
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -53,32 +53,32 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
       alert("Please enter a valid fundraise goal amount.");
       return;
     }
-    
+    if (media.length > 6) {
+      alert("You can upload up to 6 images/videos.");
+      return;
+    }
     setIsSubmitting(true);
-
     let finalCoords = coordinates;
     let finalLoc = location;
-    
-
     try {
       await createPost({
         content,
         category,
-        imageUrl: imageUrl || undefined,
+        imageUrl: media[0]?.url || undefined,
+        media: media.length ? media : undefined,
         location: finalLoc || undefined,
         latitude: finalCoords?.lat,
         longitude: finalCoords?.lng,
         fundraiseGoal: category === "fundraise" ? parseFloat(fundraiseGoal) : undefined
-      });
+      } as any);
       setContent("");
-      setImageUrl("");
+      setMedia([]);
       setLocation("");
       setCoordinates(null);
       setCategory("adoption");
       setFundraiseGoal("");
       if (onPostCreated) onPostCreated();
       window.dispatchEvent(new Event('postCreated'));
-      
       setFeedbackTitle("Success!");
       setFeedbackMessage("Your post has been created and published.");
       setIsOpen(true);
@@ -93,14 +93,22 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []) as File[];
+    if (!files.length) return;
+    const remaining = 6 - media.length;
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) alert(`Only ${remaining} more file(s) allowed (max 6).`);
+    toAdd.forEach(file => {
+      const isVideo = file.type.startsWith('video/');
+      if (isVideo && file.size > 50 * 1024 * 1024) { alert(`${file.name} is too large (max 50MB)`); return; }
+      if (!isVideo && file.size > 10 * 1024 * 1024) { alert(`${file.name} is too large (max 10MB)`); return; }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageUrl(reader.result as string);
+        setMedia(prev => [...prev, { url: reader.result as string, type: isVideo ? 'video' : 'image' }].slice(0, 6));
       };
       reader.readAsDataURL(file);
-    }
+    });
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleAddLocation = () => {
@@ -165,19 +173,26 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
               />
               
               {/* Previews */}
-              {(imageUrl || location) && (
+              {(media.length > 0 || location) && (
                 <div className="flex flex-col gap-2 mt-2">
-                  {imageUrl && (
-                    <div className="relative inline-block w-fit">
-                      <img src={imageUrl} alt="Attached" className="max-h-32 rounded-lg object-cover" />
-                      <button 
-                        onClick={() => setImageUrl("")}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        <X size={14} />
-                      </button>
+                  {media.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {media.map((m, idx) => (
+                        <div key={idx} className="relative group">
+                          {m.type === 'video' ? (
+                            <video src={m.url} className="w-full h-24 object-cover rounded-lg border border-[var(--sc-border)]" muted />
+                          ) : (
+                            <img src={m.url} alt={`media ${idx}`} className="w-full h-24 object-cover rounded-lg border border-[var(--sc-border)]" />
+                          )}
+                          <button onClick={() => setMedia(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-90">
+                            <X size={12} />
+                          </button>
+                          <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">{m.type === 'video' ? 'VIDEO' : 'IMAGE'}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
+                  {media.length > 0 && <p className="text-[11px] text-gray-400">{media.length}/6 • first is cover</p>}
                   {location && (
                     <div className="flex items-center gap-1 text-[13px] text-gray-500 bg-gray-50 w-fit px-2 py-1 rounded-md border border-[var(--sc-border)]">
                       <MapPin size={12} />
@@ -208,12 +223,16 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
             <div className="flex items-center gap-1 text-[var(--sc-brand-500)] flex-wrap">
               <input 
                 type="file" 
-                accept="image/*" 
+                accept="image/*,video/*" 
+                multiple
                 className="hidden" 
                 ref={fileInputRef} 
                 onChange={handleFileChange} 
               />
-              <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors"><ImagePlus size={18} /></button>
+              <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors relative" title="Add images/videos (up to 6)">
+                <ImagePlus size={18} />
+                {media.length > 0 && <span className="absolute -top-1 -right-1 bg-[var(--sc-brand-600)] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{media.length}</span>}
+              </button>
               <button onClick={handleAddLocation} className="p-2 hover:bg-[var(--sc-brand-50)] rounded-full transition-colors" disabled={isGettingLocation}>
                 {isGettingLocation ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
               </button>

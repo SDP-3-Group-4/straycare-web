@@ -305,6 +305,7 @@ export default function ProfileFeed() {
                 category={post.category}
                 content={post.content}
                 imageUrl={post.imageUrl || undefined}
+                media={post.media}
                 location={post.location || undefined}
                 likesCount={post._count?.likes || 0}
                 commentsCount={post._count?.comments || 0}

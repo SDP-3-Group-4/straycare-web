@@ -43,8 +43,13 @@
 @media (max-width: 768px) {
   .home-feed-page__container {
     grid-template-columns: 1fr;
+    padding: 0 1rem;
+    gap: 1rem;
   }
   .home-feed-page__left {
     display: none;
+  }
+  .home-feed-page__center {
+    padding-bottom: 80px;
   }
 }
