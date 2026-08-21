@@ -5,7 +5,7 @@ import { getAuthToken } from '../firebase';
 export const UNAUTHORIZED_EVENT = 'straycare:unauthorized';
 export const CONNECTIONS_UPDATED_EVENT = 'straycare:connections-updated';
 
-async function request(path: string, init: RequestInit = {}): Promise<any> {
+async function request(path: string, init: RequestInit = {}, retries = 1): Promise<any> {
   const token = await getAuthToken();
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${token}`);
@@ -15,27 +15,53 @@ async function request(path: string, init: RequestInit = {}): Promise<any> {
     headers.set('Content-Type', 'application/json; charset=utf-8');
   }
 
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  // 20s timeout controller to prevent browser hanging on cold starts
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-  if (response.status === 401) {
-    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
-    throw new Error('Session expired. Please sign in again.');
-  }
-  if (response.status === 429) {
-    const text = await response.text();
-    throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
-  }
-  if (!response.ok) {
-    let message = `Request failed (${response.status})`;
-    try {
-      const body = await response.json();
-      if (body.message) message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
-    } catch { /* non-JSON error body */ }
-    const err: any = new Error(message);
-    err.status = response.status;
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers,
+      signal: init.signal || controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (response.status === 401) {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      throw new Error('Session expired. Please sign in again.');
+    }
+    if (response.status === 429) {
+      const text = await response.text();
+      throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
+    }
+
+    // Handle Render cold start 502/503/504 gateway errors with a quick automatic retry
+    if ([502, 503, 504].includes(response.status) && retries > 0) {
+      console.warn(`Backend is warming up (${response.status}), retrying in 2.5s...`);
+      await new Promise((r) => setTimeout(r, 2500));
+      return request(path, init, retries - 1);
+    }
+
+    if (!response.ok) {
+      let message = `Request failed (${response.status})`;
+      try {
+        const body = await response.json();
+        if (body.message) message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
+      } catch { /* non-JSON error body */ }
+      const err: any = new Error(message);
+      err.status = response.status;
+      throw err;
+    }
+    return response.json();
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError' && retries > 0) {
+      console.warn('Request timed out while waiting for backend, retrying once...');
+      return request(path, init, retries - 1);
+    }
     throw err;
   }
-  return response.json();
 }
 
 const postJson = (path: string, data: any) =>
@@ -47,7 +73,23 @@ const putJson = (path: string, data: any) =>
 const deleteJson = (path: string, data: any) =>
   request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
 
-export const fetchPosts = (tab?: string, userId?: string, lat?: number, lng?: number) => {
+// SWR Cache Helpers
+export const getCachedData = <T>(key: string): T | null => {
+  try {
+    const raw = localStorage.getItem(`sc_swr_${key}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const setCachedData = <T>(key: string, data: T) => {
+  try {
+    localStorage.setItem(`sc_swr_${key}`, JSON.stringify(data));
+  } catch {}
+};
+
+export const fetchPosts = async (tab?: string, userId?: string, lat?: number, lng?: number) => {
   const queryParams = new URLSearchParams();
   if (tab) queryParams.append('tab', tab);
   if (userId) queryParams.append('userId', userId);
@@ -55,7 +97,13 @@ export const fetchPosts = (tab?: string, userId?: string, lat?: number, lng?: nu
   if (lng !== undefined) queryParams.append('lng', lng.toString());
 
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  return request(`/posts${queryString}`);
+  const cacheKey = `posts_${tab || 'explore'}_${userId || 'all'}`;
+  
+  const data = await request(`/posts${queryString}`);
+  if (Array.isArray(data) && data.length > 0) {
+    setCachedData(cacheKey, data);
+  }
+  return data;
 };
 
 export const createPost = (postData: any) => postJson('/posts', postData);

@@ -11,6 +11,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..900&display=swap" rel="stylesheet">
     <title>StrayCare — Home</title>
+    <script>
+      // Non-blocking early cold-start handshake
+      try {
+        var api = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://straycare-backend-se6q.onrender.com';
+        fetch(api + '/posts?tab=explore', { mode: 'no-cors', cache: 'no-store' }).catch(function(){});
+      } catch(e){}
+    </script>
   </head>
   <body>
     <div id="root"></div>
