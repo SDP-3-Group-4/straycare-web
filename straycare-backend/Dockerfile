@@ -6,7 +6,7 @@ RUN npm install --no-audit --no-fund
 
 COPY prisma ./prisma
 COPY prisma.config.ts ./
-RUN npx prisma generate
+RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate
 
 COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
