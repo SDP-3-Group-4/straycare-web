@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ChatService } from './chat.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('chat')
 export class ChatController {
@@ -62,5 +63,19 @@ export class ChatController {
   @Post(':id/read')
   markAsRead(@Param('id') id: string, @Req() req: Request) {
     return this.chatService.markAsRead(req.user!.uid, id);
+  }
+
+  @Get('debug/:id')
+  @Public()
+  async debugMessages(@Param('id') id: string) {
+    const messages = await this.chatService.getMessagesForDebug(id);
+    return messages.map((m: any) => ({
+      id: m.id,
+      content: m.content,
+      hex: Buffer.from(m.content, 'utf8').toString('hex'),
+      codePoints: [...m.content].map((c: string) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`),
+      senderId: m.senderId,
+      createdAt: m.createdAt,
+    }));
   }
 }

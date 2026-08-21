@@ -293,6 +293,14 @@ export class ChatService implements OnModuleInit {
     }, 1500);
   }
 
+  async getMessagesForDebug(conversationId: string) {
+    return this.prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      include: { sender: { select: { displayName: true } } },
+    });
+  }
+
   // Setup AI Bot user (delegated to NimService for a single source of truth)
   async ensureAiUserExists() {
     return this.nimService.ensureAiUserExists();
