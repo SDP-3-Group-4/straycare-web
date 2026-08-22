@@ -27,8 +27,19 @@ export class ChatService implements OnModuleInit {
     await this.ensureAiUserExists();
   }
 
-  // List all conversations for a user
+  // List all conversations for a user (only connected users and AI bot)
   async getConversations(userId: string) {
+    const acceptedConnections = await this.prisma.connection.findMany({
+      where: {
+        status: 'accepted',
+        OR: [{ requesterId: userId }, { recipientId: userId }],
+      },
+    });
+    const connectedUserIds = new Set<string>();
+    acceptedConnections.forEach((c) => {
+      connectedUserIds.add(c.requesterId === userId ? c.recipientId : c.requesterId);
+    });
+
     const conversations = await this.prisma.conversationParticipant.findMany({
       where: { userId },
       include: {
@@ -52,7 +63,15 @@ export class ChatService implements OnModuleInit {
       },
     });
 
-    return conversations.map((cp) => {
+    const validConversations = conversations.filter((cp) => {
+      if (cp.conversation.isGroup) return true;
+      const otherParticipant = cp.conversation.participants[0]?.user;
+      if (!otherParticipant) return false;
+      if (otherParticipant.id === 'ai-vet-bot-id') return true;
+      return connectedUserIds.has(otherParticipant.id);
+    });
+
+    return validConversations.map((cp) => {
       const conv = cp.conversation;
       const otherParticipant = conv.participants[0]?.user;
       const latestMessage = conv.messages[0];
@@ -71,8 +90,27 @@ export class ChatService implements OnModuleInit {
     });
   }
 
-  // Create a new direct conversation or return existing
+  // Create a new direct conversation or return existing (only between connected users or AI bot)
   async createConversation(userId: string, targetUserId: string) {
+    if (targetUserId !== 'ai-vet-bot-id') {
+      const isConnected = await this.prisma.connection.findFirst({
+        where: {
+          status: 'accepted',
+          OR: [
+            { requesterId: userId, recipientId: targetUserId },
+            { requesterId: targetUserId, recipientId: userId },
+          ],
+        },
+      });
+
+      if (!isConnected) {
+        throw new HttpException(
+          'Chats are only available between connected users. Please connect with this user first.',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+
     // Check if direct conversation already exists
     const existing = await this.prisma.conversation.findFirst({
       where: {

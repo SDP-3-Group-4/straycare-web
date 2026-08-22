@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
+import DisconnectConfirmModal from '../../common/DisconnectConfirmModal';
 import PostCard from './PostCard';
 import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus, UserPlus, Compass, Share2 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -566,22 +567,19 @@ export default function ProfileFeed() {
           </div>
         )}
 
-        {disconnectConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDisconnectConfirm(null)} />
-            <div className="relative bg-white rounded-2xl p-5 sm:p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
-              <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
-                <UserMinus size={20} />
-              </div>
-              <h3 className="font-bold text-[15px] sm:text-[16px]">Disconnect?</h3>
-              <p className="text-xs sm:text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
-              <div className="flex gap-2.5 mt-4">
-                <button onClick={() => setDisconnectConfirm(null)} className="flex-1 py-2 rounded-xl border border-[var(--sc-border)] font-bold text-[13px] sm:text-[14px]">Cancel</button>
-                <button onClick={() => handleDisconnect(disconnectConfirm)} className="flex-1 py-2 rounded-xl font-bold text-[13px] sm:text-[14px] text-white bg-red-600 hover:bg-red-700">Disconnect</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Mobile-friendly Disconnect Confirmation Modal */}
+        <DisconnectConfirmModal
+          isOpen={Boolean(disconnectConfirm)}
+          onClose={() => setDisconnectConfirm(null)}
+          onConfirm={() => disconnectConfirm && handleDisconnect(disconnectConfirm)}
+          userName={(() => {
+            const target = connections.find(c => {
+              const other = c.requesterId === user?.uid ? c.recipient : c.requester;
+              return other?.id === disconnectConfirm;
+            });
+            return target ? (target.requesterId === user?.uid ? target.recipient?.displayName : target.requester?.displayName) : undefined;
+          })()}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Edit3, MapPin, Link as LinkIcon, Calendar, BadgeCheck, ShieldCheck, Pencil, Loader2, Camera, UserPlus, HandHeart, User, UserMinus } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
+import DisconnectConfirmModal from '../../common/DisconnectConfirmModal';
 import { updateUserProfile, requestConnection, fetchConnectionStatus, disconnectConnection, fetchMutualConnections, fetchGraphDegree } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { avatarOnError, formatHandle } from '../../../constants';
@@ -386,24 +387,13 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
         onProfileUpdate={onProfileUpdate}
       />
 
-      {showDisconnectConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDisconnectConfirm(false)} />
-          <div className="relative bg-white rounded-2xl p-5 sm:p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-xl">
-            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
-              <UserMinus size={20} />
-            </div>
-            <h3 className="font-bold text-[15px] sm:text-[16px] text-[var(--sc-text-primary)]">Disconnect from {user.name}?</h3>
-            <p className="text-[12px] sm:text-[13px] text-gray-500 mt-1">You will need to send a new connection request to connect again.</p>
-            <div className="flex gap-2.5 mt-4">
-              <button onClick={() => setShowDisconnectConfirm(false)} className="flex-1 py-2 rounded-xl border border-[var(--sc-border)] font-bold text-[13px] sm:text-[14px]">Cancel</button>
-              <button onClick={handleConnect} disabled={isConnecting} className="flex-1 py-2 rounded-xl font-bold text-[13px] sm:text-[14px] text-white bg-red-600 hover:bg-red-700 disabled:opacity-60">
-                {isConnecting ? 'Processing...' : 'Disconnect'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DisconnectConfirmModal
+        isOpen={showDisconnectConfirm}
+        onClose={() => setShowDisconnectConfirm(false)}
+        onConfirm={handleConnect}
+        userName={user.name}
+        isProcessing={isConnecting}
+      />
     </div>
   );
 }
