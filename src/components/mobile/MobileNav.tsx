@@ -8,7 +8,7 @@ const items = [
   { to: '/', icon: Home, label: 'Home', exact: true },
   { to: '/marketplace', icon: Store, label: 'Shop' },
   { to: '/bookmarks', icon: Bookmark, label: 'Saved' },
-  { to: '/notifications', icon: Bell, label: 'Alerts', isNotification: true },
+  { to: '/notifications', icon: Bell, label: 'Notifications', isNotification: true },
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
@@ -30,9 +30,8 @@ export default function MobileNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-[var(--sc-border)] flex justify-around items-center py-2 px-1 z-40 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-lg"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[var(--sc-border)] flex justify-around items-center py-2 px-1 z-40 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-lg"
     >
-      {items.map(({ to, icon: Icon, label, exact, isNotification }) => (
         <NavLink
           key={to}
           to={to}

@@ -7,7 +7,7 @@ interface FeedTabsProps {
 
 export default function FeedTabs({ selected, onSelect }: FeedTabsProps) {
   return (
-    <div className="flex w-full border-b border-gray-100 bg-white/95">
+    <div className="flex w-full border-b border-gray-100 bg-white/70 backdrop-blur-md sticky top-0 z-10">
       <button 
         onClick={() => onSelect('explore')}
         className="flex-1 py-3.5 flex items-center justify-center cursor-pointer transition-colors relative"

@@ -40,7 +40,7 @@ export default function MobileHeader() {
 
   return (
     <>
-      <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[var(--sc-border)] px-3.5 py-2.5 flex items-center justify-between shadow-xs">
+      <header className="md:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[var(--sc-border)] px-3.5 py-2.5 flex items-center justify-between shadow-xs">
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="StrayCare Logo" className="h-7 w-auto object-contain" />
