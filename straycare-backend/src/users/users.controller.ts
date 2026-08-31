@@ -7,6 +7,7 @@ import {
   Put,
   Req,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { UsersService } from './users.service';
@@ -60,7 +61,11 @@ export class UsersController {
 
   @Get(':id')
   async getUser(@Param('id') id: string) {
-    return this.usersService.getUser(id);
+    const user = await this.usersService.getUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   @Put(':id')
