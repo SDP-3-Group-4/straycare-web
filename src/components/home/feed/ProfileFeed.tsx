@@ -73,7 +73,7 @@ export default function ProfileFeed() {
         coverImage: profile.coverImageUrl || '',
         location: profile.location || '',
         website: profile.website || '',
-        joinedDate: new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+        joinedDate: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'Recently joined',
         isVerified: profile.verifiedStatus,
         isVet: profile.isVet,
         topContributor: profile.topContributor,
@@ -324,10 +324,10 @@ export default function ProfileFeed() {
                 key={post.id} 
                 id={post.id}
                 authorId={post.authorId}
-                authorName={post.author?.displayName || profileUser?.name}
-                authorAvatar={post.author?.photoUrl || profileUser?.avatar}
-                authorHandle={post.author?.handle || profileUser?.handle}
-                timeAgo={new Date(post.createdAt).toLocaleDateString()}
+                authorName={post.author?.displayName || profileData?.name}
+                authorAvatar={post.author?.photoUrl || profileData?.avatar}
+                authorHandle={post.author?.handle || profileData?.handle}
+                timeAgo={new Date(post.createdAt || Date.now()).toLocaleDateString()}
                 category={post.category}
                 content={post.content}
                 imageUrl={post.imageUrl || undefined}
@@ -338,7 +338,7 @@ export default function ProfileFeed() {
                 fundraiseGoal={post.fundraiseGoal}
                 raisedAmount={post.raisedAmount}
                 donorsCount={post.donorsCount}
-                isVerified={post.author?.verifiedStatus || profileUser?.isVerified}
+                isVerified={post.author?.verifiedStatus || profileData?.isVerified}
               />
             )) : (
               <div className="text-center py-12 text-gray-500 border border-[var(--sc-border)] rounded-2xl bg-white p-6">
@@ -355,7 +355,7 @@ export default function ProfileFeed() {
               <div key={order.id} className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center justify-between shadow-xs">
                 <div className="min-w-0 pr-2">
                   <p className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate">Order #{order.id.slice(-8)}</p>
-                  <p className="text-xs text-[var(--sc-text-secondary)]">{new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-[var(--sc-text-secondary)]">{new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-[15px] text-[var(--sc-brand-600)]">৳{order.total.toFixed(2)}</p>
