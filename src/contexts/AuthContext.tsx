@@ -136,7 +136,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     extra?: { phone?: string; referralCode?: string },
   ): Promise<AppUser> => {
     try {
-      let dbUser = await fetchUserProfile(uid);
+      let dbUser: any = null;
+      try {
+        dbUser = await fetchUserProfile(uid);
+      } catch (e: any) {
+        if (e.status !== 404) {
+          throw e; // rethrow if it's not a 404
+        }
+      }
+
       if (!dbUser) {
         const displayName = initialData.displayName || initialData.email?.split('@')[0] || 'User';
         const photoUrl = initialData.photoURL || null;
