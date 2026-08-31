@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Heart, MessageSquare, DollarSign, UserPlus, Check, Bell, User, Loader2 } from "lucide-react";
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead, acceptConnection, declineConnection, CONNECTIONS_UPDATED_EVENT } from '../../../services/api';
@@ -38,6 +39,7 @@ const saveResolvedMap = (id: string, status: 'accepted' | 'declined') => {
 
 export default function NotificationsFeed() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
@@ -134,6 +136,14 @@ export default function NotificationsFeed() {
       } catch (err) {
         console.error("Failed to mark read:", err);
       }
+    }
+    
+    if (notif.type === 'connection' || notif.type === 'connection_accepted') {
+      if (notif.senderId) {
+        navigate(`/profile?id=${notif.senderId}`);
+      }
+    } else if (notif.type === 'like' || notif.type === 'comment' || notif.type === 'donation') {
+      navigate(`/profile?id=${user.uid}`);
     }
   };
 
