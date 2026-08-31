@@ -40,7 +40,7 @@ export class PostsController {
         e.message || e.toString() + '\n' + e.stack,
       );
       console.error('CREATE POST ERROR:', e);
-      throw new InternalServerErrorException(e.message);
+      throw new InternalServerErrorException('Failed to create post. Please try again later.');
     }
   }
 

@@ -59,11 +59,19 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
     }
 
     if (!response.ok) {
-      let message = `Request failed (${response.status})`;
-      try {
-        const body = await response.json();
-        if (body.message) message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
-      } catch { /* non-JSON error body */ }
+      let message = 'An unexpected error occurred. Please try again.';
+      if (response.status >= 500) {
+        message = 'Service temporarily unavailable. Please try again later.';
+      } else {
+        try {
+          const body = await response.json();
+          if (body.message) {
+            message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
+          } else {
+            message = `Request failed (${response.status})`;
+          }
+        } catch { /* non-JSON error body */ }
+      }
       const err: any = new Error(message);
       err.status = response.status;
       throw err;
