@@ -199,7 +199,7 @@ export default function ChatConversation({ chat, onBack, onChatDeleted }: ChatCo
   return (
     <div className="flex flex-col h-full bg-white relative rounded-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--sc-border)] bg-white sticky top-0 z-10 shrink-0 rounded-t-2xl">
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 border-b border-[var(--sc-border)] glass-effect z-10 rounded-t-2xl">
         <div className="flex items-center gap-3">
           <button 
             onClick={onBack}
@@ -242,7 +242,7 @@ export default function ChatConversation({ chat, onBack, onChatDeleted }: ChatCo
       {/* Message List */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 flex flex-col gap-1 bg-[#f8f9fa]"
+        className="flex-1 overflow-y-auto p-4 pt-20 flex flex-col gap-1 bg-[#f8f9fa]"
       >
 {messages.map((msg, index) => {
             // Day divider before the first message of each day

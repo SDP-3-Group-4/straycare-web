@@ -144,7 +144,7 @@ export default function ChatWidget() {
       <div className={`bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col overflow-hidden transition-all duration-300 ${isCollapsed ? 'h-auto flex-none' : 'flex-1 min-h-0 max-h-[800px]'}`}>
         {/* Header */}
         <div 
-          className="p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
+          className="absolute top-0 left-0 right-0 p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50/50 transition-colors glass-effect z-10 rounded-t-2xl"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-center gap-2">
@@ -170,9 +170,9 @@ export default function ChatWidget() {
         </div>
 
         {!isCollapsed && (
-          <>
+          <div className="flex flex-col flex-1 overflow-y-auto pt-[76px]">
             {/* AI Vet Bot Banner */}
-            <div className="px-5 mb-4">
+            <div className="px-5 mb-4 shrink-0">
               <button 
                 onClick={async () => {
                   try {
@@ -215,7 +215,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Chat List */}
-            <div ref={menuRef} className="flex flex-col px-3 pb-2 overflow-y-auto flex-1">
+            <div ref={menuRef} className="flex flex-col px-3 pb-2">
               {humanChats.map((chat) => (
                 <div 
                   key={chat.id} 

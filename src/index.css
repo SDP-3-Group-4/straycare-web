@@ -218,6 +218,17 @@ html.text-scale-lg {
   font-size: 110%;
 }
 
+/* Glass Effect */
+.glass-effect {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+html.dark .glass-effect {
+  background-color: rgba(21, 21, 32, 0.75) !important;
+}
+
 /* ─────────────────────────────────────────────────────
    Eye-Soothing Animation & Micro-Interaction System
    ───────────────────────────────────────────────────── */
