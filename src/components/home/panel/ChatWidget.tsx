@@ -310,7 +310,7 @@ export default function ChatWidget() {
                 New Message
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
 
