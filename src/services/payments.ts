@@ -23,6 +23,8 @@ export interface PaymentTransaction {
   transactionRef: string;
 }
 
+import { getCachedData, setCachedData } from '../utils/storage';
+
 const DEFAULT_METHODS: SavedPaymentMethod[] = [
   {
     id: 'pm-1',
@@ -47,13 +49,9 @@ const DEFAULT_METHODS: SavedPaymentMethod[] = [
 ];
 
 export const getSavedPaymentMethods = (): SavedPaymentMethod[] => {
-  try {
-    const raw = localStorage.getItem('straycare_payment_methods');
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error(e);
-  }
-  return DEFAULT_METHODS;
+  const cached = getCachedData<SavedPaymentMethod[]>('straycare_payment_methods');
+  if (cached) return cached;
+  return import.meta.env.DEV ? DEFAULT_METHODS : [];
 };
 
 export const savePaymentMethod = (method: Omit<SavedPaymentMethod, 'id' | 'createdAt'>): SavedPaymentMethod[] => {
@@ -70,11 +68,7 @@ export const savePaymentMethod = (method: Omit<SavedPaymentMethod, 'id' | 'creat
   }
   updated = [newMethod, ...updated];
 
-  try {
-    localStorage.setItem('straycare_payment_methods', JSON.stringify(updated));
-  } catch (e) {
-    console.error(e);
-  }
+  setCachedData('straycare_payment_methods', updated);
   window.dispatchEvent(new CustomEvent('straycare:payment-methods-updated', { detail: updated }));
   return updated;
 };
@@ -85,11 +79,7 @@ export const deletePaymentMethod = (id: string): SavedPaymentMethod[] => {
   if (updated.length > 0 && !updated.some((m) => m.isDefault)) {
     updated[0].isDefault = true;
   }
-  try {
-    localStorage.setItem('straycare_payment_methods', JSON.stringify(updated));
-  } catch (e) {
-    console.error(e);
-  }
+  setCachedData('straycare_payment_methods', updated);
   window.dispatchEvent(new CustomEvent('straycare:payment-methods-updated', { detail: updated }));
   return updated;
 };
@@ -100,16 +90,14 @@ export const setDefaultPaymentMethod = (id: string): SavedPaymentMethod[] => {
     ...m,
     isDefault: m.id === id,
   }));
-  try {
-    localStorage.setItem('straycare_payment_methods', JSON.stringify(updated));
-  } catch (e) {
-    console.error(e);
-  }
+  setCachedData('straycare_payment_methods', updated);
   window.dispatchEvent(new CustomEvent('straycare:payment-methods-updated', { detail: updated }));
   return updated;
 };
 
 export const getPaymentHistory = (): PaymentTransaction[] => {
+  if (!import.meta.env.DEV) return [];
+  
   return [
     {
       id: 'tx-101',

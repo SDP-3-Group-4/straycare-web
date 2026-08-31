@@ -91,7 +91,7 @@ export default function ProfileHeader({ user, onProfileUpdate, onConnectionsClic
 
       if (field === 'avatar') {
         setLocalAvatar(base64String);
-        updateLocalUser({ photoURL: base64String, photoUrl: base64String });
+        updateLocalUser({ photoUrl: base64String, photoUrl: base64String });
       } else {
         setLocalCover(base64String);
         updateLocalUser({ coverImageUrl: base64String });

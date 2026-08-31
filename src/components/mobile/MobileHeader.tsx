@@ -40,7 +40,7 @@ export default function MobileHeader() {
 
   return (
     <>
-      <header className="md:hidden sticky top-0 z-30 glass-effect border-b border-[var(--sc-border)] px-3.5 py-2.5 flex items-center justify-between shadow-xs">
+      <header className="md:hidden sticky-glass px-3.5 py-2.5 flex items-center justify-between shadow-xs">
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="StrayCare Logo" className="h-7 w-auto object-contain" />
@@ -115,9 +115,9 @@ export default function MobileHeader() {
             <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
               isVerifiedVet ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : 'border border-gray-200'
             }`}>
-              {user?.photoURL || user?.photoUrl ? (
+              {user?.photoUrl ? (
                 <img
-                  src={user?.photoURL || user?.photoUrl || undefined}
+                  src={user?.photoUrl || undefined}
                   alt={user?.displayName || 'User'}
                   onError={avatarOnError}
                   className="w-full h-full object-cover"
@@ -153,7 +153,7 @@ export default function MobileHeader() {
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowClinicsModal(false)} />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in slide-in-from-bottom-5 duration-300">
-            <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white/95 backdrop-blur-md border-b border-[var(--sc-border)]">
+            <div className="sticky-glass flex items-center justify-between p-4">
               <h3 className="font-bold text-base text-[var(--sc-text-primary)]">Nearby 24/7 Vet Clinics</h3>
               <button
                 onClick={() => setShowClinicsModal(false)}

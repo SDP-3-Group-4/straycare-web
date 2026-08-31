@@ -108,7 +108,7 @@ export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChat
         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
 
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-[var(--sc-card-bg,white)] shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 sticky-glass shrink-0">
           <div>
             <h2 className="text-lg font-extrabold text-[var(--sc-text-primary)] leading-tight">
               New Message

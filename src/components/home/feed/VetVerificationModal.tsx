@@ -144,7 +144,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
       <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
       <div className="relative bg-white rounded-3xl w-full max-w-md overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-gray-50/70">
+        <div className="flex items-center justify-between p-4 sm:p-5 sticky-glass shadow-xs">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-xl bg-green-50 text-green-700">
               <ShieldCheck size={18} />
@@ -181,8 +181,8 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
 
               <div className="flex items-center gap-3.5 mb-4">
                 <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/40 bg-white/10 shrink-0 flex items-center justify-center">
-                  {user?.photoURL || user?.photoUrl ? (
-                    <img src={user.photoURL || user.photoUrl} alt={displayName} onError={avatarOnError} className="w-full h-full object-cover" />
+                  {user?.photoUrl ? (
+                    <img src={user.photoUrl} alt={displayName} onError={avatarOnError} className="w-full h-full object-cover" />
                   ) : (
                     <UserIcon size={28} className="text-white/70" />
                   )}
@@ -398,7 +398,7 @@ export default function VetVerificationModal({ isOpen, onClose, email, displayNa
             </div>
 
             {/* Footer */}
-            <div className="p-4 pt-0">
+            <div className="p-4 pt-4 sm:p-5 border-t border-[var(--sc-border)] glass-effect sticky bottom-0 z-20 mt-auto">
               <p className="text-[11px] text-gray-400 mb-3 truncate">{email || 'Signed in'}</p>
               <button
                 onClick={handleSubmit}

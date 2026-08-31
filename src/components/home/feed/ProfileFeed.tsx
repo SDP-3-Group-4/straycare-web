@@ -273,7 +273,7 @@ export default function ProfileFeed() {
       )}
 
       {/* Sticky Header & Tabs */}
-      <div className="sticky top-0 z-30 glass-effect border-b border-[var(--sc-border)] mb-4 sm:mb-6 shadow-xs sm:rounded-2xl mt-1 -mx-2 sm:mx-0 flex flex-col overflow-hidden">
+      <div className="sticky-glass mb-4 sm:mb-6 shadow-xs sm:rounded-2xl mt-1 -mx-2 sm:mx-0 flex flex-col">
         {/* Compact User Info (Sticks to top) */}
         <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--sc-border)]/50">
           <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 shrink-0 border-2 border-white shadow-sm flex items-center justify-center">

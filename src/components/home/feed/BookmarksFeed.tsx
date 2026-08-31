@@ -39,7 +39,7 @@ export default function BookmarksFeed() {
     <div className="flex flex-col w-full max-w-2xl mx-auto pb-24 pt-3 sm:pt-6 lg:pt-[74px] px-1 sm:px-0">
       
       {/* Header & Filter Bar */}
-      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-[var(--sc-border)] px-3.5 py-3 sm:px-5 rounded-2xl shadow-xs mb-4">
+      <div className="sticky-glass px-3.5 py-3 sm:px-5 rounded-2xl shadow-xs mb-4">
         <div className="flex items-center gap-2.5 mb-3">
           <div className="bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] p-1.5 rounded-xl">
             <Bookmark size={18} className="fill-current" />

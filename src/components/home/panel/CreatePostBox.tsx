@@ -207,9 +207,9 @@ export default function CreatePostBox({ onPostCreated }: { onPostCreated?: () =>
         <div className="bg-white rounded-2xl p-3 sm:p-4 border border-[var(--sc-border)] flex flex-col gap-3 w-full box-border">
           <div className="flex gap-2.5 sm:gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-              {user?.photoURL || user?.photoUrl ? (
+              {user?.photoUrl ? (
                 <img 
-                  src={user?.photoURL || user?.photoUrl || undefined} 
+                  src={user?.photoUrl || undefined} 
                   alt={user?.displayName || 'User'}
                   className="w-full h-full object-cover rounded-full"
                 />

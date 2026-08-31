@@ -11,13 +11,11 @@
   },
   "dependencies": {
     "@dietrichgebert/ponytail": "^4.9.0",
-    "@formkit/auto-animate": "^0.10.0",
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
     "@tailwindcss/vite": "^4.3.3",
     "emoji-picker-react": "^4.19.1",
     "firebase": "^12.17.1",
-    "framer-motion": "^13.1.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",

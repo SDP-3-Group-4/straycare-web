@@ -71,7 +71,7 @@ export default function ChatInfoModal({ isOpen, onClose, onDeleted, chat }: Chat
       <div className="relative bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-hidden flex flex-col border border-[var(--sc-border)]">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--sc-border)] bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between p-5 sticky-glass shadow-xs">
           <h2 className="text-[18px] font-bold text-[var(--sc-text-primary)]">
             {chat.isGroup ? 'Group Info' : chat.isAiBot ? 'Bot Info' : 'Contact Info'}
           </h2>

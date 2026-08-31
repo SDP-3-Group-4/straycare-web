@@ -36,9 +36,9 @@ export default function UserProfileCard() {
             <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 ${
               (user.isVet || user.verifiedStatus) ? 'ring-2 ring-white ring-offset-2 ring-offset-[var(--sc-brand-500)]' : 'border-2 border-white/20'
             }`}>
-              {user.photoURL || user.photoUrl ? (
+              {user.photoUrl ? (
                 <img 
-                  src={user.photoURL || user.photoUrl || undefined} 
+                  src={user.photoUrl || undefined} 
                   alt={user.displayName || 'User'}
                   onError={avatarOnError}
                   className="w-full h-full object-cover rounded-full"

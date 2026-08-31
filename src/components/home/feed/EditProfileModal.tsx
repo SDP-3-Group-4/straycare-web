@@ -35,7 +35,7 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
   const [name, setName] = useState(effectiveUser.name || effectiveUser.displayName || '');
   const [handle, setHandle] = useState(initialHandle);
   const [bio, setBio] = useState(effectiveUser.bio || '');
-  const [avatar, setAvatar] = useState(effectiveUser.avatar || effectiveUser.photoUrl || effectiveUser.photoURL || '');
+  const [avatar, setAvatar] = useState(effectiveUser.avatar || effectiveUser.photoUrl || effectiveUser.photoUrl || '');
   const [coverImage, setCoverImage] = useState(effectiveUser.coverImage || effectiveUser.coverImageUrl || '');
   const [location, setLocation] = useState(effectiveUser.location || '');
   const [website, setWebsite] = useState(effectiveUser.website || '');
@@ -119,7 +119,7 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
         handle: sanitizedHandle,
         bio: bio.trim(),
         photoUrl: avatar.trim() || undefined,
-        photoURL: avatar.trim() || undefined,
+        photoUrl: avatar.trim() || undefined,
         coverImageUrl: coverImage.trim() || undefined,
         location: location.trim(),
         website: website.trim(),
@@ -145,7 +145,7 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
       {/* Modal Content */}
       <div className="relative w-full max-w-lg bg-white rounded-3xl border border-[var(--sc-border)] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[88vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-gray-50/70">
+        <div className="flex items-center justify-between p-4 sm:p-5 sticky-glass shadow-xs">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-xl bg-purple-50 text-[var(--sc-brand-600)]">
               <User size={18} />
@@ -398,7 +398,7 @@ export default function EditProfileModal({ isOpen, onClose, user: propUser, onPr
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-[var(--sc-border)] bg-gray-50/50 flex justify-end gap-2.5">
+        <div className="p-4 sm:p-5 border-t border-[var(--sc-border)] glass-effect sticky bottom-0 z-20 flex justify-end gap-2.5">
           <button
             onClick={onClose}
             disabled={loading}

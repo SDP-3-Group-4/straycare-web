@@ -1,7 +1,7 @@
 import { useState, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, toFirebaseError } from '../../contexts/AuthContext';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
+
 import { TextField, Input, Label, FieldError, Button, Separator } from '@heroui/react';
 import {
   Mail,
@@ -45,7 +45,7 @@ export default function AuthForm() {
   const { signInWithEmail, signUp, signInWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  const [parent] = useAutoAnimate();
+
   const [mode, setMode] = useState<AuthMode>('login');
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [showPassword, setShowPassword] = useState(false);
@@ -253,7 +253,7 @@ export default function AuthForm() {
       )}
 
       {/* Form */}
-      <form ref={parent} onSubmit={handleSubmit} noValidate className="auth-form__fields">
+      <form onSubmit={handleSubmit} noValidate className="auth-form__fields transition-all duration-300">
         {/* Registration-only fields */}
         {isRegister && (
           <>

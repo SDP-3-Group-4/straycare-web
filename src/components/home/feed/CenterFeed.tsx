@@ -4,6 +4,7 @@ import PostCard from './PostCard';
 import CreatePostBox from '../panel/CreatePostBox';
 import { fetchPosts, getCachedData } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useUserLocation } from '../../../hooks/useUserLocation';
 import { RefreshCw, Wifi } from 'lucide-react';
 
 export default function CenterFeed() {
@@ -12,14 +13,14 @@ export default function CenterFeed() {
 
   // SWR: Initialize state with cached posts for instant 0ms rendering
   const [posts, setPosts] = useState<any[]>(() => {
-    const cached = getCachedData<any[]>(`posts_${activeTab}_all`);
+    const cached = getCachedData<any[]>(`posts_explore_all`);
     return Array.isArray(cached) ? cached : [];
   });
-
   const [loading, setLoading] = useState(() => {
-    const cached = getCachedData<any[]>(`posts_${activeTab}_all`);
+    const cached = getCachedData<any[]>(`posts_explore_all`);
     return !(Array.isArray(cached) && cached.length > 0);
   });
+  const { requestLocation } = useUserLocation();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -28,24 +29,9 @@ export default function CenterFeed() {
     else setIsRefreshing(true);
 
     if (activeTab === 'nearby') {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            fetchPostsWithLocation(position.coords.latitude, position.coords.longitude);
-          },
-          (error) => {
-            console.warn("Geolocation fallback on mobile:", error);
-            fetchPostsWithLocation();
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 4000,
-            maximumAge: 300000,
-          }
-        );
-      } else {
-        fetchPostsWithLocation();
-      }
+      requestLocation().then((loc) => {
+        fetchPostsWithLocation(loc.lat, loc.lng);
+      });
     } else {
       fetchPostsWithLocation();
     }
@@ -95,7 +81,7 @@ export default function CenterFeed() {
       <div className="lg:hidden w-full"><CreatePostBox /></div>
       
       {/* Sticky Tab Header with Background Refreshing Indicator */}
-      <div className="sticky top-0 z-20 flex flex-col bg-white/90 backdrop-blur-md border-b border-[var(--sc-border)] rounded-2xl shadow-xs overflow-hidden">
+      <div className="sticky top-0 z-20 flex flex-col bg-white/75 dark:bg-black/65 backdrop-blur-md border-b border-[var(--sc-border)] rounded-2xl shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <FeedTabs selected={activeTab} onSelect={setActiveTab} />

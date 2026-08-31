@@ -141,10 +141,10 @@ export default function ChatWidget() {
   // Otherwise, render the Chat List view
   return (
     <>
-      <div className={`bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col overflow-hidden transition-all duration-300 ${isCollapsed ? 'h-auto flex-none' : 'flex-1 min-h-0 max-h-[800px]'}`}>
+      <div className={`bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col overflow-hidden transition-all duration-300 relative ${isCollapsed ? 'h-auto flex-none' : 'flex-1 min-h-0 max-h-[800px]'}`}>
         {/* Header */}
         <div 
-          className="absolute top-0 left-0 right-0 p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50/50 transition-colors glass-effect z-10 rounded-t-2xl"
+          className="sticky top-0 p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50/50 transition-colors bg-white z-20 rounded-t-2xl border-b border-[var(--sc-border)]"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-center gap-2">
@@ -170,9 +170,9 @@ export default function ChatWidget() {
         </div>
 
         {!isCollapsed && (
-          <div className="flex flex-col flex-1 overflow-y-auto pt-[76px]">
+          <div className="flex flex-col flex-1 overflow-y-auto">
             {/* AI Vet Bot Banner */}
-            <div className="px-5 mb-4 shrink-0">
+            <div className="px-5 mb-4 mt-4 shrink-0">
               <button 
                 onClick={async () => {
                   try {

@@ -19,7 +19,6 @@ export interface AppUser {
   id: string;
   email: string | null;
   displayName: string;
-  photoURL: string | null;
   photoUrl: string | null;
   coverImageUrl?: string;
   bio?: string;
@@ -110,19 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const buildHandle = async (displayName: string, email: string | null) => {
     const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
     const baseSlug = base || 'user';
-    let handle = baseSlug;
-    try {
-      const users = await fetchUsers();
-      const taken = new Set(users.map((u: any) => (u.handle || '').replace(/^@+/, '')).filter(Boolean));
-      let i = 2;
-      while (taken.has(handle)) {
-        handle = `${baseSlug}${i}`;
-        i += 1;
-      }
-    } catch {
-      handle = `${baseSlug}${Date.now().toString(36).slice(-4)}`;
-    }
-    return handle;
+    // Instead of O(N) client-side scan of all users, we optimistically generate a unique suffix.
+    const uniqueSuffix = Date.now().toString(36).slice(-4) + Math.random().toString(36).substring(2, 4);
+    return `${baseSlug}_${uniqueSuffix}`;
   };
 
   const syncWithPostgres = async (
@@ -130,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialData: {
       email: string | null;
       displayName: string | null;
-      photoURL: string | null;
+      photoUrl: string | null;
       emailVerified: boolean;
     },
     extra?: { phone?: string; referralCode?: string },
@@ -147,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!dbUser) {
         const displayName = initialData.displayName || initialData.email?.split('@')[0] || 'User';
-        const photoUrl = initialData.photoURL || null;
+        const photoUrl = initialData.photoUrl || null;
         const handle = await buildHandle(displayName, initialData.email);
 
         dbUser = await createUserProfile({
@@ -168,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateData.displayName = initialData.displayName || '';
   }
   if (!dbUser.photoUrl) {
-    updateData.photoUrl = initialData.photoURL ?? null;
+    updateData.photoUrl = initialData.photoUrl ?? null;
   }
   if (!dbUser.phone) {
     updateData.phone = extra?.phone ?? null;
@@ -183,14 +172,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await updateUserProfile(uid, updateData).catch(() => {});
   }
 
-  const resolvedAvatar = dbUser.photoUrl || initialData.photoURL || null;
+  const resolvedAvatar = dbUser.photoUrl || initialData.photoUrl || null;
 
       const appUser: AppUser = {
         uid,
         id: uid,
         email: dbUser.email || initialData.email,
         displayName: dbUser.displayName || initialData.displayName || 'User',
-        photoURL: resolvedAvatar,
         photoUrl: resolvedAvatar,
         coverImageUrl: dbUser.coverImageUrl || '',
         bio: dbUser.bio || '',
@@ -211,13 +199,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return appUser;
     } catch (e) {
       console.error('Error syncing with backend in AuthContext:', e);
-      const fallbackAvatar = initialData.photoURL || null;
+      const fallbackAvatar = initialData.photoUrl || null;
       const fallback: AppUser = {
         uid,
         id: uid,
         email: initialData.email,
         displayName: initialData.displayName || 'User',
-        photoURL: fallbackAvatar,
         photoUrl: fallbackAvatar,
         emailVerified: initialData.emailVerified,
         phone: extra?.phone || '',
@@ -236,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         email: fbUser.email,
         displayName: fbUser.displayName,
-        photoURL: fbUser.photoURL,
+        photoUrl: fbUser.photoUrl,
         emailVerified,
       },
       extra,
@@ -264,8 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: currentUser.uid,
             email: currentUser.email,
             displayName: currentUser.displayName || 'User',
-            photoURL: currentUser.photoURL,
-            photoUrl: currentUser.photoURL,
+            photoUrl: currentUser.photoUrl,
             emailVerified: currentUser.emailVerified,
           });
         } else {
@@ -328,7 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         email: credential.user.email,
         displayName,
-        photoURL: credential.user.photoURL,
+        photoUrl: credential.user.photoUrl,
         emailVerified: false,
       },
       { phone, referralCode },
@@ -363,11 +349,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.handle !== undefined) {
         updated.handle = (data.handle || '').replace(/^@+/, '');
       }
-      if (data.photoUrl && !data.photoURL) {
-        updated.photoURL = data.photoUrl;
+      if (data.photoUrl && !data.photoUrl) {
+        updated.photoUrl = data.photoUrl;
       }
-      if (data.photoURL && !data.photoUrl) {
-        updated.photoUrl = data.photoURL;
+      if (data.photoUrl && !data.photoUrl) {
+        updated.photoUrl = data.photoUrl;
       }
       return updated;
     });

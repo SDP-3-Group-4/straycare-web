@@ -1,19 +1,8 @@
-const getBaseApiUrl = (): string => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined') {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocal) {
-      return envUrl || 'http://localhost:3000';
-    }
-    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
-      return envUrl;
-    }
-    return 'https://straycare-backend-se6q.onrender.com';
-  }
-  return envUrl || 'https://straycare-backend-se6q.onrender.com';
-};
+const API_URL = import.meta.env.VITE_API_URL;
 
-const API_URL = getBaseApiUrl();
+if (!API_URL) {
+  throw new Error("VITE_API_URL environment variable is missing. Check your .env file.");
+}
 
 import { getAuthToken } from '../firebase';
 
@@ -96,21 +85,7 @@ const putJson = (path: string, data: any) =>
 const deleteJson = (path: string, data: any) =>
   request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
 
-// SWR Cache Helpers
-export const getCachedData = <T>(key: string): T | null => {
-  try {
-    const raw = localStorage.getItem(`sc_swr_${key}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
-
-export const setCachedData = <T>(key: string, data: T) => {
-  try {
-    localStorage.setItem(`sc_swr_${key}`, JSON.stringify(data));
-  } catch {}
-};
+export { getCachedData, setCachedData } from '../utils/storage';
 
 export const fetchPosts = async (tab?: string, userId?: string, lat?: number, lng?: number) => {
   const queryParams = new URLSearchParams();
@@ -255,3 +230,4 @@ export const submitVetApplication = (data: {
 }) => postJson('/vet-applications', data);
 
 export const fetchVetApplicationStatus = (userId: string) => request(`/vet-applications/${userId}`);
+export const fetchNearbyClinics = (lat?: number, lng?: number, radius?: number) => request(`/clinics/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);

@@ -155,9 +155,9 @@ export default function SettingsFeed() {
                 <div className={`w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
                   isVerifiedVet ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : 'ring-1 ring-gray-200'
                 }`}>
-                  {user.photoURL || user.photoUrl ? (
+                  {user.photoUrl ? (
                     <img
-                      src={user.photoURL || user.photoUrl || undefined}
+                      src={user.photoUrl || undefined}
                       alt={user.displayName || 'User'}
                       onError={avatarOnError}
                       className="w-full h-full object-cover"
