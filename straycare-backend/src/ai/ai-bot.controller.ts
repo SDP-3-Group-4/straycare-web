@@ -25,6 +25,7 @@ export class AiBotController {
   }
 
   @Public()
+  @Get('respond-rescue')
   @Post('respond-rescue')
   @HttpCode(200)
   async runRescueResponseNow(
