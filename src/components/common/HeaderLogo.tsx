@@ -21,8 +21,8 @@ export default function HeaderLogo({ className, style }: HeaderLogoProps) {
         autoplay: true,
         path: "/headerLogo.json",
         rendererSettings: {
-          preserveAspectRatio: "xMinYMid slice",
-          className: "overflow-visible", // Prevent Lottie from clipping bounces
+          preserveAspectRatio: "xMinYMid meet",
+          viewBoxSize: "0 160 1280 400", // Natively crop 160px of empty space from top/bottom
         },
       });
 
@@ -48,7 +48,7 @@ export default function HeaderLogo({ className, style }: HeaderLogoProps) {
   return (
     <div
       ref={containerRef}
-      className={`select-none cursor-pointer flex items-center justify-start overflow-visible ${className || ""}`}
+      className={`select-none cursor-pointer flex items-center justify-start ${className || ""}`}
       style={style}
     />
   );

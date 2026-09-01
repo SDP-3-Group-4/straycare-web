@@ -9,7 +9,7 @@ export default function LeftSidebar() {
     <div className="flex flex-col w-full h-full pb-4 px-2">
       <div className="flex-1 flex flex-col pt-4">
         <div className="flex items-center mb-6 pl-4 pr-2 w-full cursor-pointer">
-          <HeaderLogo className="w-full max-w-[200px] h-[45px]" />
+          <HeaderLogo className="w-[180px] h-[55px]" />
         </div>
 
         <div className="mb-6 px-4">
