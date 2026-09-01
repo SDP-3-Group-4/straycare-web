@@ -187,7 +187,19 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm mt-1 text-gray-800">{comment.content}</p>
+                        <div className="text-sm mt-1 text-gray-800 whitespace-pre-wrap">
+                          {comment.content.includes('[Disclaimer]') || comment.content.includes('**Disclaimer**:') ? (
+                            <>
+                              <p className="whitespace-pre-wrap">{comment.content.split(/(?:\[Disclaimer\]|\*\*Disclaimer\*\*:)/)[0].replace(/^AI Vet Bot Suggestion:\s*/i, '').replace(/-\s*$/, '').trim()}</p>
+                              <div className="mt-3 p-2.5 bg-yellow-50/80 border border-yellow-200/60 rounded-xl flex items-start gap-2.5 text-[12px] text-yellow-800 shadow-sm">
+                                <span className="mt-0.5 text-sm">⚠️</span>
+                                <p className="leading-relaxed"><strong>Disclaimer:</strong> {comment.content.split(/(?:\[Disclaimer\]|\*\*Disclaimer\*\*:)/)[1].trim()}</p>
+                              </div>
+                            </>
+                          ) : (
+                            comment.content
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="flex gap-4 items-center mt-1 ml-2 text-[12px] text-gray-500 font-medium">
