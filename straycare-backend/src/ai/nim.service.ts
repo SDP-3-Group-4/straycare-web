@@ -90,11 +90,11 @@ const RESCUE_ADVICE_PROMPT = (postContent: string) =>
 ${postContent}
 </user_document>
 
-Decide if it is a genuine rescue, injury, disease, or medical help request for a stray or domestic animal.
+Decide if it is a genuine rescue (medical, physical, or relocation) or help request for a stray or domestic animal.
 Rules:
-1. If the post is irrelevant, spam, a general chat, or just a cute photo with no animal distress or medical need, reply with exactly "NO_RESPONSE" and nothing else.
+1. If the post is irrelevant, spam, a general chat, or just a cute photo with no animal distress, reply with exactly "NO_RESPONSE" and nothing else.
 2. Otherwise, reply in the same language as the post (English, Bengali/Bangla, or Banglish).
-3. Provide 2-3 concise, actionable emergency first-aid triage steps (e.g. keep warm, apply pressure to bleeding, safe hydration, do not give human painkillers, seek immediate vet care).
+3. Provide 2-3 concise, actionable triage or safety steps. If it's a medical emergency, give first-aid advice. If it's a physical rescue (stuck, lost, needing relocation), give safe handling/approach advice (e.g. approach calmly, use treats, contact local authorities).
 4. Do NOT ask clarifying questions. Do NOT explain your reasoning. Keep the advice to 2-3 sentences or clear bullet points.`;
 
 const RESCUE_DISCLAIMER =

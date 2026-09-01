@@ -78,12 +78,12 @@ export class AutoResponseService implements OnModuleInit, OnModuleDestroy {
       const cutoff = new Date(Date.now() - waitMinutes * 60 * 1000);
       const batchLimit = Math.min(options?.limit ?? 5, 10);
 
-      // Find unanswered rescue posts created before the 30-min cutoff
+      // Find unanswered rescue posts created before the cutoff
       const candidates = await this.prisma.post.findMany({
         where: {
           category: { in: ['rescue', 'RESCUE', 'Rescue'] },
           commentsCount: 0,
-          aiResponseStatus: 'pending',
+          aiResponseStatus: options?.force ? { in: ['pending', 'skipped'] } : 'pending',
           authorId: { not: this.nimService.botId },
           createdAt: { lte: cutoff },
         },
