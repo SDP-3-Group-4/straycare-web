@@ -81,7 +81,7 @@ function RefetchOnClick({ onClick }: { onClick: () => void }) {
 }
 
 export default function NearbyClinicsWidget() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const { location, resolved, error, requestLocation } = useUserLocation();
 

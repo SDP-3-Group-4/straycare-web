@@ -45,7 +45,7 @@ export type Chat = {
 const AI_BOT_AVATAR = "/aivetbot.svg";
 
 export default function ChatWidget() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
