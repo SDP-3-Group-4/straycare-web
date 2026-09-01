@@ -81,7 +81,7 @@ export class AutoResponseService implements OnModuleInit, OnModuleDestroy {
       // Find unanswered rescue posts created before the 30-min cutoff
       const candidates = await this.prisma.post.findMany({
         where: {
-          category: 'rescue',
+          category: { in: ['rescue', 'RESCUE', 'Rescue'] },
           commentsCount: 0,
           aiResponseStatus: 'pending',
           authorId: { not: this.nimService.botId },
