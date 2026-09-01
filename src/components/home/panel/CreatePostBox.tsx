@@ -11,6 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   User,
+  Sparkles,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -92,6 +93,9 @@ export default function CreatePostBox({
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [fundraiseGoal, setFundraiseGoal] = useState("");
 
+  const [hyperidTag, setHyperidTag] = useState<string | null>(null);
+  const [isAnalyzingHyperid, setIsAnalyzingHyperid] = useState(false);
+
   const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
@@ -137,6 +141,34 @@ export default function CreatePostBox({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const analyzeImageWithHyperID = async (file: File) => {
+    setIsAnalyzingHyperid(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("https://hyperid-ke.onrender.com/predict?clip_weight=0.65&top_k=2", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ranked_breeds && data.ranked_breeds.length > 0) {
+          const top1 = data.ranked_breeds[0];
+          const top2 = data.ranked_breeds[1];
+          let tag = `${top1.breed.replace(/([A-Z])/g, ' $1').trim()} (${top1.score})`;
+          if (top2) {
+            tag += ` or ${top2.breed.replace(/([A-Z])/g, ' $1').trim()} (${top2.score})`;
+          }
+          setHyperidTag(tag);
+        }
+      }
+    } catch (err) {
+      console.error("HyperID analysis failed", err);
+    } finally {
+      setIsAnalyzingHyperid(false);
+    }
+  };
+
   const handlePost = async () => {
     if (!content.trim() || !user) return;
     if (
@@ -158,7 +190,7 @@ export default function CreatePostBox({
         content,
         category,
         imageUrl: media[0]?.url || undefined,
-        media: media.length ? media : undefined,
+        media: media.length ? media.map((m, i) => i === 0 && hyperidTag ? { ...m, hyperidTag } : m) : undefined,
         location: finalLoc || undefined,
         latitude: finalCoords?.lat,
         longitude: finalCoords?.lng,
@@ -196,6 +228,12 @@ export default function CreatePostBox({
     const toAdd = files.slice(0, remaining);
     if (files.length > remaining)
       alert(`Only ${remaining} more file(s) allowed (max 6).`);
+
+    const firstImage = toAdd.find(f => !f.type.startsWith("video/"));
+    if (firstImage && media.filter(m => m.type === "image").length === 0 && !hyperidTag && !isAnalyzingHyperid) {
+      analyzeImageWithHyperID(firstImage);
+    }
+
     toAdd.forEach((file) => {
       const isVideo = file.type.startsWith("video/");
       if (isVideo && file.size > 50 * 1024 * 1024) {
@@ -298,6 +336,18 @@ export default function CreatePostBox({
                     <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {media.map((m, idx) => (
                         <div key={idx} className="relative group">
+                          {idx === 0 && isAnalyzingHyperid && (
+                            <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm z-10">
+                              <Loader2 size={10} className="animate-spin" />
+                              Analyzing Breed...
+                            </div>
+                          )}
+                          {idx === 0 && hyperidTag && (
+                            <div className="absolute top-2 left-2 bg-[var(--sc-brand-600)] text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+                              <Sparkles size={10} />
+                              HyperID Tag Attached
+                            </div>
+                          )}
                           {m.type === "video" ? (
                             <video
                               src={m.url}
@@ -449,11 +499,13 @@ export default function CreatePostBox({
 
             <button
               onClick={handlePost}
-              disabled={!content.trim() || isSubmitting}
-              className={`transition-all text-white font-bold py-1.5 px-4 rounded-full flex items-center gap-1.5 shrink-0 text-xs sm:text-sm active:scale-95 ${!content.trim() || isSubmitting ? "bg-gray-300 cursor-not-allowed" : "bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] shadow-xs"}`}
+              disabled={isSubmitting || !content.trim() || isAnalyzingHyperid}
+              className="bg-[var(--sc-brand-600)] text-white px-5 sm:px-6 py-2.5 rounded-full font-bold text-sm hover:bg-[var(--sc-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px]"
             >
               {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={18} className="animate-spin" />
+              ) : isAnalyzingHyperid ? (
+                <span className="flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" /> AI</span>
               ) : (
                 "Post"
               )}

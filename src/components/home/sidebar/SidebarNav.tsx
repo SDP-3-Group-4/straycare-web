@@ -42,11 +42,10 @@ export default function SidebarNav() {
           <NavLink
             key={item.label}
             to={item.path}
-            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-200 group ${
-              isActive
+            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-200 group ${isActive
                 ? "bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]"
                 : "text-gray-500 hover:bg-gray-100 hover:text-[var(--sc-text-primary)]"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-4">
               <item.icon

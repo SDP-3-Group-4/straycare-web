@@ -12,6 +12,7 @@ import {
   UserPlus,
   User,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -44,7 +45,7 @@ interface PostCardProps {
   category: "adoption" | "fun" | "rescue" | "fundraise" | string;
   content: string;
   imageUrl?: string;
-  media?: { url: string; type: "image" | "video" }[];
+  media?: { url: string; type: "image" | "video"; hyperidTag?: string }[];
   location?: string;
   likesCount: number;
   commentsCount: number;
@@ -314,6 +315,15 @@ export default function PostCard({
               >
                 {cat.label}
               </span>
+              {media?.[0]?.hyperidTag && (
+                <span
+                  className="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] flex items-center gap-1"
+                  title="HyperID NeuroSym Vision"
+                >
+                  <Sparkles size={10} />
+                  {media[0].hyperidTag}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1 text-[11px] sm:text-[12px] text-[var(--sc-text-muted)] truncate mt-0.5">
