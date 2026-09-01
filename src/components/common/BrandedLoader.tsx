@@ -1,10 +1,29 @@
 import React from 'react';
-import { Lottie } from 'lottie-react';
+import { useLottie } from 'lottie-react';
 import rippleAnimation from '../../assets/animations/Twitch-Brand-ripple-pop.nowatermark.json';
 
 interface BrandedLoaderProps {
   fullScreen?: boolean;
   size?: 'sm' | 'md' | 'lg' | number;
+}
+
+function PureLottie({ dim }: { dim: number }) {
+  const options = {
+    animationData: rippleAnimation,
+    loop: true,
+    autoplay: true,
+  };
+
+  const { View } = useLottie(options, {
+    width: dim,
+    height: dim,
+  });
+
+  return (
+    <div className="flex items-center justify-center pointer-events-none select-none overflow-visible">
+      {View}
+    </div>
+  );
 }
 
 export default function BrandedLoader({
@@ -26,27 +45,13 @@ export default function BrandedLoader({
 
   const dim = getDimension();
 
-  const content = (
-    <div
-      style={{ width: `${dim}px`, height: `${dim}px` }}
-      className="flex items-center justify-center pointer-events-none select-none"
-    >
-      <Lottie
-        animationData={rippleAnimation}
-        loop={true}
-        autoplay={true}
-        style={{ width: '100%', height: '100%' }}
-      />
-    </div>
-  );
-
   if (fullScreen) {
     return (
       <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[var(--sc-bg,#ffffff)]">
-        {content}
+        <PureLottie dim={dim} />
       </div>
     );
   }
 
-  return content;
+  return <PureLottie dim={dim} />;
 }
