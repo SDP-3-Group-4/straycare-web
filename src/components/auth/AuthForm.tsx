@@ -22,7 +22,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import logo from "../../assets/logo.svg";
+import HeaderLogo from "../common/HeaderLogo";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -196,13 +196,11 @@ export default function AuthForm() {
   return (
     <div className="auth-form">
       {/* Brand mark */}
-      <img
-        src={logo}
-        alt="StrayCare"
+      <HeaderLogo
         className="auth-form__brand"
         style={{
           height: "48px",
-          objectFit: "contain",
+          width: "auto",
           marginBottom: "var(--sc-space-xs)",
         }}
       />

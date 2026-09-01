@@ -9,7 +9,7 @@ import {
   BadgeCheck,
   ShoppingBag,
 } from "lucide-react";
-import logo from "../../assets/logo.svg";
+import HeaderLogo from "../common/HeaderLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { useCart } from "../../contexts/CartContext";
 import { avatarOnError } from "../../constants";
@@ -51,11 +51,7 @@ export default function MobileHeader() {
       <header className="md:hidden sticky-glass px-3.5 py-2.5 flex items-center justify-between shadow-xs">
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img
-            src={logo}
-            alt="StrayCare Logo"
-            className="h-7 w-auto object-contain"
-          />
+          <HeaderLogo className="h-7 w-auto max-w-[150px]" />
         </Link>
 
         {/* Right: Quick Action Controls */}
