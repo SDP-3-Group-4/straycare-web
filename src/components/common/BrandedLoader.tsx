@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLottie } from 'lottie-react';
-import rippleAnimation from '../../assets/animations/loading-ripple.json';
-import logoSvg from '../../assets/logo.svg';
+import rippleAnimation from '../../assets/animations/Twitch-Brand-ripple-pop.nowatermark.json';
 
 interface BrandedLoaderProps {
   fullScreen?: boolean;
@@ -17,7 +16,7 @@ const COLD_START_MESSAGES = [
   'Almost ready to care...',
 ];
 
-function LottieAnimation({ dim }: { dim: number }) {
+function LottiePureAnimation({ dim }: { dim: number }) {
   const options = {
     animationData: rippleAnimation,
     loop: true,
@@ -30,12 +29,11 @@ function LottieAnimation({ dim }: { dim: number }) {
   });
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: dim, height: dim }}>
+    <div
+      className="flex items-center justify-center overflow-visible"
+      style={{ width: dim, height: dim }}
+    >
       {View}
-      {/* Floating Brand Logo Badge in Center */}
-      <div className="absolute inset-0 m-auto w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white dark:bg-zinc-900 border border-[var(--sc-border)] shadow-md flex items-center justify-center p-2 z-10 transition-transform duration-300 hover:scale-105">
-        <img src={logoSvg} alt="StrayCare" className="w-full h-full object-contain" />
-      </div>
     </div>
   );
 }
@@ -60,12 +58,12 @@ export default function BrandedLoader({
     if (typeof size === 'number') return size;
     switch (size) {
       case 'sm':
-        return 72;
+        return 96;
       case 'lg':
-        return 200;
+        return 260;
       case 'md':
       default:
-        return 130;
+        return fullScreen ? 200 : 140;
     }
   };
 
@@ -74,12 +72,13 @@ export default function BrandedLoader({
 
   const content = (
     <div className="flex flex-col items-center justify-center select-none text-center animate-in fade-in duration-300">
-      <LottieAnimation dim={dim} />
+      {/* Pure Lottie Animation strictly from Twitch-Brand-ripple-pop.nowatermark.json */}
+      <LottiePureAnimation dim={dim} />
 
-      {/* Message and Subtext */}
+      {/* Status Message and Subtext */}
       {showTagline && (
-        <div className="mt-3.5 flex flex-col items-center">
-          <p className="text-[13px] sm:text-[14px] font-bold text-[var(--sc-text-primary)] tracking-tight transition-all duration-300">
+        <div className="mt-2 flex flex-col items-center">
+          <p className="text-[14px] sm:text-[15px] font-bold text-[var(--sc-text-primary)] tracking-tight transition-all duration-300">
             {currentMessage}
           </p>
           {fullScreen && (
@@ -95,8 +94,8 @@ export default function BrandedLoader({
   if (fullScreen) {
     return (
       <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[var(--sc-bg,#f8fafc)] dark:bg-zinc-950 transition-colors duration-300">
-        {/* Subtle glowing ambient gradient backdrop */}
-        <div className="absolute w-72 h-72 rounded-full bg-[var(--sc-brand-500)] opacity-10 blur-3xl pointer-events-none -translate-y-6" />
+        {/* Ambient glow */}
+        <div className="absolute w-80 h-80 rounded-full bg-[var(--sc-brand-500)] opacity-10 blur-3xl pointer-events-none -translate-y-4" />
         {content}
       </div>
     );
