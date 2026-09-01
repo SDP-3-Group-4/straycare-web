@@ -146,24 +146,44 @@ export default function CreatePostBox({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("https://hyperid-ke.onrender.com/predict?clip_weight=0.65&top_k=2", {
+      const res = await fetch("https://hyperid-ke.onrender.com/predict?top_k=2", {
         method: "POST",
         body: formData,
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.ranked_breeds && data.ranked_breeds.length > 0) {
+        if (data.trait_profile && data.ranked_breeds.length > 0) {
           const top1 = data.ranked_breeds[0];
           const top2 = data.ranked_breeds[1];
-          let tag = `${top1.breed.replace(/([A-Z])/g, ' $1').trim()} (${top1.score})`;
-          if (top2) {
-            tag += ` or ${top2.breed.replace(/([A-Z])/g, ' $1').trim()} (${top2.score})`;
+          const s1 = parseInt(top1.shared_traits);
+          const s2 = top2 ? parseInt(top2.shared_traits) : 0;
+          const breed1 = top1.breed.replace(/([A-Z])/g, ' $1').trim();
+          const breed2 = top2 ? top2.breed.replace(/([A-Z])/g, ' $1').trim() : "";
+
+          let tag = "";
+          if (s1 >= 5 && (s1 - s2) >= 2) {
+            tag = `HyperID: ${breed1}`;
+          } else {
+            const total = s1 + s2 || 1;
+            const p1 = Math.round((s1 / total) * 100);
+            const p2 = 100 - p1;
+            tag = `HyperID: ${breed1} ${p1}%`;
+            if (s2 > 0) {
+              tag += ` / ${breed2} ${p2}%`;
+            }
           }
           setHyperidTag(tag);
+        } else {
+          console.warn("HyperID API returned an invalid response.");
+          alert("HyperID API returned an invalid response.");
         }
+      } else {
+        console.warn("HyperID API failed with status: " + res.status);
+        alert("HyperID API failed with status: " + res.status);
       }
     } catch (err) {
       console.error("HyperID analysis failed", err);
+      alert("HyperID API request failed.");
     } finally {
       setIsAnalyzingHyperid(false);
     }
@@ -203,6 +223,7 @@ export default function CreatePostBox({
       setCoordinates(null);
       setCategory("adoption");
       setFundraiseGoal("");
+      setHyperidTag(null);
       if (onPostCreated) onPostCreated();
       window.dispatchEvent(new Event("postCreated"));
       setFeedbackTitle("Success!");
@@ -339,13 +360,13 @@ export default function CreatePostBox({
                           {idx === 0 && isAnalyzingHyperid && (
                             <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm z-10">
                               <Loader2 size={10} className="animate-spin" />
-                              Analyzing Breed...
+                              Analyzing with HyperID...
                             </div>
                           )}
                           {idx === 0 && hyperidTag && (
                             <div className="absolute top-2 left-2 bg-[var(--sc-brand-600)] text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
                               <Sparkles size={10} />
-                              HyperID Tag Attached
+                              HyperID Attached
                             </div>
                           )}
                           {m.type === "video" ? (
@@ -362,11 +383,12 @@ export default function CreatePostBox({
                             />
                           )}
                           <button
-                            onClick={() =>
+                            onClick={() => {
+                              if (idx === 0) setHyperidTag(null);
                               setMedia((prev) =>
                                 prev.filter((_, i) => i !== idx),
-                              )
-                            }
+                              );
+                            }}
                             className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-90 shadow-xs"
                           >
                             <X size={10} />
@@ -505,7 +527,7 @@ export default function CreatePostBox({
               {isSubmitting ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : isAnalyzingHyperid ? (
-                <span className="flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" /> AI</span>
+                <span className="flex items-center gap-1.5"><Loader2 size={14} className="animate-spin" /> HyperID</span>
               ) : (
                 "Post"
               )}
