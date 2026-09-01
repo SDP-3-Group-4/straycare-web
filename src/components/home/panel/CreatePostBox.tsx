@@ -160,18 +160,7 @@ export default function CreatePostBox({
           const breed1 = top1.breed.replace(/([A-Z])/g, ' $1').trim();
           const breed2 = top2 ? top2.breed.replace(/([A-Z])/g, ' $1').trim() : "";
 
-          let tag = "";
-          if (s1 >= 5 && (s1 - s2) >= 2) {
-            tag = `HyperID: ${breed1}`;
-          } else {
-            const total = s1 + s2 || 1;
-            const p1 = Math.round((s1 / total) * 100);
-            const p2 = 100 - p1;
-            tag = `HyperID: ${breed1} ${p1}%`;
-            if (s2 > 0) {
-              tag += ` / ${breed2} ${p2}%`;
-            }
-          }
+          const tag = `HyperID: ${breed1}`;
           setHyperidTag(tag);
         } else {
           console.warn("HyperID API returned an invalid response.");
