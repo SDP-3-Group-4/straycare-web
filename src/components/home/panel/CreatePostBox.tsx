@@ -241,9 +241,16 @@ export default function CreatePostBox({
       alert(`Only ${remaining} more file(s) allowed (max 6).`);
 
     const prefs = getStoredPreferences();
-    const firstImage = toAdd.find(f => !f.type.startsWith("video/"));
-    if (prefs.useHyperID && firstImage && media.filter(m => m.type === "image").length === 0 && !hyperidTag && !isAnalyzingHyperid) {
-      analyzeImageWithHyperID(firstImage);
+    const imageFilesToAdd = toAdd.filter(f => !f.type.startsWith("video/"));
+    const totalImageCount = media.filter(m => m.type === "image").length + imageFilesToAdd.length;
+
+    if (totalImageCount > 1) {
+      if (prefs.useHyperID && imageFilesToAdd.length > 0) {
+        alert("HyperID is currently limited to 1 image per post. HyperID analysis will be skipped.");
+      }
+      setHyperidTag(null);
+    } else if (prefs.useHyperID && imageFilesToAdd.length === 1 && totalImageCount === 1 && !hyperidTag && !isAnalyzingHyperid) {
+      analyzeImageWithHyperID(imageFilesToAdd[0]);
     }
 
     toAdd.forEach((file) => {
