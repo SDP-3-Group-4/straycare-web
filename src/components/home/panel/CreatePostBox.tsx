@@ -16,6 +16,7 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { createPost } from "../../../services/api";
+import { getStoredPreferences } from "../../../services/preferences";
 
 const CATEGORIES = [
   {
@@ -239,8 +240,9 @@ export default function CreatePostBox({
     if (files.length > remaining)
       alert(`Only ${remaining} more file(s) allowed (max 6).`);
 
+    const prefs = getStoredPreferences();
     const firstImage = toAdd.find(f => !f.type.startsWith("video/"));
-    if (firstImage && media.filter(m => m.type === "image").length === 0 && !hyperidTag && !isAnalyzingHyperid) {
+    if (prefs.useHyperID && firstImage && media.filter(m => m.type === "image").length === 0 && !hyperidTag && !isAnalyzingHyperid) {
       analyzeImageWithHyperID(firstImage);
     }
 

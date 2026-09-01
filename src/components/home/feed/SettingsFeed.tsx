@@ -464,6 +464,50 @@ export default function SettingsFeed() {
           </div>
         </div>
 
+        {/* 3.5 AI Features */}
+        <div className="flex flex-col gap-2.5">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2 flex items-center gap-2">
+            HyperID Settings <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-bold">BETA</span>
+          </h3>
+
+          <div className="bg-white rounded-2xl border border-[var(--sc-border)] overflow-hidden shadow-xs divide-y divide-[var(--sc-border)]">
+            <button
+              onClick={() => {
+                const updated = savePreferences({ useHyperID: !prefs.useHyperID });
+                setPrefs(updated);
+              }}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-50 text-[var(--sc-brand-600)]">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Use HyperID Vision AI
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Automatically analyze pet images to determine breeds and traits
+                  </span>
+                </div>
+              </div>
+              <div
+                className={`w-12 h-6 rounded-full relative transition-colors ${
+                  prefs.useHyperID
+                    ? "bg-[var(--sc-brand-600)]"
+                    : "bg-gray-200"
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                    prefs.useHyperID ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* 4. Language & Global Translation */}
         <div className="flex flex-col gap-2.5">
           <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">

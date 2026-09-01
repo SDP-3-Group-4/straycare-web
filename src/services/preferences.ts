@@ -10,6 +10,7 @@ export type UserPreferences = {
   emailAlerts: boolean;
   whoCanMessage: "anyone" | "connections";
   defaultFeedTab: "explore" | "nearby";
+  useHyperID: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -24,6 +25,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   emailAlerts: true,
   whoCanMessage: "anyone",
   defaultFeedTab: "explore",
+  useHyperID: true,
 };
 
 export const applyThemeDOM = (theme: "light" | "dark" | "system") => {
