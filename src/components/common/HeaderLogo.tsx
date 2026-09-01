@@ -19,7 +19,7 @@ export default function HeaderLogo({ className, style }: HeaderLogoProps) {
         renderer: "svg",
         loop: false,
         autoplay: true,
-        path: "/headerLogo.json",
+        path: "/headerLogo.json?v=2",
         rendererSettings: {
           preserveAspectRatio: "xMinYMid slice",
           className: "overflow-visible", // Prevent Lottie from clipping bounces
