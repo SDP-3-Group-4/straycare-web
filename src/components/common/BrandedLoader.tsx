@@ -1,57 +1,51 @@
-import React from 'react';
-import { useLottie } from 'lottie-react';
+import React, { useEffect, useRef } from 'react';
+import lottie from 'lottie-web';
 import rippleAnimation from '../../assets/animations/Twitch-Brand-ripple-pop.nowatermark.json';
 
 interface BrandedLoaderProps {
   fullScreen?: boolean;
-  size?: 'sm' | 'md' | 'lg' | number;
 }
 
-function PureLottie({ dim }: { dim: number }) {
-  const options = {
-    animationData: rippleAnimation,
-    loop: true,
-    autoplay: true,
-  };
+export default function BrandedLoader({ fullScreen = false }: BrandedLoaderProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<any>(null);
 
-  const { View } = useLottie(options, {
-    width: dim,
-    height: dim,
-  });
-
-  return (
-    <div className="flex items-center justify-center pointer-events-none select-none overflow-visible">
-      {View}
-    </div>
-  );
-}
-
-export default function BrandedLoader({
-  fullScreen = false,
-  size = 'md',
-}: BrandedLoaderProps) {
-  const getDimension = () => {
-    if (typeof size === 'number') return size;
-    switch (size) {
-      case 'sm':
-        return 120;
-      case 'lg':
-        return 320;
-      case 'md':
-      default:
-        return fullScreen ? 260 : 160;
+  useEffect(() => {
+    if (containerRef.current) {
+      animRef.current = lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: rippleAnimation,
+        rendererSettings: {
+          preserveAspectRatio: 'xMidYMid slice',
+        },
+      });
     }
-  };
+    
+    return () => {
+      if (animRef.current) {
+        animRef.current.destroy();
+      }
+    };
+  }, []);
 
-  const dim = getDimension();
+  const content = (
+    <div 
+      ref={containerRef} 
+      className="flex items-center justify-center pointer-events-none select-none"
+      style={{ width: fullScreen ? '260px' : '160px', height: fullScreen ? '260px' : '160px' }}
+    />
+  );
 
   if (fullScreen) {
     return (
       <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[var(--sc-bg,#ffffff)]">
-        <PureLottie dim={dim} />
+        {content}
       </div>
     );
   }
 
-  return <PureLottie dim={dim} />;
+  return content;
 }

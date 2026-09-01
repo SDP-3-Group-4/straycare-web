@@ -3,7 +3,6 @@ import { useSearchParams, Link } from 'react-router-dom';
 import ProfileHeader from './ProfileHeader';
 import VetVerificationModal from './VetVerificationModal';
 import DisconnectConfirmModal from '../../common/DisconnectConfirmModal';
-import BrandedLoader from '../../common/BrandedLoader';
 import PostCard from './PostCard';
 import { Package, Users, LayoutList, Loader2, User, ShieldCheck, Store, ChevronRight, ChevronUp, ChevronDown, Sparkles, UserMinus, UserPlus, Compass, Share2 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -203,8 +202,8 @@ export default function ProfileFeed() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-10 border border-[var(--sc-border)] shadow-xs flex flex-col items-center justify-center my-6">
-        <BrandedLoader size="md" message="Loading profile..." showTagline />
+      <div className="flex h-64 w-full items-center justify-center">
+        <Loader2 className="animate-spin text-[var(--sc-brand-600)]" size={36} />
       </div>
     );
   }

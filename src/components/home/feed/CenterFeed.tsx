@@ -5,8 +5,7 @@ import CreatePostBox from '../panel/CreatePostBox';
 import { fetchPosts, getCachedData } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useUserLocation } from '../../../hooks/useUserLocation';
-import { RefreshCw } from 'lucide-react';
-import BrandedLoader from '../../common/BrandedLoader';
+import { RefreshCw, Wifi } from 'lucide-react';
 
 export default function CenterFeed() {
   const [activeTab, setActiveTab] = useState('explore');
@@ -111,8 +110,28 @@ export default function CenterFeed() {
       
       <div className="flex flex-col w-full min-w-0">
         {loading ? (
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-10 border border-[var(--sc-border)] shadow-xs flex flex-col items-center justify-center my-2">
-            <BrandedLoader size="md" message="Connecting to StrayCare network..." showTagline />
+          // Shimmer Skeleton Loader (Never a frozen blank screen)
+          <div className="flex flex-col gap-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 sm:p-5 border border-[var(--sc-border)] animate-pulse shadow-xs">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 bg-gray-200 rounded-md w-1/3" />
+                    <div className="h-2.5 bg-gray-100 rounded-md w-1/4" />
+                  </div>
+                </div>
+                <div className="space-y-2 mb-3">
+                  <div className="h-3 bg-gray-200 rounded-md w-full" />
+                  <div className="h-3 bg-gray-200 rounded-md w-5/6" />
+                </div>
+                <div className="h-44 bg-gray-100 rounded-xl w-full" />
+              </div>
+            ))}
+            <div className="text-center py-2 text-xs text-gray-400 flex items-center justify-center gap-1.5">
+              <Wifi size={13} className="text-[var(--sc-brand-600)] animate-pulse" />
+              <span>Connecting to StrayCare network...</span>
+            </div>
           </div>
         ) : posts.length === 0 ? (
           <div className="p-12 text-center text-gray-500 bg-white rounded-2xl border border-[var(--sc-border)] shadow-xs">
