@@ -6,3 +6,5 @@ node_modules
 src/ai/vetbot-system-prompt-guardrails.md
 
 /generated/prisma
+neon_backup.json
+*.log

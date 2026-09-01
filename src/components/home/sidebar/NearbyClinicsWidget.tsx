@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Clock, Cross, LocateFixed, MapPin, Navigatio
 import L from 'leaflet';
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { type Clinic, CLINIC_CATEGORIES } from '../../../data/clinics';
+import { CLINICS, type Clinic } from '../../../data/clinics';
 import { haversineDistanceKm, formatDistance } from '../../../utils/geo';
 import { useUserLocation } from '../../../hooks/useUserLocation';
 
@@ -62,38 +62,21 @@ export default function NearbyClinicsWidget() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const { location, resolved, error, requestLocation } = useUserLocation();
-  const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    setIsLoading(true);
-    
-    import('../../../data/clinics').then(mod => {
-      if (mounted) {
-        setClinics(mod.CLINICS);
-        setIsLoading(false);
-      }
-    });
-
-    return () => { mounted = false; };
-  }, []);
 
   const requestWithRetry = () => {
     if (!resolved || error) requestLocation();
   };
 
   const nearby = useMemo(() => {
-    if (!resolved) return [];
-    return clinics.map((clinic) => ({
+    return CLINICS.map((clinic) => ({
       clinic,
       distanceKm: haversineDistanceKm(location.lat, location.lng, clinic.lat, clinic.lng),
     }))
       .filter(({ distanceKm }) => distanceKm <= RADIUS_KM)
       .sort((a, b) => a.distanceKm - b.distanceKm);
-  }, [location, clinics, resolved]);
+  }, [location]);
 
-  if (!isLoading && nearby.length === 0) {
+  if (nearby.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-[var(--sc-border)] overflow-hidden transition-all duration-300">
         <div className="p-3.5 flex items-center justify-between">
@@ -112,9 +95,11 @@ export default function NearbyClinicsWidget() {
   }
 
   const active = nearby[activeIndex % nearby.length];
-  const open = active ? isOpenNow(active.clinic) : false;
+  if (!active) return null;
+
+  const open = isOpenNow(active.clinic);
   const userPos: [number, number] = [location.lat, location.lng];
-  const clinicPos = active ? [active.clinic.lat, active.clinic.lng] as [number, number] : userPos;
+  const clinicPos: [number, number] = [active.clinic.lat, active.clinic.lng];
   const canCycle = nearby.length > 1;
 
   return (
@@ -137,7 +122,7 @@ export default function NearbyClinicsWidget() {
         />
       </div>
 
-      {!isCollapsed && !isLoading && (
+      {!isCollapsed && (
         <div className="px-3 pb-3">
           <div className="relative h-32 rounded-xl overflow-hidden border border-gray-200 z-0">
             <MapContainer

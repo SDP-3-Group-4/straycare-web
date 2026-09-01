@@ -27,8 +27,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-export const getAuthToken = async (): Promise<string> => {
-  if (!auth.currentUser) throw new Error('Not authenticated');
-  const token = await auth.currentUser.getIdToken();
-  return token;
+export const getAuthToken = async (): Promise<string | null> => {
+  if (!auth.currentUser) return null;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    return token;
+  } catch {
+    return null;
+  }
 };

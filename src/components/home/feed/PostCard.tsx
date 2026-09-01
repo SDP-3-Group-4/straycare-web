@@ -8,6 +8,7 @@ import CommentSheet from './CommentSheet';
 import PostMedia from './PostMedia';
 import PostActions from './PostActions';
 import DonationModal from './DonationModal';
+import DeletePostModal from '../../common/DeletePostModal';
 import { Link } from 'react-router-dom';
 import { avatarOnError, formatHandle } from '../../../constants';
 
@@ -89,6 +90,11 @@ export default function PostCard({
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Delete State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+  const [isVanishing, setIsVanishing] = useState(false);
+
   useEffect(() => {
     if (user && authorId && user.uid !== authorId) {
       fetchConnectionStatus(user.uid, authorId).then(data => {
@@ -155,15 +161,22 @@ export default function PostCard({
     }
   };
 
-  const handleDeletePost = async () => {
+  const handleConfirmDelete = async () => {
     if (!user) return;
-    if (!confirm('Are you sure you want to delete this post?')) return;
+    setIsDeletingPost(true);
     try {
       await deletePost(id);
-      if (onPostDeleted) onPostDeleted();
+      setIsDeleteModalOpen(false);
+      setIsVanishing(true);
+      setTimeout(() => {
+        if (onPostDeleted) onPostDeleted();
+        window.dispatchEvent(new Event('postDeleted'));
+      }, 300);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to delete post:', err);
       alert('Failed to delete post.');
+    } finally {
+      setIsDeletingPost(false);
     }
   };
 
@@ -203,7 +216,9 @@ export default function PostCard({
   };
 
   return (
-    <article className="bg-white rounded-2xl p-3.5 sm:p-5 mb-3 sm:mb-4 border border-[var(--sc-border)] overflow-hidden w-full max-w-full box-border shadow-xs">
+    <article className={`bg-white rounded-2xl p-3.5 sm:p-5 mb-3 sm:mb-4 border border-[var(--sc-border)] overflow-hidden w-full max-w-full box-border shadow-xs transition-all duration-300 ease-out ${
+      isVanishing ? 'opacity-0 scale-90 -translate-y-4 max-h-0 !p-0 !mb-0 !border-0 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
+    }`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
@@ -308,7 +323,7 @@ export default function PostCard({
                       Edit Post
                     </button>
                     <button 
-                      onClick={() => { handleDeletePost(); setShowActions(false); }}
+                      onClick={() => { setIsDeleteModalOpen(true); setShowActions(false); }}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                     >
                       <Trash2 size={16} className="text-red-500" /> 
@@ -398,6 +413,13 @@ export default function PostCard({
         setDonationAmount={setDonationAmount}
         onDonate={handleDonate}
         isDonating={isDonating}
+      />
+
+      <DeletePostModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        isProcessing={isDeletingPost}
       />
     </article>
   );

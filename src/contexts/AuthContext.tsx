@@ -223,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         email: fbUser.email,
         displayName: fbUser.displayName,
-        photoUrl: fbUser.photoUrl,
+        photoUrl: fbUser.photoURL || (fbUser as any).photoUrl || null,
         emailVerified,
       },
       extra,
@@ -251,7 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: currentUser.uid,
             email: currentUser.email,
             displayName: currentUser.displayName || 'User',
-            photoUrl: currentUser.photoUrl,
+            photoUrl: currentUser.photoURL || (currentUser as any).photoUrl || null,
             emailVerified: currentUser.emailVerified,
           });
         } else {
@@ -314,7 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         email: credential.user.email,
         displayName,
-        photoUrl: credential.user.photoUrl,
+        photoUrl: credential.user.photoURL || (credential.user as any).photoUrl || null,
         emailVerified: false,
       },
       { phone, referralCode },

@@ -55,14 +55,45 @@ export default function ProfileFeed() {
     const ordersPromise = isOwnProfile ? fetchUserOrders(targetUserId).catch(() => []) : Promise.resolve([]);
     const suggestionsPromise = fetchNetworkSuggestions(targetUserId).catch(() => []);
     
+    console.log('[ProfileFeed] Loading profile data for targetUserId:', targetUserId);
     Promise.all([
-      fetchUserProfile(targetUserId),
-      fetchPosts(),
+      fetchUserProfile(targetUserId).catch((e) => {
+        console.warn('[ProfileFeed] fetchUserProfile failed:', e);
+        return null;
+      }),
+      fetchPosts().catch((e) => {
+        console.warn('[ProfileFeed] fetchPosts failed:', e);
+        return [];
+      }),
       connPromise,
       ordersPromise,
       suggestionsPromise
     ])
-    .then(([profile, allPosts, userConns, userOrders, netSuggestions]) => {
+    .then(([rawProfile, allPosts, userConns, userOrders, netSuggestions]) => {
+      console.log('[ProfileFeed] Received allPosts count:', allPosts?.length, 'rawProfile:', rawProfile);
+      let profile = rawProfile;
+      if (!profile && isOwnProfile && user) {
+        profile = {
+          id: user.uid,
+          displayName: user.displayName,
+          handle: user.handle,
+          photoUrl: user.photoUrl,
+          coverImageUrl: user.coverImageUrl,
+          bio: user.bio,
+          location: user.location,
+          website: user.website,
+          createdAt: user.createdAt,
+          verifiedStatus: user.verifiedStatus,
+          isVet: user.isVet,
+          topContributor: user.topContributor,
+          pets: user.pets || []
+        };
+      }
+      if (!profile) {
+        setProfileData(null);
+        setLoading(false);
+        return;
+      }
       // Format profile to match expected structure
       const formattedProfile = {
         id: profile.id,
@@ -109,6 +140,18 @@ export default function ProfileFeed() {
   useEffect(() => {
     loadData();
   }, [user, targetUserId]);
+
+  useEffect(() => {
+    const handlePostChange = () => {
+      loadData();
+    };
+    window.addEventListener('postCreated', handlePostChange);
+    window.addEventListener('postDeleted', handlePostChange);
+    return () => {
+      window.removeEventListener('postCreated', handlePostChange);
+      window.removeEventListener('postDeleted', handlePostChange);
+    };
+  }, [targetUserId]);
 
   useEffect(() => {
     const handler = () => {
@@ -358,6 +401,9 @@ export default function ProfileFeed() {
                 raisedAmount={post.raisedAmount}
                 donorsCount={post.donorsCount}
                 isVerified={post.author?.verifiedStatus || profileData?.isVerified}
+                onPostDeleted={() => {
+                  setUserPosts(prev => prev.filter(p => p.id !== post.id));
+                }}
               />
             )) : (
               <div className="text-center py-12 text-gray-500 border border-[var(--sc-border)] rounded-2xl bg-white p-6">

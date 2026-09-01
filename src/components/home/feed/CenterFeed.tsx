@@ -14,7 +14,7 @@ export default function CenterFeed() {
   // SWR: Initialize state with cached posts for instant 0ms rendering
   const [posts, setPosts] = useState<any[]>(() => {
     const cached = getCachedData<any[]>(`posts_explore_all`);
-    return Array.isArray(cached) ? cached : [];
+    return Array.isArray(cached) && cached.length > 0 ? cached : [];
   });
   const [loading, setLoading] = useState(() => {
     const cached = getCachedData<any[]>(`posts_explore_all`);
@@ -38,18 +38,23 @@ export default function CenterFeed() {
   };
 
   const fetchPostsWithLocation = (lat?: number, lng?: number) => {
-    fetchPosts(activeTab, user?.uid, lat, lng)
+    console.log('[CenterFeed] Fetching posts for tab:', activeTab);
+    fetchPosts(activeTab, activeTab === 'nearby' ? user?.uid : undefined, lat, lng)
       .then((data) => {
+        console.log('[CenterFeed] Received posts:', data);
         if (Array.isArray(data)) {
-          let sorted = data;
+          let sorted = [...data];
           if (activeTab === 'explore') {
-            sorted = data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            sorted.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           }
+          console.log('[CenterFeed] Setting sorted posts count:', sorted.length);
           setPosts(sorted);
+        } else {
+          console.warn('[CenterFeed] Data is not an array:', data);
         }
       })
       .catch((error) => {
-        console.warn("Background feed sync:", error.message || error);
+        console.error('[CenterFeed] Error fetching posts:', error);
       })
       .finally(() => {
         setLoading(false);
@@ -72,9 +77,17 @@ export default function CenterFeed() {
       loadPosts(false);
     };
 
+    const handlePostDeleted = () => {
+      loadPosts(false);
+    };
+
     window.addEventListener('postCreated', handlePostCreated);
-    return () => window.removeEventListener('postCreated', handlePostCreated);
-  }, [activeTab, user]);
+    window.addEventListener('postDeleted', handlePostDeleted);
+    return () => {
+      window.removeEventListener('postCreated', handlePostCreated);
+      window.removeEventListener('postDeleted', handlePostDeleted);
+    };
+  }, [activeTab, user?.uid]);
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto pt-3 sm:pt-4 pb-24 gap-4 px-0 sm:px-2">
@@ -146,6 +159,9 @@ export default function CenterFeed() {
               raisedAmount={post.raisedAmount}
               donorsCount={post.donorsCount}
               isVerified={post.author?.verifiedStatus}
+              onPostDeleted={() => {
+                setPosts(prev => prev.filter(p => p.id !== post.id));
+              }}
             />
           ))
         )}

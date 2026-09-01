@@ -1,8 +1,19 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const getApiUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) {
+      return envUrl || 'http://localhost:3000';
+    }
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl;
+    }
+    return 'https://straycare-backend-se6q.onrender.com';
+  }
+  return envUrl || 'https://straycare-backend-se6q.onrender.com';
+};
 
-if (!API_URL) {
-  throw new Error("VITE_API_URL environment variable is missing. Check your .env file.");
-}
+const API_URL = getApiUrl();
 
 import { getAuthToken } from '../firebase';
 
@@ -10,13 +21,19 @@ export const UNAUTHORIZED_EVENT = 'straycare:unauthorized';
 export const CONNECTIONS_UPDATED_EVENT = 'straycare:connections-updated';
 
 async function request(path: string, init: RequestInit = {}, retries = 1): Promise<any> {
-  const token = await getAuthToken();
+  let token: string | null = null;
+  try {
+    token = await getAuthToken();
+  } catch {
+    // optional token
+  }
   const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
   headers.set('Accept', 'application/json');
-  headers.set('Accept-Charset', 'utf-8');
   if (init.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json; charset=utf-8');
+    headers.set('Content-Type', 'application/json');
   }
 
   // 20s timeout controller to prevent browser hanging on cold starts
@@ -77,15 +94,16 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
 }
 
 const postJson = (path: string, data: any) =>
-  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
+  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
 
 const putJson = (path: string, data: any) =>
-  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
+  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
 
 const deleteJson = (path: string, data: any) =>
-  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) });
+  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
 
-export { getCachedData, setCachedData } from '../utils/storage';
+import { getCachedData, setCachedData } from '../utils/storage';
+export { getCachedData, setCachedData };
 
 export const fetchPosts = async (tab?: string, userId?: string, lat?: number, lng?: number) => {
   const queryParams = new URLSearchParams();

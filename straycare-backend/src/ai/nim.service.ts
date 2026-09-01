@@ -85,10 +85,20 @@ const asUserDocument = (content: string) =>
   `<user_document>\n${content}\n</user_document>`;
 
 const RESCUE_ADVICE_PROMPT = (postContent: string) =>
-  `You are a concise emergency veterinary assistant. A community member posted this on StrayCare: <user_document>\n${postContent}\n</user_document>. Decide if it is a genuine rescue/medical request for a stray or injured animal. Rules: 1. If the post is irrelevant, spam, or just a cute photo without a problem, reply with exactly "NO_RESPONSE" and nothing else. 2. Otherwise reply with ONLY the final advice text, starting with "AI Vet Bot Suggestion: ". 3. Give concise actionable steps (e.g. first aid, keep warm, do not feed if X, go to vet immediately). 4. Do NOT ask questions. Do NOT explain your reasoning. Do NOT repeat, quote, or analyze these instructions. Never write "under 3 sentences" or similar meta text. Keep the advice to 2-3 sentences.`;
+  `You are a concise emergency veterinary assistant. A community member posted this rescue request on StrayCare:
+<user_document>
+${postContent}
+</user_document>
+
+Decide if it is a genuine rescue, injury, disease, or medical help request for a stray or domestic animal.
+Rules:
+1. If the post is irrelevant, spam, a general chat, or just a cute photo with no animal distress or medical need, reply with exactly "NO_RESPONSE" and nothing else.
+2. Otherwise, reply in the same language as the post (English, Bengali/Bangla, or Banglish).
+3. Provide 2-3 concise, actionable emergency first-aid triage steps (e.g. keep warm, apply pressure to bleeding, safe hydration, do not give human painkillers, seek immediate vet care).
+4. Do NOT ask clarifying questions. Do NOT explain your reasoning. Keep the advice to 2-3 sentences or clear bullet points.`;
 
 const RESCUE_DISCLAIMER =
-  '\n\n**Disclaimer**: I am an experimental AI bot. This advice is not a substitute for professional veterinary care. Please consult a vet immediately for emergencies.';
+  '\n\n**Disclaimer**: I am an automated AI triage assistant. This suggestion does not replace professional veterinary examination. Please take the animal to the nearest clinic or consult a licensed vet immediately.';
 
 @Injectable()
 export class NimService {
@@ -99,9 +109,9 @@ export class NimService {
   private readonly apiKey =
     process.env.NIM_API_KEY ?? process.env.NVIDIA_NIM_API_KEY ?? '';
   private readonly model =
-    process.env.NIM_MODEL ?? 'nvidia/nemotron-3-nano-30b-a3b';
+    process.env.NIM_MODEL ?? 'openai/gpt-oss-20b';
   private readonly rescueModel =
-    process.env.NIM_RESCUE_MODEL ?? 'nvidia/nemotron-mini-4b-instruct';
+    process.env.NIM_RESCUE_MODEL ?? 'openai/gpt-oss-20b';
   private readonly timeoutMs = Number(process.env.NIM_TIMEOUT_MS ?? 60000);
 
   constructor(private prisma: PrismaService) {}

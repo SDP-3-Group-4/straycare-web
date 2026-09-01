@@ -59,6 +59,7 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
+  @Public()
   @Get(':id')
   async getUser(@Param('id') id: string) {
     const user = await this.usersService.getUser(id);
