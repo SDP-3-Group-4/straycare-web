@@ -69,15 +69,13 @@ function VerifyEmailGate() {
   );
 }
 
+import BrandedLoader from '../common/BrandedLoader';
+
 export default function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[var(--sc-bg)]">
-        <Loader2 className="animate-spin text-[var(--sc-primary)]" size={48} />
-      </div>
-    );
+    return <BrandedLoader fullScreen />;
   }
 
   if (!user) {
