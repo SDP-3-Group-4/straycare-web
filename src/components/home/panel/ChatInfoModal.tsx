@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Users, Settings, LogOut, Bell, BellOff, Image as ImageIcon, Trash2, ShieldAlert, Trash, MessageSquareOff } from 'lucide-react';
+import { X, ArrowLeft, Users, Settings, LogOut, Bell, BellOff, Image as ImageIcon, Trash2, ShieldAlert, Trash, MessageSquareOff } from 'lucide-react';
 import { avatarOnError } from '../../../constants';
 import { deleteChat, clearChat, blockChat } from '../../../services/api';
 
@@ -59,29 +59,21 @@ export default function ChatInfoModal({ isOpen, onClose, onDeleted, chat }: Chat
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+  return (
+    <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden">
       
-      {/* Modal */}
-      <div className="relative bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-hidden flex flex-col border border-[var(--sc-border)]">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 sticky-glass shadow-xs">
-          <h2 className="text-[18px] font-bold text-[var(--sc-text-primary)]">
-            {chat.isGroup ? 'Group Info' : chat.isAiBot ? 'Bot Info' : 'Contact Info'}
-          </h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 p-2 rounded-full transition-colors border border-[var(--sc-border)]"
-          >
-            <X size={18} />
-          </button>
-        </div>
+      {/* Header */}
+      <div className="flex items-center p-3 sm:p-4 sticky-glass shadow-xs border-b border-[var(--sc-border)] shrink-0">
+        <button 
+          onClick={onClose}
+          className="mr-3 text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-colors border border-gray-200"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <h2 className="text-[16px] sm:text-[18px] font-bold text-[var(--sc-text-primary)]">
+          {chat.isGroup ? 'Group Info' : chat.isAiBot ? 'Bot Info' : 'Contact Info'}
+        </h2>
+      </div>
 
         {/* Content */}
         <div className="overflow-y-auto pb-6">
@@ -214,8 +206,6 @@ export default function ChatInfoModal({ isOpen, onClose, onDeleted, chat }: Chat
             </div>
           </div>
         )}
-      </div>
-    </div>,
-    document.body
+    </div>
   );
 }
