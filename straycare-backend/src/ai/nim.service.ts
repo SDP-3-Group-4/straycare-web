@@ -98,7 +98,7 @@ Rules:
 4. Do NOT ask clarifying questions. Do NOT explain your reasoning. Keep the advice to 2-3 sentences or clear bullet points.`;
 
 const RESCUE_DISCLAIMER =
-  '\n\n**Disclaimer**: I am an automated AI triage assistant. This suggestion does not replace professional veterinary examination. Please take the animal to the nearest clinic or consult a licensed vet immediately.';
+  '\n\n[Disclaimer] I am an automated AI triage assistant. This suggestion does not replace professional veterinary examination. Please take the animal to the nearest clinic or consult a licensed vet immediately.';
 
 @Injectable()
 export class NimService {
@@ -249,7 +249,7 @@ export class NimService {
     try {
       const advice = await this.callNim(
         [{ role: 'user', content: RESCUE_ADVICE_PROMPT(postContent) }],
-        { maxTokens: 200, temperature: 0.1, model: this.rescueModel },
+        { maxTokens: 512, temperature: 0.1, model: this.rescueModel },
       );
       if (advice.toUpperCase().includes('NO_RESPONSE')) return 'NO_RESPONSE';
       return advice.startsWith('AI Vet Bot Suggestion')

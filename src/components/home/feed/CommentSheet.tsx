@@ -190,7 +190,26 @@ export default function CommentSheet({ postId, isOpen, onClose, onCommentAdded, 
                         <div className="text-sm mt-1 text-gray-800 whitespace-pre-wrap">
                           {comment.content.includes('[Disclaimer]') || comment.content.includes('**Disclaimer**:') ? (
                             <>
-                              <p className="whitespace-pre-wrap">{comment.content.split(/(?:\[Disclaimer\]|\*\*Disclaimer\*\*:)/)[0].replace(/^AI Vet Bot Suggestion:\s*/i, '').replace(/-\s*$/, '').trim()}</p>
+                              <div className="flex flex-col gap-1.5 mb-2 mt-0.5">
+                                {comment.content.split(/(?:\[Disclaimer\]|\*\*Disclaimer\*\*:)/)[0]
+                                  .replace(/^AI Vet Bot Suggestion:\s*/i, '')
+                                  .replace(/-\s*\w*\s*$/, '')
+                                  .trim()
+                                  .split('\n')
+                                  .map((line, i) => {
+                                    const trimmedLine = line.trim();
+                                    if (!trimmedLine) return null;
+                                    if (trimmedLine.startsWith('-')) {
+                                      return (
+                                        <div key={i} className="flex gap-2 items-start">
+                                          <span className="text-blue-500 mt-0.5 text-[10px]">⬤</span>
+                                          <span className="leading-relaxed text-gray-700">{trimmedLine.replace(/^-/, '').trim()}</span>
+                                        </div>
+                                      );
+                                    }
+                                    return <p key={i} className="leading-relaxed text-gray-700">{trimmedLine}</p>;
+                                  })}
+                              </div>
                               <div className="mt-3 p-2.5 bg-yellow-50/80 border border-yellow-200/60 rounded-xl flex items-start gap-2.5 text-[12px] text-yellow-800 shadow-sm">
                                 <span className="mt-0.5 text-sm">⚠️</span>
                                 <p className="leading-relaxed"><strong>Disclaimer:</strong> {comment.content.split(/(?:\[Disclaimer\]|\*\*Disclaimer\*\*:)/)[1].trim()}</p>
