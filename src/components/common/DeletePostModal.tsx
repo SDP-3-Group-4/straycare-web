@@ -1,5 +1,5 @@
-import { createPortal } from 'react-dom';
-import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { createPortal } from "react-dom";
+import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 
 interface DeletePostModalProps {
   isOpen: boolean;
@@ -19,14 +19,13 @@ export default function DeletePostModal({
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
         onClick={() => !isProcessing && onClose()}
       />
 
       {/* Modal / Bottom Sheet */}
       <div className="relative w-full max-w-sm sm:max-w-md bg-[var(--sc-card-bg,white)] rounded-t-[28px] sm:rounded-3xl border border-[var(--sc-border)] shadow-2xl p-5 sm:p-6 flex flex-col z-10 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 overflow-hidden">
-        
         {/* Top Grab Bar for Mobile */}
         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-3 sm:hidden shrink-0" />
 
@@ -51,7 +50,8 @@ export default function DeletePostModal({
             Delete Post?
           </h3>
           <p className="text-xs sm:text-[13px] text-[var(--sc-text-secondary)] mt-1.5 leading-relaxed max-w-xs mx-auto">
-            Are you sure you want to delete this post? It will be permanently removed from the StrayCare feed.
+            Are you sure you want to delete this post? It will be permanently
+            removed from the StrayCare feed.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default function DeletePostModal({
           >
             Cancel
           </button>
-          
+
           <button
             type="button"
             disabled={isProcessing}
@@ -85,9 +85,8 @@ export default function DeletePostModal({
             )}
           </button>
         </div>
-
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

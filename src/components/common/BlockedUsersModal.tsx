@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { ShieldAlert, UserX, X, Check, Search, UserCheck } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { ShieldAlert, UserX, X, Check, Search, UserCheck } from "lucide-react";
 
 interface BlockedUsersModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModalProps) {
+export default function BlockedUsersModal({
+  isOpen,
+  onClose,
+}: BlockedUsersModalProps) {
   const [blockedUsers, setBlockedUsers] = useState<any[]>(() => {
     try {
-      const raw = localStorage.getItem('straycare_blocked_users');
+      const raw = localStorage.getItem("straycare_blocked_users");
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
   });
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [unblockedToast, setUnblockedToast] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -24,7 +27,7 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
   const handleUnblock = (userId: string, name: string) => {
     const updated = blockedUsers.filter((u) => u.id !== userId);
     setBlockedUsers(updated);
-    localStorage.setItem('straycare_blocked_users', JSON.stringify(updated));
+    localStorage.setItem("straycare_blocked_users", JSON.stringify(updated));
     setUnblockedToast(`Unblocked ${name}`);
     setTimeout(() => setUnblockedToast(null), 2500);
   };
@@ -32,14 +35,16 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
   const filtered = blockedUsers.filter(
     (u) =>
       u.name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.handle?.toLowerCase().includes(search.toLowerCase())
+      u.handle?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+        onClick={onClose}
+      />
       <div className="relative bg-white rounded-3xl w-full max-w-md overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh]">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-gray-50/70">
           <div className="flex items-center gap-2">
@@ -60,7 +65,8 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
 
         <div className="p-5 sm:p-6 overflow-y-auto flex flex-col gap-4">
           <p className="text-xs text-gray-500">
-            Blocked accounts cannot view your rescue posts, direct message you, or invite you to campaigns.
+            Blocked accounts cannot view your rescue posts, direct message you,
+            or invite you to campaigns.
           </p>
 
           {unblockedToast && (
@@ -72,7 +78,10 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
 
           {blockedUsers.length > 0 && (
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 value={search}
@@ -92,14 +101,14 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
                 >
                   <div className="min-w-0 flex-1">
                     <span className="font-bold text-xs text-[var(--sc-text-primary)] block truncate">
-                      {user.name || 'User'}
+                      {user.name || "User"}
                     </span>
                     <span className="text-[11px] text-gray-400 block truncate">
-                      @{user.handle || 'user'}
+                      @{user.handle || "user"}
                     </span>
                   </div>
                   <button
-                    onClick={() => handleUnblock(user.id, user.name || 'User')}
+                    onClick={() => handleUnblock(user.id, user.name || "User")}
                     className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-[var(--sc-border)] rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-xs"
                   >
                     Unblock
@@ -111,7 +120,9 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-400 mb-2 border border-gray-200">
                   <UserX size={20} />
                 </div>
-                <span className="font-bold text-xs text-gray-700">No Blocked Accounts</span>
+                <span className="font-bold text-xs text-gray-700">
+                  No Blocked Accounts
+                </span>
                 <span className="text-[11px] text-gray-400 mt-0.5">
                   You haven't blocked any rescuers or community members.
                 </span>
@@ -128,9 +139,8 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
             Close
           </button>
         </div>
-
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

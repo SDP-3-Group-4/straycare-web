@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from 'react';
-import lottie from 'lottie-web';
-import rippleAnimation from '../../assets/animations/Twitch-Brand-ripple-pop.nowatermark.json';
+import React, { useEffect, useRef } from "react";
+import lottie from "lottie-web";
+import rippleAnimation from "../../assets/animations/Twitch-Brand-ripple-pop.nowatermark.json";
 
 interface BrandedLoaderProps {
   fullScreen?: boolean;
 }
 
-export default function BrandedLoader({ fullScreen = false }: BrandedLoaderProps) {
+export default function BrandedLoader({
+  fullScreen = false,
+}: BrandedLoaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<any>(null);
 
@@ -14,16 +16,16 @@ export default function BrandedLoader({ fullScreen = false }: BrandedLoaderProps
     if (containerRef.current) {
       animRef.current = lottie.loadAnimation({
         container: containerRef.current,
-        renderer: 'svg',
+        renderer: "svg",
         loop: true,
         autoplay: true,
         animationData: rippleAnimation,
         rendererSettings: {
-          preserveAspectRatio: 'xMidYMid slice',
+          preserveAspectRatio: "xMidYMid slice",
         },
       });
     }
-    
+
     return () => {
       if (animRef.current) {
         animRef.current.destroy();
@@ -32,10 +34,13 @@ export default function BrandedLoader({ fullScreen = false }: BrandedLoaderProps
   }, []);
 
   const content = (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="flex items-center justify-center pointer-events-none select-none"
-      style={{ width: fullScreen ? '260px' : '160px', height: fullScreen ? '260px' : '160px' }}
+      style={{
+        width: fullScreen ? "260px" : "160px",
+        height: fullScreen ? "260px" : "160px",
+      }}
     />
   );
 

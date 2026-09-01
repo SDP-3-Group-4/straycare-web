@@ -1,5 +1,5 @@
-import ChatWidget from './ChatWidget';
-import CreatePostBox from './CreatePostBox';
+import ChatWidget from "./ChatWidget";
+import CreatePostBox from "./CreatePostBox";
 
 export default function RightPanel() {
   return (

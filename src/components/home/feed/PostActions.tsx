@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
 
 interface PostActionsProps {
   isLiked: boolean;
@@ -19,15 +19,17 @@ export default function PostActions({
   onLike,
   onComment,
   onShare,
-  onBookmark
+  onBookmark,
 }: PostActionsProps) {
   return (
     <div className="flex items-center justify-between text-[var(--sc-text-secondary)] text-xs pt-2.5 mt-1 border-t border-gray-100 px-1">
       {/* Like Button */}
-      <button 
+      <button
         onClick={onLike}
         className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full transition-colors whitespace-nowrap ${
-          isLiked ? 'text-red-500 font-bold bg-red-50' : 'hover:text-red-500 hover:bg-gray-50'
+          isLiked
+            ? "text-red-500 font-bold bg-red-50"
+            : "hover:text-red-500 hover:bg-gray-50"
         }`}
         title="Like"
       >
@@ -36,7 +38,7 @@ export default function PostActions({
       </button>
 
       {/* Comment Button */}
-      <button 
+      <button
         onClick={onComment}
         className="flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-colors whitespace-nowrap"
         title="Comments"
@@ -46,7 +48,7 @@ export default function PostActions({
       </button>
 
       {/* Share Button */}
-      <button 
+      <button
         onClick={onShare}
         className="flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-colors"
         title="Share"
@@ -55,10 +57,12 @@ export default function PostActions({
       </button>
 
       {/* Bookmark Button */}
-      <button 
+      <button
         onClick={onBookmark}
         className={`py-1.5 px-3 rounded-full transition-colors ${
-          isBookmarked ? 'text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]' : 'hover:text-[var(--sc-brand-600)] hover:bg-gray-50'
+          isBookmarked
+            ? "text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]"
+            : "hover:text-[var(--sc-brand-600)] hover:bg-gray-50"
         }`}
         title="Bookmark"
       >

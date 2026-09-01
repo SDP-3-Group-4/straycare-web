@@ -1,50 +1,53 @@
 export type UserPreferences = {
-  locationPrivacy: 'precise' | 'city' | 'hidden';
+  locationPrivacy: "precise" | "city" | "hidden";
   blurSensitiveMedia: boolean;
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   language: string;
-  fontSize: 'normal' | 'large';
+  fontSize: "normal" | "large";
   emergencyAlerts: boolean;
   postInteractionAlerts: boolean;
   donationAlerts: boolean;
   emailAlerts: boolean;
-  whoCanMessage: 'anyone' | 'connections';
-  defaultFeedTab: 'explore' | 'nearby';
+  whoCanMessage: "anyone" | "connections";
+  defaultFeedTab: "explore" | "nearby";
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
-  locationPrivacy: 'city',
+  locationPrivacy: "city",
   blurSensitiveMedia: false,
-  theme: 'light',
-  language: 'en',
-  fontSize: 'normal',
+  theme: "light",
+  language: "en",
+  fontSize: "normal",
   emergencyAlerts: true,
   postInteractionAlerts: true,
   donationAlerts: true,
   emailAlerts: true,
-  whoCanMessage: 'anyone',
-  defaultFeedTab: 'explore',
+  whoCanMessage: "anyone",
+  defaultFeedTab: "explore",
 };
 
-export const applyThemeDOM = (theme: 'light' | 'dark' | 'system') => {
+export const applyThemeDOM = (theme: "light" | "dark" | "system") => {
   try {
-    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const isDark =
+      theme === "dark" ||
+      (theme === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (isDark) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   } catch (e) {
     console.error(e);
   }
 };
 
-export const applyFontSizeDOM = (fontSize: 'normal' | 'large') => {
+export const applyFontSizeDOM = (fontSize: "normal" | "large") => {
   try {
-    if (fontSize === 'large') {
-      document.documentElement.classList.add('text-scale-lg');
+    if (fontSize === "large") {
+      document.documentElement.classList.add("text-scale-lg");
     } else {
-      document.documentElement.classList.remove('text-scale-lg');
+      document.documentElement.classList.remove("text-scale-lg");
     }
   } catch (e) {
     console.error(e);
@@ -55,10 +58,12 @@ export const applyLanguageTranslation = (langCode: string) => {
   try {
     // Set google translate cookie for persistence
     document.cookie = `googtrans=/en/${langCode}; path=/;`;
-    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+    const select = document.querySelector(
+      ".goog-te-combo",
+    ) as HTMLSelectElement | null;
     if (select) {
       select.value = langCode;
-      select.dispatchEvent(new Event('change'));
+      select.dispatchEvent(new Event("change"));
     }
   } catch (e) {
     console.error(e);
@@ -67,7 +72,7 @@ export const applyLanguageTranslation = (langCode: string) => {
 
 export const getStoredPreferences = (): UserPreferences => {
   try {
-    const raw = localStorage.getItem('straycare_user_preferences');
+    const raw = localStorage.getItem("straycare_user_preferences");
     if (raw) return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
   } catch (e) {
     console.error(e);
@@ -81,11 +86,13 @@ export const initPreferencesDOM = () => {
   applyFontSizeDOM(prefs.fontSize);
 };
 
-export const savePreferences = (prefs: Partial<UserPreferences>): UserPreferences => {
+export const savePreferences = (
+  prefs: Partial<UserPreferences>,
+): UserPreferences => {
   const current = getStoredPreferences();
   const updated = { ...current, ...prefs };
   try {
-    localStorage.setItem('straycare_user_preferences', JSON.stringify(updated));
+    localStorage.setItem("straycare_user_preferences", JSON.stringify(updated));
   } catch (e) {
     console.error(e);
   }
@@ -100,11 +107,13 @@ export const savePreferences = (prefs: Partial<UserPreferences>): UserPreference
     applyLanguageTranslation(prefs.language);
   }
 
-  window.dispatchEvent(new CustomEvent('straycare:preferences-changed', { detail: updated }));
+  window.dispatchEvent(
+    new CustomEvent("straycare:preferences-changed", { detail: updated }),
+  );
   return updated;
 };
 
 // Initialize DOM attributes on load
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   initPreferencesDOM();
 }

@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Cross, MessageSquare, X, User, BadgeCheck, ShoppingBag } from 'lucide-react';
-import logo from '../../assets/logo.svg';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCart } from '../../contexts/CartContext';
-import { avatarOnError } from '../../constants';
-import { fetchChats } from '../../services/api';
-import SearchBar from '../home/feed/SearchBar';
-import NearbyClinicsWidget from '../home/sidebar/NearbyClinicsWidget';
-import ChatWidget from '../home/panel/ChatWidget';
-import ProfileFlyoutMenu from '../common/ProfileFlyoutMenu';
-import MobileCartModal from './MobileCartModal';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  Search,
+  Cross,
+  MessageSquare,
+  X,
+  User,
+  BadgeCheck,
+  ShoppingBag,
+} from "lucide-react";
+import logo from "../../assets/logo.svg";
+import { useAuth } from "../../contexts/AuthContext";
+import { useCart } from "../../contexts/CartContext";
+import { avatarOnError } from "../../constants";
+import { fetchChats } from "../../services/api";
+import SearchBar from "../home/feed/SearchBar";
+import NearbyClinicsWidget from "../home/sidebar/NearbyClinicsWidget";
+import ChatWidget from "../home/panel/ChatWidget";
+import ProfileFlyoutMenu from "../common/ProfileFlyoutMenu";
+import MobileCartModal from "./MobileCartModal";
 
 export default function MobileHeader() {
   const { user } = useAuth();
@@ -30,7 +38,7 @@ export default function MobileHeader() {
       fetchChats(user.uid)
         .then((chats: any[]) => {
           const totalUnread = chats
-            .filter((c) => c.otherUserId !== 'ai-vet-bot-id')
+            .filter((c) => c.otherUserId !== "ai-vet-bot-id")
             .reduce((acc, c) => acc + (c.unread || 0), 0);
           setUnreadMessages(totalUnread);
         })
@@ -43,7 +51,11 @@ export default function MobileHeader() {
       <header className="md:hidden sticky-glass px-3.5 py-2.5 flex items-center justify-between shadow-xs">
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="StrayCare Logo" className="h-7 w-auto object-contain" />
+          <img
+            src={logo}
+            alt="StrayCare Logo"
+            className="h-7 w-auto object-contain"
+          />
         </Link>
 
         {/* Right: Quick Action Controls */}
@@ -52,7 +64,9 @@ export default function MobileHeader() {
           <button
             onClick={() => setShowSearch(!showSearch)}
             className={`p-2 rounded-full transition-colors ${
-              showSearch ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]' : 'text-gray-600 hover:bg-gray-100'
+              showSearch
+                ? "bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)]"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
             title="Search"
             aria-label="Search"
@@ -91,8 +105,8 @@ export default function MobileHeader() {
             onClick={() => setShowCartModal(true)}
             className={`p-2 rounded-full transition-all relative ${
               cartItemCount > 0
-                ? 'text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]'
-                : 'text-gray-600 hover:text-[var(--sc-brand-600)] hover:bg-gray-100'
+                ? "text-[var(--sc-brand-600)] bg-[var(--sc-brand-50)]"
+                : "text-gray-600 hover:text-[var(--sc-brand-600)] hover:bg-gray-100"
             }`}
             title="Cart"
             aria-label={`Shopping cart with ${cartItemCount} items`}
@@ -100,7 +114,7 @@ export default function MobileHeader() {
             <ShoppingBag size={19} />
             {cartItemCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-[var(--sc-brand-600)] text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-2xs animate-in zoom-in-50">
-                {cartItemCount > 9 ? '9+' : cartItemCount}
+                {cartItemCount > 9 ? "9+" : cartItemCount}
               </span>
             )}
           </button>
@@ -112,13 +126,17 @@ export default function MobileHeader() {
             aria-label="Open settings and profile menu"
             title="Settings & Profile"
           >
-            <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
-              isVerifiedVet ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : 'border border-gray-200'
-            }`}>
+            <div
+              className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
+                isVerifiedVet
+                  ? "ring-2 ring-offset-2 ring-[var(--sc-brand-500)]"
+                  : "border border-gray-200"
+              }`}
+            >
               {user?.photoUrl ? (
                 <img
                   src={user?.photoUrl || undefined}
-                  alt={user?.displayName || 'User'}
+                  alt={user?.displayName || "User"}
                   onError={avatarOnError}
                   className="w-full h-full object-cover"
                 />
@@ -151,10 +169,15 @@ export default function MobileHeader() {
       {/* Mobile Nearby Clinics Modal / Sheet */}
       {showClinicsModal && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowClinicsModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowClinicsModal(false)}
+          />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in slide-in-from-bottom-5 duration-300">
             <div className="sticky-glass flex items-center justify-between p-4">
-              <h3 className="font-bold text-base text-[var(--sc-text-primary)]">Nearby 24/7 Vet Clinics</h3>
+              <h3 className="font-bold text-base text-[var(--sc-text-primary)]">
+                Nearby 24/7 Vet Clinics
+              </h3>
               <button
                 onClick={() => setShowClinicsModal(false)}
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700"
@@ -172,10 +195,15 @@ export default function MobileHeader() {
       {/* Mobile Messages & AI Vet Modal / Sheet */}
       {showChatModal && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowChatModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowChatModal(false)}
+          />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg h-[90vh] flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in slide-in-from-bottom-5 duration-300 overflow-hidden">
             <div className="flex items-center justify-between p-3.5 bg-white border-b border-[var(--sc-border)] shrink-0">
-              <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">Messages & AI Assistant</span>
+              <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">
+                Messages & AI Assistant
+              </span>
               <button
                 onClick={() => setShowChatModal(false)}
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700"

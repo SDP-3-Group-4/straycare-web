@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { DEFAULT_LOCATION } from '../data/clinics';
+import { useCallback, useState } from "react";
+import { DEFAULT_LOCATION } from "../data/clinics";
 
 export interface UserLocation {
   lat: number;
@@ -16,27 +16,30 @@ export function useUserLocation() {
       if (!navigator.geolocation) {
         setLocation(DEFAULT_LOCATION);
         setResolved(true);
-        setError('Location not supported');
+        setError("Location not supported");
         resolve(DEFAULT_LOCATION);
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+          const loc = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
           setLocation(loc);
           setResolved(true);
           setError(null);
           resolve(loc);
         },
         (geoError) => {
-          console.error('Error getting location', geoError);
+          console.error("Error getting location", geoError);
           setLocation(DEFAULT_LOCATION);
           setResolved(true);
-          setError(geoError.message || 'Location unavailable');
+          setError(geoError.message || "Location unavailable");
           resolve(DEFAULT_LOCATION);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
       );
     });
   }, []);

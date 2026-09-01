@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Smartphone, Monitor, X, ExternalLink } from 'lucide-react';
-import bannerBrandingIcon from '../../assets/banner_branding.svg';
+import { useState } from "react";
+import { Smartphone, Monitor, X, ExternalLink } from "lucide-react";
+import bannerBrandingIcon from "../../assets/banner_branding.svg";
 
-const ANDROID_WAITLIST_URL = 'https://forms.gle/T8di6jGPrGnk8Qbr6';
+const ANDROID_WAITLIST_URL = "https://forms.gle/T8di6jGPrGnk8Qbr6";
 
 export default function MobileBanner() {
   const [isVisible, setIsVisible] = useState(true);
@@ -18,17 +18,21 @@ export default function MobileBanner() {
         {/* Main Text */}
         <div className="flex items-center gap-2 leading-tight flex-1 min-w-[200px]">
           <span className="p-1 bg-white/15 rounded-lg shrink-0 flex items-center justify-center">
-            <img src={bannerBrandingIcon} alt="StrayCare Brand Icon" className="h-4 w-auto object-contain" />
+            <img
+              src={bannerBrandingIcon}
+              alt="StrayCare Brand Icon"
+              className="h-4 w-auto object-contain"
+            />
           </span>
           <p className="font-medium text-white/95 text-xs">
-            StrayCare experience is better on{' '}
+            StrayCare experience is better on{" "}
             <a
               href={window.location.origin}
               className="underline font-bold hover:text-white transition-colors"
             >
               desktop
-            </a>{' '}
-            or{' '}
+            </a>{" "}
+            or{" "}
             <a
               href={ANDROID_WAITLIST_URL}
               target="_blank"

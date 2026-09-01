@@ -1,5 +1,5 @@
-import { createPortal } from 'react-dom';
-import { UserMinus, AlertTriangle, X } from 'lucide-react';
+import { createPortal } from "react-dom";
+import { UserMinus, AlertTriangle, X } from "lucide-react";
 
 interface DisconnectConfirmModalProps {
   isOpen: boolean;
@@ -21,14 +21,13 @@ export default function DisconnectConfirmModal({
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
         onClick={() => !isProcessing && onClose()}
       />
 
       {/* Modal / Bottom Sheet */}
       <div className="relative w-full max-w-sm sm:max-w-md bg-[var(--sc-card-bg,white)] rounded-t-[28px] sm:rounded-3xl border border-[var(--sc-border)] shadow-2xl p-5 sm:p-6 flex flex-col z-10 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 overflow-hidden">
-        
         {/* Top Grab Bar for Mobile */}
         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-3 sm:hidden shrink-0" />
 
@@ -49,11 +48,18 @@ export default function DisconnectConfirmModal({
 
         {/* Title & Description */}
         <div className="text-center px-2">
-          <h3 className="font-extrabold text-[17px] sm:text-[18px] text-[var(--sc-text-primary)] leading-snug notranslate" translate="no">
-            {userName ? `Disconnect from ${userName}?` : 'Disconnect Connection?'}
+          <h3
+            className="font-extrabold text-[17px] sm:text-[18px] text-[var(--sc-text-primary)] leading-snug notranslate"
+            translate="no"
+          >
+            {userName
+              ? `Disconnect from ${userName}?`
+              : "Disconnect Connection?"}
           </h3>
           <p className="text-xs sm:text-[13px] text-[var(--sc-text-secondary)] mt-1.5 leading-relaxed max-w-xs mx-auto">
-            You will no longer be connected. Direct messaging is reserved for active connections, so new messages will be paused until you reconnect.
+            You will no longer be connected. Direct messaging is reserved for
+            active connections, so new messages will be paused until you
+            reconnect.
           </p>
         </div>
 
@@ -67,7 +73,7 @@ export default function DisconnectConfirmModal({
           >
             Keep Connected
           </button>
-          
+
           <button
             type="button"
             disabled={isProcessing}
@@ -84,9 +90,8 @@ export default function DisconnectConfirmModal({
             )}
           </button>
         </div>
-
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

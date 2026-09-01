@@ -1,11 +1,27 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Clock, Cross, LocateFixed, MapPin, Navigation, Star } from 'lucide-react';
-import L from 'leaflet';
-import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { CLINICS, type Clinic } from '../../../data/clinics';
-import { haversineDistanceKm, formatDistance } from '../../../utils/geo';
-import { useUserLocation } from '../../../hooks/useUserLocation';
+import { useLayoutEffect, useMemo, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Cross,
+  LocateFixed,
+  MapPin,
+  Navigation,
+  Star,
+} from "lucide-react";
+import L from "leaflet";
+import {
+  MapContainer,
+  Marker,
+  Polyline,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { CLINICS, type Clinic } from "../../../data/clinics";
+import { haversineDistanceKm, formatDistance } from "../../../utils/geo";
+import { useUserLocation } from "../../../hooks/useUserLocation";
 
 const RADIUS_KM = 3;
 
@@ -17,31 +33,37 @@ function isOpenNow(clinic: Clinic): boolean {
 
 const formatHour = (h24: number) => {
   const h = h24 % 12 === 0 ? 12 : h24 % 12;
-  return `${h}:00 ${h24 >= 12 ? 'PM' : 'AM'}`;
+  return `${h}:00 ${h24 >= 12 ? "PM" : "AM"}`;
 };
 
 const userIcon = L.divIcon({
-  className: '',
+  className: "",
   html: '<div style="width:15px;height:15px;border-radius:9999px;background:#772BFB;border:3px solid #fff;box-shadow:0 0 0 4px rgba(119,43,251,0.25), 0 2px 6px rgba(0,0,0,0.25);"></div>',
   iconSize: [15, 15],
   iconAnchor: [7.5, 7.5],
 });
 
 const clinicIcon = L.divIcon({
-  className: '',
+  className: "",
   html: '<svg width="26" height="34" viewBox="0 0 24 24" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35));"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#772BFB"/><circle cx="12" cy="9" r="3.2" fill="#fff"/></svg>',
   iconSize: [26, 34],
   iconAnchor: [13, 32],
 });
 
 const activeClinicIcon = L.divIcon({
-  className: '',
+  className: "",
   html: '<div style="display:flex;flex-direction:column;align-items:center;"><span style="background:#772BFB;color:#fff;font-weight:700;font-size:10px;padding:1px 7px;border-radius:9999px;box-shadow:0 1px 4px rgba(0,0,0,0.3);margin-bottom:2px;">Selected</span><svg width="30" height="38" viewBox="0 0 24 24" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#5B21B6"/><circle cx="12" cy="9" r="3.2" fill="#fff"/></svg></div>',
   iconSize: [30, 46],
   iconAnchor: [15, 44],
 });
 
-function FitRoute({ user, clinic }: { user: [number, number]; clinic: [number, number] }) {
+function FitRoute({
+  user,
+  clinic,
+}: {
+  user: [number, number];
+  clinic: [number, number];
+}) {
   const map = useMap();
   const bounds = useMemo(() => L.latLngBounds([user, clinic]), [user, clinic]);
   useLayoutEffect(() => {
@@ -70,7 +92,12 @@ export default function NearbyClinicsWidget() {
   const nearby = useMemo(() => {
     return CLINICS.map((clinic) => ({
       clinic,
-      distanceKm: haversineDistanceKm(location.lat, location.lng, clinic.lat, clinic.lng),
+      distanceKm: haversineDistanceKm(
+        location.lat,
+        location.lng,
+        clinic.lat,
+        clinic.lng,
+      ),
     }))
       .filter(({ distanceKm }) => distanceKm <= RADIUS_KM)
       .sort((a, b) => a.distanceKm - b.distanceKm);
@@ -84,7 +111,9 @@ export default function NearbyClinicsWidget() {
             <div className="w-10 h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0">
               <Cross size={20} />
             </div>
-            <h3 className="font-bold text-[var(--sc-text-primary)] text-[15px] leading-tight">Nearby Clinics</h3>
+            <h3 className="font-bold text-[var(--sc-text-primary)] text-[15px] leading-tight">
+              Nearby Clinics
+            </h3>
           </div>
         </div>
         <div className="px-3 pb-3.5 text-[12px] text-gray-500 font-medium">
@@ -114,11 +143,13 @@ export default function NearbyClinicsWidget() {
           <div className="w-10 h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0">
             <Cross size={20} />
           </div>
-          <h3 className="font-bold text-[var(--sc-text-primary)] text-[15px] leading-tight">Nearby Clinics</h3>
+          <h3 className="font-bold text-[var(--sc-text-primary)] text-[15px] leading-tight">
+            Nearby Clinics
+          </h3>
         </div>
         <ChevronDown
           size={20}
-          className={`text-gray-400 transition-transform duration-300 ${isCollapsed ? '' : 'rotate-180'}`}
+          className={`text-gray-400 transition-transform duration-300 ${isCollapsed ? "" : "rotate-180"}`}
         />
       </div>
 
@@ -143,12 +174,21 @@ export default function NearbyClinicsWidget() {
                     <Marker
                       key={clinic.id}
                       position={[clinic.lat, clinic.lng]}
-                      icon={clinic.id === active.clinic.id ? activeClinicIcon : clinicIcon}
+                      icon={
+                        clinic.id === active.clinic.id
+                          ? activeClinicIcon
+                          : clinicIcon
+                      }
                     />
                   ))}
                   <Polyline
                     positions={[userPos, clinicPos]}
-                    pathOptions={{ color: '#772BFB', weight: 4, dashArray: '10 12', opacity: 0.85 }}
+                    pathOptions={{
+                      color: "#772BFB",
+                      weight: 4,
+                      dashArray: "10 12",
+                      opacity: 0.85,
+                    }}
                   />
                 </>
               )}
@@ -186,7 +226,10 @@ export default function NearbyClinicsWidget() {
                   {active.clinic.name}
                 </h4>
                 {open && (
-                  <span className="shrink-0 w-2 h-2 rounded-full bg-green-500" aria-label="Open now" />
+                  <span
+                    className="shrink-0 w-2 h-2 rounded-full bg-green-500"
+                    aria-label="Open now"
+                  />
                 )}
                 <span className="flex items-center gap-0.5 ml-auto shrink-0 text-[12px] font-bold text-[var(--sc-brand-600)]">
                   <Navigation size={12} />
@@ -202,22 +245,28 @@ export default function NearbyClinicsWidget() {
                   <Star size={12} className="fill-amber-400 text-amber-400" />
                   {active.clinic.rating.toFixed(1)}
                 </span>
-                <span className={`flex items-center gap-1 font-medium ${open ? 'text-green-600' : 'text-gray-500'}`}>
-                  <Clock size={12} className={open ? '' : 'text-gray-400'} />
-                  {open ? `Open till ${formatHour(active.clinic.closeHour)}` : 'Closed now'}
+                <span
+                  className={`flex items-center gap-1 font-medium ${open ? "text-green-600" : "text-gray-500"}`}
+                >
+                  <Clock size={12} className={open ? "" : "text-gray-400"} />
+                  {open
+                    ? `Open till ${formatHour(active.clinic.closeHour)}`
+                    : "Closed now"}
                 </span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-1 shrink-0">
               <button
-                onClick={() => canCycle && setActiveIndex((i) => (i + 1) % nearby.length)}
+                onClick={() =>
+                  canCycle && setActiveIndex((i) => (i + 1) % nearby.length)
+                }
                 disabled={!canCycle}
-                aria-label={canCycle ? 'Next clinic' : 'Only one clinic nearby'}
-                title={canCycle ? 'Next clinic' : 'Only one clinic nearby'}
+                aria-label={canCycle ? "Next clinic" : "Only one clinic nearby"}
+                title={canCycle ? "Next clinic" : "Only one clinic nearby"}
                 className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors shadow-sm ${
                   canCycle
-                    ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white cursor-pointer'
-                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    ? "bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white cursor-pointer"
+                    : "bg-gray-100 text-gray-300 cursor-not-allowed"
                 }`}
               >
                 <ChevronRight size={18} />

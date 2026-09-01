@@ -1,30 +1,62 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  User, Mail, Key, Bell, Moon, Sun, Monitor, Globe,
-  ShieldAlert, EyeOff, Eye, FileText, HelpCircle, ChevronRight,
-  LogOut, ShieldCheck, MapPin, Download, Check, Sparkles, AlertCircle,
-  MessageSquare, HeartHandshake, Shield, Smartphone, Trash2, Sliders, Type, ExternalLink
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { avatarOnError, formatHandle } from '../../../constants';
-import { getStoredPreferences, savePreferences, type UserPreferences } from '../../../services/preferences';
-import EditProfileModal from './EditProfileModal';
-import VetVerificationModal from './VetVerificationModal';
-import PasswordSecurityModal from '../../common/PasswordSecurityModal';
-import BlockedUsersModal from '../../common/BlockedUsersModal';
-import PolicyModal, { type PolicyType } from '../../common/PolicyModal';
-import PaymentMethodsModal from '../../common/PaymentMethodsModal';
-import { getSavedPaymentMethods, type SavedPaymentMethod } from '../../../services/payments';
+  User,
+  Mail,
+  Key,
+  Bell,
+  Moon,
+  Sun,
+  Monitor,
+  Globe,
+  ShieldAlert,
+  EyeOff,
+  Eye,
+  FileText,
+  HelpCircle,
+  ChevronRight,
+  LogOut,
+  ShieldCheck,
+  MapPin,
+  Download,
+  Check,
+  Sparkles,
+  AlertCircle,
+  MessageSquare,
+  HeartHandshake,
+  Shield,
+  Smartphone,
+  Trash2,
+  Sliders,
+  Type,
+  ExternalLink,
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { avatarOnError, formatHandle } from "../../../constants";
+import {
+  getStoredPreferences,
+  savePreferences,
+  type UserPreferences,
+} from "../../../services/preferences";
+import EditProfileModal from "./EditProfileModal";
+import VetVerificationModal from "./VetVerificationModal";
+import PasswordSecurityModal from "../../common/PasswordSecurityModal";
+import BlockedUsersModal from "../../common/BlockedUsersModal";
+import PolicyModal, { type PolicyType } from "../../common/PolicyModal";
+import PaymentMethodsModal from "../../common/PaymentMethodsModal";
+import {
+  getSavedPaymentMethods,
+  type SavedPaymentMethod,
+} from "../../../services/payments";
 
 const LANGUAGES = [
-  { code: 'en', name: 'English (US)', flag: '🇺🇸' },
-  { code: 'bn', name: 'বাংলা (Bengali)', flag: '🇧🇩' },
-  { code: 'es', name: 'Español (Spanish)', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français (French)', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch (German)', flag: '🇩🇪' },
-  { code: 'hi', name: 'हिन्दी (Hindi)', flag: '🇮🇳' },
-  { code: 'ar', name: 'العربية (Arabic)', flag: '🇸🇦' },
+  { code: "en", name: "English (US)", flag: "🇺🇸" },
+  { code: "bn", name: "বাংলা (Bengali)", flag: "🇧🇩" },
+  { code: "es", name: "Español (Spanish)", flag: "🇪🇸" },
+  { code: "fr", name: "Français (French)", flag: "🇫🇷" },
+  { code: "de", name: "Deutsch (German)", flag: "🇩🇪" },
+  { code: "hi", name: "हिन्दी (Hindi)", flag: "🇮🇳" },
+  { code: "ar", name: "العربية (Arabic)", flag: "🇸🇦" },
 ];
 
 export default function SettingsFeed() {
@@ -36,14 +68,19 @@ export default function SettingsFeed() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>(getSavedPaymentMethods());
-  const [policyModalType, setPolicyModalType] = useState<PolicyType | null>(null);
+  const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>(
+    getSavedPaymentMethods(),
+  );
+  const [policyModalType, setPolicyModalType] = useState<PolicyType | null>(
+    null,
+  );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [dataExported, setDataExported] = useState(false);
 
   const isVerifiedVet = Boolean(user?.isVet || user?.verifiedStatus);
-  const primaryMethod = savedMethods.find((m) => m.isDefault) || savedMethods[0];
+  const primaryMethod =
+    savedMethods.find((m) => m.isDefault) || savedMethods[0];
 
   useEffect(() => {
     const handlePrefsChange = (e: any) => {
@@ -52,20 +89,29 @@ export default function SettingsFeed() {
     const handlePaymentsChange = (e: any) => {
       if (e.detail) setSavedMethods(e.detail);
     };
-    window.addEventListener('straycare:preferences-changed', handlePrefsChange);
-    window.addEventListener('straycare:payment-methods-updated', handlePaymentsChange);
+    window.addEventListener("straycare:preferences-changed", handlePrefsChange);
+    window.addEventListener(
+      "straycare:payment-methods-updated",
+      handlePaymentsChange,
+    );
     return () => {
-      window.removeEventListener('straycare:preferences-changed', handlePrefsChange);
-      window.removeEventListener('straycare:payment-methods-updated', handlePaymentsChange);
+      window.removeEventListener(
+        "straycare:preferences-changed",
+        handlePrefsChange,
+      );
+      window.removeEventListener(
+        "straycare:payment-methods-updated",
+        handlePaymentsChange,
+      );
     };
   }, []);
 
-  const handleLocationChange = (mode: 'precise' | 'city' | 'hidden') => {
+  const handleLocationChange = (mode: "precise" | "city" | "hidden") => {
     const updated = savePreferences({ locationPrivacy: mode });
     setPrefs(updated);
   };
 
-  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = (theme: "light" | "dark" | "system") => {
     const updated = savePreferences({ theme });
     setPrefs(updated);
   };
@@ -75,23 +121,29 @@ export default function SettingsFeed() {
     setPrefs(updated);
   };
 
-  const handleFontSizeChange = (size: 'normal' | 'large') => {
+  const handleFontSizeChange = (size: "normal" | "large") => {
     const updated = savePreferences({ fontSize: size });
     setPrefs(updated);
   };
 
   const toggleBlurSensitive = () => {
-    const updated = savePreferences({ blurSensitiveMedia: !prefs.blurSensitiveMedia });
+    const updated = savePreferences({
+      blurSensitiveMedia: !prefs.blurSensitiveMedia,
+    });
     setPrefs(updated);
   };
 
   const toggleEmergencyAlerts = () => {
-    const updated = savePreferences({ emergencyAlerts: !prefs.emergencyAlerts });
+    const updated = savePreferences({
+      emergencyAlerts: !prefs.emergencyAlerts,
+    });
     setPrefs(updated);
   };
 
   const togglePostAlerts = () => {
-    const updated = savePreferences({ postInteractionAlerts: !prefs.postInteractionAlerts });
+    const updated = savePreferences({
+      postInteractionAlerts: !prefs.postInteractionAlerts,
+    });
     setPrefs(updated);
   };
 
@@ -105,7 +157,7 @@ export default function SettingsFeed() {
     setPrefs(updated);
   };
 
-  const handleMessagePrivacyChange = (privacy: 'anyone' | 'connections') => {
+  const handleMessagePrivacyChange = (privacy: "anyone" | "connections") => {
     const updated = savePreferences({ whoCanMessage: privacy });
     setPrefs(updated);
   };
@@ -126,9 +178,11 @@ export default function SettingsFeed() {
       exportDate: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(userData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `straycare-data-${user.uid}.json`;
     a.click();
@@ -140,11 +194,15 @@ export default function SettingsFeed() {
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto pb-24 pt-3 sm:pt-6 lg:pt-[74px] px-1 sm:px-0">
       <div className="flex flex-col gap-6">
-        
         {/* Page Title */}
         <div className="px-2 sm:px-0">
-          <h2 className="text-lg sm:text-xl font-bold text-[var(--sc-text-primary)]">Settings & Preferences</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Control your account, appearance, language translation, safety, and privacy.</p>
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--sc-text-primary)]">
+            Settings & Preferences
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Control your account, appearance, language translation, safety, and
+            privacy.
+          </p>
         </div>
 
         {/* 1. User Identity & Account Card */}
@@ -152,13 +210,17 @@ export default function SettingsFeed() {
           <div className="bg-white rounded-3xl border border-[var(--sc-border)] p-4 sm:p-5 shadow-xs flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
               <div className="relative shrink-0">
-                <div className={`w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
-                  isVerifiedVet ? 'ring-2 ring-offset-2 ring-[var(--sc-brand-500)]' : 'ring-1 ring-gray-200'
-                }`}>
+                <div
+                  className={`w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 ${
+                    isVerifiedVet
+                      ? "ring-2 ring-offset-2 ring-[var(--sc-brand-500)]"
+                      : "ring-1 ring-gray-200"
+                  }`}
+                >
                   {user.photoUrl ? (
                     <img
                       src={user.photoUrl || undefined}
-                      alt={user.displayName || 'User'}
+                      alt={user.displayName || "User"}
                       onError={avatarOnError}
                       className="w-full h-full object-cover"
                     />
@@ -168,7 +230,10 @@ export default function SettingsFeed() {
                 </div>
                 {isVerifiedVet && (
                   <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-xs">
-                    <ShieldCheck size={16} className="text-[var(--sc-brand-500)]" />
+                    <ShieldCheck
+                      size={16}
+                      className="text-[var(--sc-brand-500)]"
+                    />
                   </div>
                 )}
               </div>
@@ -176,16 +241,21 @@ export default function SettingsFeed() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-base text-[var(--sc-text-primary)] truncate">
-                    {user.displayName || 'User'}
+                    {user.displayName || "User"}
                   </h3>
                   {isVerifiedVet && (
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-lg shrink-0">
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-lg shrink-0">
                       Verified Vet
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[var(--sc-text-secondary)] truncate notranslate" translate="no">
-                  {(user as any).handle ? formatHandle((user as any).handle) : user.email}
+                <p
+                  className="text-xs text-[var(--sc-text-secondary)] truncate notranslate"
+                  translate="no"
+                >
+                  {(user as any).handle
+                    ? formatHandle((user as any).handle)
+                    : user.email}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                   {user.email}
@@ -194,7 +264,7 @@ export default function SettingsFeed() {
             </div>
 
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate("/profile")}
               className="px-3.5 py-2 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-100)] rounded-xl text-xs font-bold shrink-0 transition-all active:scale-95 flex items-center gap-1.5 shadow-xs"
             >
               Go to Profile
@@ -205,7 +275,7 @@ export default function SettingsFeed() {
 
         {/* 2. Account Security & Login Credentials */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Account & Security
           </h3>
 
@@ -217,7 +287,9 @@ export default function SettingsFeed() {
                   <Mail size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Primary Email</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Primary Email
+                  </span>
                   <span className="text-xs text-gray-500">{user?.email}</span>
                 </div>
               </div>
@@ -236,11 +308,18 @@ export default function SettingsFeed() {
                   <Key size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Password & Credentials</span>
-                  <span className="text-xs text-gray-500">Dispatch secure password reset link or update credentials</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Password & Credentials
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Dispatch secure password reset link or update credentials
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
 
             {/* Payment Methods & Wallet */}
@@ -254,7 +333,9 @@ export default function SettingsFeed() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)]">Payment Methods & Wallet</span>
+                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)]">
+                      Payment Methods & Wallet
+                    </span>
                     {primaryMethod && (
                       <span className="px-2 py-0.5 bg-purple-50 text-[var(--sc-brand-700)] border border-purple-200 text-[10px] font-bold rounded-md truncate max-w-[140px]">
                         {primaryMethod.title}
@@ -262,18 +343,22 @@ export default function SettingsFeed() {
                     )}
                   </div>
                   <span className="text-xs text-gray-500 truncate block">
-                    Manage bKash, Nagad, Card gateways & donation receipts ({savedMethods.length} saved)
+                    Manage bKash, Nagad, Card gateways & donation receipts (
+                    {savedMethods.length} saved)
                   </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
           </div>
         </div>
 
         {/* 3. Appearance & Theme Settings */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Appearance & Themes
           </h3>
 
@@ -286,42 +371,50 @@ export default function SettingsFeed() {
                     <Sun size={18} />
                   </div>
                   <div>
-                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Color Theme</span>
-                    <span className="text-xs text-gray-500">Select your preferred interface display mode</span>
+                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                      Color Theme
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Select your preferred interface display mode
+                    </span>
                   </div>
                 </div>
                 <span className="text-xs font-bold text-blue-600 capitalize bg-blue-50 px-2.5 py-1 rounded-lg">
-                  {prefs.theme === 'light' ? 'Light Mode' : prefs.theme === 'dark' ? 'Dark Mode' : 'System Match'}
+                  {prefs.theme === "light"
+                    ? "Light Mode"
+                    : prefs.theme === "dark"
+                      ? "Dark Mode"
+                      : "System Match"}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-[var(--sc-border)] text-xs font-bold">
                 <button
-                  onClick={() => handleThemeChange('light')}
+                  onClick={() => handleThemeChange("light")}
                   className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                    prefs.theme === 'light'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.theme === "light"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   <Sun size={14} /> Light
                 </button>
                 <button
-                  onClick={() => handleThemeChange('dark')}
+                  onClick={() => handleThemeChange("dark")}
                   className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                    prefs.theme === 'dark'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.theme === "dark"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   <Moon size={14} /> Dark
                 </button>
                 <button
-                  onClick={() => handleThemeChange('system')}
+                  onClick={() => handleThemeChange("system")}
                   className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                    prefs.theme === 'system'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.theme === "system"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   <Monitor size={14} /> System
@@ -336,28 +429,32 @@ export default function SettingsFeed() {
                   <Type size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Accessibility Text Size</span>
-                  <span className="text-xs text-gray-500">Standard readable vs. enlarged touch-friendly typography</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Accessibility Text Size
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Standard readable vs. enlarged touch-friendly typography
+                  </span>
                 </div>
               </div>
 
               <div className="flex bg-gray-100 p-1 rounded-xl border border-[var(--sc-border)] text-xs font-bold">
                 <button
-                  onClick={() => handleFontSizeChange('normal')}
+                  onClick={() => handleFontSizeChange("normal")}
                   className={`px-3 py-1 rounded-lg transition-all ${
-                    prefs.fontSize === 'normal'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200'
+                    prefs.fontSize === "normal"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   Normal
                 </button>
                 <button
-                  onClick={() => handleFontSizeChange('large')}
+                  onClick={() => handleFontSizeChange("large")}
                   className={`px-3 py-1 rounded-lg transition-all ${
-                    prefs.fontSize === 'large'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200'
+                    prefs.fontSize === "large"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   Large
@@ -369,7 +466,7 @@ export default function SettingsFeed() {
 
         {/* 4. Language & Global Translation */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Language & Global Translation
           </h3>
 
@@ -380,8 +477,12 @@ export default function SettingsFeed() {
                   <Globe size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Global Translation Plugin</span>
-                  <span className="text-xs text-gray-500">Translate the StrayCare portal into local languages</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Global Translation Plugin
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Translate the StrayCare portal into local languages
+                  </span>
                 </div>
               </div>
             </div>
@@ -396,8 +497,8 @@ export default function SettingsFeed() {
                     onClick={() => handleLanguageChange(lang.code)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all text-left ${
                       isSelected
-                        ? 'bg-[var(--sc-brand-50)] text-[var(--sc-brand-700)] border-[var(--sc-brand-300)] ring-1 ring-[var(--sc-brand-300)]'
-                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-[var(--sc-border)]'
+                        ? "bg-[var(--sc-brand-50)] text-[var(--sc-brand-700)] border-[var(--sc-brand-300)] ring-1 ring-[var(--sc-brand-300)]"
+                        : "bg-gray-50 hover:bg-gray-100 text-gray-700 border-[var(--sc-border)]"
                     }`}
                   >
                     <span className="text-base">{lang.flag}</span>
@@ -411,7 +512,7 @@ export default function SettingsFeed() {
 
         {/* 5. Veterinary & Practitioner Credentials */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Veterinary & Professional Status
           </h3>
 
@@ -426,7 +527,9 @@ export default function SettingsFeed() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)]">Veterinary Practitioner Credential</span>
+                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)]">
+                      Veterinary Practitioner Credential
+                    </span>
                     {isVerifiedVet && (
                       <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-md flex items-center gap-1">
                         <Check size={12} /> Certified & Active
@@ -435,19 +538,22 @@ export default function SettingsFeed() {
                   </div>
                   <span className="text-xs text-gray-500">
                     {isVerifiedVet
-                      ? 'View your official license credentials, badges, and verified practitioner privileges.'
-                      : 'Apply to receive the verified practitioner badge and medical advisory privileges.'}
+                      ? "View your official license credentials, badges, and verified practitioner privileges."
+                      : "Apply to receive the verified practitioner badge and medical advisory privileges."}
                   </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
           </div>
         </div>
 
         {/* 6. Privacy, Location & Safety Autonomy */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Privacy & Rescuer Safety
           </h3>
 
@@ -460,42 +566,50 @@ export default function SettingsFeed() {
                     <MapPin size={18} />
                   </div>
                   <div>
-                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Location Precision Mode</span>
-                    <span className="text-xs text-gray-500">Protect your exact address when creating rescue posts</span>
+                    <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                      Location Precision Mode
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Protect your exact address when creating rescue posts
+                    </span>
                   </div>
                 </div>
                 <span className="text-xs font-bold text-[var(--sc-brand-600)] capitalize bg-purple-50 px-2.5 py-1 rounded-lg">
-                  {prefs.locationPrivacy === 'precise' ? 'Exact GPS' : prefs.locationPrivacy === 'city' ? 'City Only' : 'Hidden'}
+                  {prefs.locationPrivacy === "precise"
+                    ? "Exact GPS"
+                    : prefs.locationPrivacy === "city"
+                      ? "City Only"
+                      : "Hidden"}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-[var(--sc-border)] text-xs font-bold">
                 <button
-                  onClick={() => handleLocationChange('precise')}
+                  onClick={() => handleLocationChange("precise")}
                   className={`py-2 rounded-lg transition-all ${
-                    prefs.locationPrivacy === 'precise'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.locationPrivacy === "precise"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   GPS Exact
                 </button>
                 <button
-                  onClick={() => handleLocationChange('city')}
+                  onClick={() => handleLocationChange("city")}
                   className={`py-2 rounded-lg transition-all ${
-                    prefs.locationPrivacy === 'city'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.locationPrivacy === "city"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   City Only
                 </button>
                 <button
-                  onClick={() => handleLocationChange('hidden')}
+                  onClick={() => handleLocationChange("hidden")}
                   className={`py-2 rounded-lg transition-all ${
-                    prefs.locationPrivacy === 'hidden'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200/60'
+                    prefs.locationPrivacy === "hidden"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
                   }`}
                 >
                   Off (Hidden)
@@ -507,11 +621,19 @@ export default function SettingsFeed() {
             <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-                  {prefs.blurSensitiveMedia ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {prefs.blurSensitiveMedia ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Blur Sensitive Graphic Animal Media</span>
-                  <span className="text-xs text-gray-500">Require a tap to reveal injured animal rescue photos</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Blur Sensitive Graphic Animal Media
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Require a tap to reveal injured animal rescue photos
+                  </span>
                 </div>
               </div>
 
@@ -520,12 +642,14 @@ export default function SettingsFeed() {
                 role="switch"
                 aria-checked={prefs.blurSensitiveMedia}
                 className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
-                  prefs.blurSensitiveMedia ? 'bg-[var(--sc-brand-600)]' : 'bg-gray-300'
+                  prefs.blurSensitiveMedia
+                    ? "bg-[var(--sc-brand-600)]"
+                    : "bg-gray-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                    prefs.blurSensitiveMedia ? 'translate-x-5' : 'translate-x-0'
+                    prefs.blurSensitiveMedia ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>
@@ -538,28 +662,32 @@ export default function SettingsFeed() {
                   <MessageSquare size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Direct Message Permissions</span>
-                  <span className="text-xs text-gray-500">Allow chats from all users or established connections only</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Direct Message Permissions
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Allow chats from all users or established connections only
+                  </span>
                 </div>
               </div>
 
               <div className="flex bg-gray-100 p-1 rounded-xl border border-[var(--sc-border)] text-xs font-bold">
                 <button
-                  onClick={() => handleMessagePrivacyChange('anyone')}
+                  onClick={() => handleMessagePrivacyChange("anyone")}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
-                    prefs.whoCanMessage === 'anyone'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200'
+                    prefs.whoCanMessage === "anyone"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   Anyone
                 </button>
                 <button
-                  onClick={() => handleMessagePrivacyChange('connections')}
+                  onClick={() => handleMessagePrivacyChange("connections")}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
-                    prefs.whoCanMessage === 'connections'
-                      ? 'bg-[var(--sc-brand-600)] text-white shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-200'
+                    prefs.whoCanMessage === "connections"
+                      ? "bg-[var(--sc-brand-600)] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   Connections
@@ -577,18 +705,25 @@ export default function SettingsFeed() {
                   <ShieldAlert size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Blocked Accounts & Reports</span>
-                  <span className="text-xs text-gray-500">Manage blocked users and content moderation safety</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Blocked Accounts & Reports
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Manage blocked users and content moderation safety
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
           </div>
         </div>
 
         {/* 7. Detailed Notification Preferences */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Notification Preferences
           </h3>
 
@@ -600,8 +735,12 @@ export default function SettingsFeed() {
                   <Bell size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Emergency Rescue Push Notices</span>
-                  <span className="text-xs text-gray-500">Instant alerts when stray animals need urgent rescue nearby</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Emergency Rescue Push Notices
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Instant alerts when stray animals need urgent rescue nearby
+                  </span>
                 </div>
               </div>
 
@@ -610,12 +749,14 @@ export default function SettingsFeed() {
                 role="switch"
                 aria-checked={prefs.emergencyAlerts}
                 className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
-                  prefs.emergencyAlerts ? 'bg-[var(--sc-brand-600)]' : 'bg-gray-300'
+                  prefs.emergencyAlerts
+                    ? "bg-[var(--sc-brand-600)]"
+                    : "bg-gray-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                    prefs.emergencyAlerts ? 'translate-x-5' : 'translate-x-0'
+                    prefs.emergencyAlerts ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>
@@ -628,8 +769,12 @@ export default function SettingsFeed() {
                   <MessageSquare size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Comments & Interaction Alerts</span>
-                  <span className="text-xs text-gray-500">Notices when community members reply or like your cases</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Comments & Interaction Alerts
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Notices when community members reply or like your cases
+                  </span>
                 </div>
               </div>
 
@@ -638,12 +783,16 @@ export default function SettingsFeed() {
                 role="switch"
                 aria-checked={prefs.postInteractionAlerts}
                 className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
-                  prefs.postInteractionAlerts ? 'bg-[var(--sc-brand-600)]' : 'bg-gray-300'
+                  prefs.postInteractionAlerts
+                    ? "bg-[var(--sc-brand-600)]"
+                    : "bg-gray-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                    prefs.postInteractionAlerts ? 'translate-x-5' : 'translate-x-0'
+                    prefs.postInteractionAlerts
+                      ? "translate-x-5"
+                      : "translate-x-0"
                   }`}
                 />
               </button>
@@ -656,8 +805,12 @@ export default function SettingsFeed() {
                   <HeartHandshake size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Fundraiser Donation Receipts</span>
-                  <span className="text-xs text-gray-500">Receive real-time notices for campaign contributions</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Fundraiser Donation Receipts
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Receive real-time notices for campaign contributions
+                  </span>
                 </div>
               </div>
 
@@ -666,12 +819,14 @@ export default function SettingsFeed() {
                 role="switch"
                 aria-checked={prefs.donationAlerts}
                 className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
-                  prefs.donationAlerts ? 'bg-[var(--sc-brand-600)]' : 'bg-gray-300'
+                  prefs.donationAlerts
+                    ? "bg-[var(--sc-brand-600)]"
+                    : "bg-gray-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                    prefs.donationAlerts ? 'translate-x-5' : 'translate-x-0'
+                    prefs.donationAlerts ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>
@@ -684,8 +839,12 @@ export default function SettingsFeed() {
                   <Smartphone size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Weekly Community Email Digest</span>
-                  <span className="text-xs text-gray-500">Summary of rescues and community milestones</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Weekly Community Email Digest
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Summary of rescues and community milestones
+                  </span>
                 </div>
               </div>
 
@@ -694,12 +853,12 @@ export default function SettingsFeed() {
                 role="switch"
                 aria-checked={prefs.emailAlerts}
                 className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
-                  prefs.emailAlerts ? 'bg-[var(--sc-brand-600)]' : 'bg-gray-300'
+                  prefs.emailAlerts ? "bg-[var(--sc-brand-600)]" : "bg-gray-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                    prefs.emailAlerts ? 'translate-x-5' : 'translate-x-0'
+                    prefs.emailAlerts ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>
@@ -709,13 +868,13 @@ export default function SettingsFeed() {
 
         {/* 8. Legal, Community Standards & Help Center */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Legal & Support
           </h3>
 
           <div className="bg-white rounded-2xl border border-[var(--sc-border)] overflow-hidden shadow-xs divide-y divide-[var(--sc-border)]">
             <button
-              onClick={() => setPolicyModalType('terms')}
+              onClick={() => setPolicyModalType("terms")}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors group"
             >
               <div className="flex items-center gap-3">
@@ -723,15 +882,22 @@ export default function SettingsFeed() {
                   <FileText size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Terms of Service</span>
-                  <span className="text-xs text-gray-500">Read our platform usage agreement and rescue standards</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Terms of Service
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Read our platform usage agreement and rescue standards
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
 
             <button
-              onClick={() => setPolicyModalType('privacy')}
+              onClick={() => setPolicyModalType("privacy")}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors group"
             >
               <div className="flex items-center gap-3">
@@ -739,15 +905,22 @@ export default function SettingsFeed() {
                   <Shield size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Privacy Policy</span>
-                  <span className="text-xs text-gray-500">How we protect your individual data and location autonomy</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Privacy Policy
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    How we protect your individual data and location autonomy
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
 
             <button
-              onClick={() => setPolicyModalType('community')}
+              onClick={() => setPolicyModalType("community")}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors group"
             >
               <div className="flex items-center gap-3">
@@ -755,15 +928,23 @@ export default function SettingsFeed() {
                   <HeartHandshake size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Community Rescue Guidelines</span>
-                  <span className="text-xs text-gray-500">Best practices for humane handling and fundraising accountability</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Community Rescue Guidelines
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Best practices for humane handling and fundraising
+                    accountability
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
 
             <button
-              onClick={() => setPolicyModalType('support')}
+              onClick={() => setPolicyModalType("support")}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors group"
             >
               <div className="flex items-center gap-3">
@@ -771,18 +952,25 @@ export default function SettingsFeed() {
                   <HelpCircle size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Help Center & Support</span>
-                  <span className="text-xs text-gray-500">24/7 clinic emergency hotline and developer assistance</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Help Center & Support
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    24/7 clinic emergency hotline and developer assistance
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+              />
             </button>
           </div>
         </div>
 
         {/* 9. Data Freedom & Danger Zone */}
         <div className="flex flex-col gap-2.5">
-          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] uppercase tracking-wider pl-2">
+          <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2">
             Data Freedom & Account Management
           </h3>
 
@@ -797,8 +985,12 @@ export default function SettingsFeed() {
                   <Download size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">Download My Data Archive (JSON)</span>
-                  <span className="text-xs text-gray-500">Export your posts, credentials, and activity record</span>
+                  <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                    Download My Data Archive (JSON)
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Export your posts, credentials, and activity record
+                  </span>
                 </div>
               </div>
               {dataExported ? (
@@ -806,7 +998,10 @@ export default function SettingsFeed() {
                   <Check size={14} /> Downloaded
                 </span>
               ) : (
-                <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0" />
+                <ChevronRight
+                  size={18}
+                  className="text-gray-300 group-hover:text-[var(--sc-brand-600)] transition-colors shrink-0"
+                />
               )}
             </button>
 
@@ -820,11 +1015,18 @@ export default function SettingsFeed() {
                   <LogOut size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-red-600 block">Sign Out</span>
-                  <span className="text-xs text-gray-500">End your current session securely on this device</span>
+                  <span className="font-bold text-[14px] text-red-600 block">
+                    Sign Out
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    End your current session securely on this device
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-red-300 group-hover:text-red-600 transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-red-300 group-hover:text-red-600 transition-colors shrink-0"
+              />
             </button>
 
             {/* Delete Account */}
@@ -837,15 +1039,21 @@ export default function SettingsFeed() {
                   <Trash2 size={18} />
                 </div>
                 <div>
-                  <span className="font-bold text-[14px] text-red-700 block">Deactivate / Delete Account</span>
-                  <span className="text-xs text-gray-500">Permanently remove your account and rescue posts</span>
+                  <span className="font-bold text-[14px] text-red-700 block">
+                    Deactivate / Delete Account
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Permanently remove your account and rescue posts
+                  </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-red-400 group-hover:text-red-700 transition-colors shrink-0" />
+              <ChevronRight
+                size={18}
+                className="text-red-400 group-hover:text-red-700 transition-colors shrink-0"
+              />
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Edit Profile Modal */}
@@ -902,13 +1110,20 @@ export default function SettingsFeed() {
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={() => setShowLogoutConfirm(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
           <div className="relative bg-white rounded-3xl p-5 sm:p-6 w-full max-w-xs text-center border border-[var(--sc-border)] shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="w-11 h-11 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
               <LogOut size={18} />
             </div>
-            <h3 className="font-bold text-base text-[var(--sc-text-primary)]">Log out of StrayCare?</h3>
-            <p className="text-xs text-gray-500 mt-1">You will need to sign in again to access your rescues and posts.</p>
+            <h3 className="font-bold text-base text-[var(--sc-text-primary)]">
+              Log out of StrayCare?
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">
+              You will need to sign in again to access your rescues and posts.
+            </p>
             <div className="flex gap-2.5 mt-5">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
@@ -933,14 +1148,20 @@ export default function SettingsFeed() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={() => setShowDeleteConfirm(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
           <div className="relative bg-white rounded-3xl p-5 sm:p-6 w-full max-w-sm text-center border border-[var(--sc-border)] shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
               <Trash2 size={22} />
             </div>
-            <h3 className="font-bold text-base text-[var(--sc-text-primary)]">Delete StrayCare Account?</h3>
+            <h3 className="font-bold text-base text-[var(--sc-text-primary)]">
+              Delete StrayCare Account?
+            </h3>
             <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
-              This action is permanent. All your posts, animal rescue cases, and connections will be permanently removed.
+              This action is permanent. All your posts, animal rescue cases, and
+              connections will be permanently removed.
             </p>
             <div className="flex gap-2.5 mt-5">
               <button

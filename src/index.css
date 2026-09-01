@@ -231,6 +231,7 @@ html.dark .skeleton-shimmer {
 html {
   font-family: var(--sc-font-body);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-variation-settings: 'ROND' 100;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

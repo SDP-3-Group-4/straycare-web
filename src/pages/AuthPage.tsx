@@ -1,7 +1,7 @@
-import './AuthPage.css';
-import HeroPanel from '../components/auth/HeroPanel';
-import AuthForm from '../components/auth/AuthForm';
-import Footer from '../components/layout/Footer';
+import "./AuthPage.css";
+import HeroPanel from "../components/auth/HeroPanel";
+import AuthForm from "../components/auth/AuthForm";
+import Footer from "../components/layout/Footer";
 
 /**
  * AuthPage — split-panel layout for login/registration.

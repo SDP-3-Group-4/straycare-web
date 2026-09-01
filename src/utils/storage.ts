@@ -2,7 +2,10 @@
  * Generic utility for safely reading/writing to localStorage with type-safety and fallback support.
  */
 
-export function getCachedData<T>(key: string, fallback: T | null = null): T | null {
+export function getCachedData<T>(
+  key: string,
+  fallback: T | null = null,
+): T | null {
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : fallback;
@@ -19,4 +22,3 @@ export function setCachedData<T>(key: string, value: T): void {
     console.warn(`Error writing to localStorage key "${key}":`, error);
   }
 }
-

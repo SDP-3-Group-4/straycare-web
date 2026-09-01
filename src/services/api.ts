@@ -1,26 +1,36 @@
 const getApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined') {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (typeof window !== "undefined") {
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
     if (isLocal) {
-      return envUrl || 'http://localhost:3000';
+      return envUrl || "http://localhost:3000";
     }
-    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    if (
+      envUrl &&
+      !envUrl.includes("localhost") &&
+      !envUrl.includes("127.0.0.1")
+    ) {
       return envUrl;
     }
-    return 'https://straycare-backend-se6q.onrender.com';
+    return "https://straycare-backend-se6q.onrender.com";
   }
-  return envUrl || 'https://straycare-backend-se6q.onrender.com';
+  return envUrl || "https://straycare-backend-se6q.onrender.com";
 };
 
 const API_URL = getApiUrl();
 
-import { getAuthToken } from '../firebase';
+import { getAuthToken } from "../firebase";
 
-export const UNAUTHORIZED_EVENT = 'straycare:unauthorized';
-export const CONNECTIONS_UPDATED_EVENT = 'straycare:connections-updated';
+export const UNAUTHORIZED_EVENT = "straycare:unauthorized";
+export const CONNECTIONS_UPDATED_EVENT = "straycare:connections-updated";
 
-async function request(path: string, init: RequestInit = {}, retries = 1): Promise<any> {
+async function request(
+  path: string,
+  init: RequestInit = {},
+  retries = 1,
+): Promise<any> {
   let token: string | null = null;
   try {
     token = await getAuthToken();
@@ -29,11 +39,11 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
   }
   const headers = new Headers(init.headers);
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
-  headers.set('Accept', 'application/json');
-  if (init.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+  headers.set("Accept", "application/json");
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
   // 20s timeout controller to prevent browser hanging on cold starts
@@ -50,33 +60,44 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
 
     if (response.status === 401) {
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
-      throw new Error('Session expired. Please sign in again.');
+      throw new Error("Session expired. Please sign in again.");
     }
     if (response.status === 429) {
       const text = await response.text();
-      throw new Error(text ? JSON.parse(text).message || 'Rate limit exceeded. Please wait a moment.' : 'Rate limit exceeded. Please wait a moment.');
+      throw new Error(
+        text
+          ? JSON.parse(text).message ||
+              "Rate limit exceeded. Please wait a moment."
+          : "Rate limit exceeded. Please wait a moment.",
+      );
     }
 
     // Handle Render cold start 502/503/504 gateway errors with a quick automatic retry
     if ([502, 503, 504].includes(response.status) && retries > 0) {
-      console.warn(`Backend is warming up (${response.status}), retrying in 2.5s...`);
+      console.warn(
+        `Backend is warming up (${response.status}), retrying in 2.5s...`,
+      );
       await new Promise((r) => setTimeout(r, 2500));
       return request(path, init, retries - 1);
     }
 
     if (!response.ok) {
-      let message = 'An unexpected error occurred. Please try again.';
+      let message = "An unexpected error occurred. Please try again.";
       if (response.status >= 500) {
-        message = 'Service temporarily unavailable. Please try again later.';
+        message = "Service temporarily unavailable. Please try again later.";
       } else {
         try {
           const body = await response.json();
           if (body.message) {
-            message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
+            message = Array.isArray(body.message)
+              ? body.message.join(", ")
+              : body.message;
           } else {
             message = `Request failed (${response.status})`;
           }
-        } catch { /* non-JSON error body */ }
+        } catch {
+          /* non-JSON error body */
+        }
       }
       const err: any = new Error(message);
       err.status = response.status;
@@ -85,8 +106,10 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
     return response.json();
   } catch (err: any) {
     clearTimeout(timeoutId);
-    if (err.name === 'AbortError' && retries > 0) {
-      console.warn('Request timed out while waiting for backend, retrying once...');
+    if (err.name === "AbortError" && retries > 0) {
+      console.warn(
+        "Request timed out while waiting for backend, retrying once...",
+      );
       return request(path, init, retries - 1);
     }
     throw err;
@@ -94,27 +117,46 @@ async function request(path: string, init: RequestInit = {}, retries = 1): Promi
 }
 
 const postJson = (path: string, data: any) =>
-  request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
 const putJson = (path: string, data: any) =>
-  request(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
 const deleteJson = (path: string, data: any) =>
-  request(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  request(path, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
-import { getCachedData, setCachedData } from '../utils/storage';
+import { getCachedData, setCachedData } from "../utils/storage";
 export { getCachedData, setCachedData };
 
-export const fetchPosts = async (tab?: string, userId?: string, lat?: number, lng?: number) => {
+export const fetchPosts = async (
+  tab?: string,
+  userId?: string,
+  lat?: number,
+  lng?: number,
+) => {
   const queryParams = new URLSearchParams();
-  if (tab) queryParams.append('tab', tab);
-  if (userId) queryParams.append('userId', userId);
-  if (lat !== undefined) queryParams.append('lat', lat.toString());
-  if (lng !== undefined) queryParams.append('lng', lng.toString());
+  if (tab) queryParams.append("tab", tab);
+  if (userId) queryParams.append("userId", userId);
+  if (lat !== undefined) queryParams.append("lat", lat.toString());
+  if (lng !== undefined) queryParams.append("lng", lng.toString());
 
-  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  const cacheKey = `posts_${tab || 'explore'}_${userId || 'all'}`;
-  
+  const queryString = queryParams.toString()
+    ? `?${queryParams.toString()}`
+    : "";
+  const cacheKey = `posts_${tab || "explore"}_${userId || "all"}`;
+
   const data = await request(`/posts${queryString}`);
   if (Array.isArray(data) && data.length > 0) {
     setCachedData(cacheKey, data);
@@ -122,9 +164,10 @@ export const fetchPosts = async (tab?: string, userId?: string, lat?: number, ln
   return data;
 };
 
-export const createPost = (postData: any) => postJson('/posts', postData);
+export const createPost = (postData: any) => postJson("/posts", postData);
 
-export const updatePost = (id: string, data: any) => putJson(`/posts/${id}`, data);
+export const updatePost = (id: string, data: any) =>
+  putJson(`/posts/${id}`, data);
 
 export const deletePost = (id: string) => deleteJson(`/posts/${id}`, {});
 
@@ -137,25 +180,29 @@ export const fetchUserProfile = async (id: string) => {
   }
 };
 
-export const createUserProfile = (userData: any) => postJson('/users', userData);
+export const createUserProfile = (userData: any) =>
+  postJson("/users", userData);
 
-export const fetchUsers = () => request('/users');
+export const fetchUsers = () => request("/users");
 
-export const fetchMarketplaceItems = () => request('/marketplace');
+export const fetchMarketplaceItems = () => request("/marketplace");
 
 export const fetchChats = (userId: string) => request(`/chat?userId=${userId}`);
 
 export const createChat = (targetUserId: string) =>
-  postJson('/chat', { targetUserId });
+  postJson("/chat", { targetUserId });
 
 export const fetchMessages = (userId: string, chatId: string) =>
   request(`/chat/${chatId}/messages?userId=${userId}`);
 
-export const sendMessage = (chatId: string, content: string, imageUrl?: string) =>
-  postJson(`/chat/${chatId}/messages`, { content, imageUrl });
+export const sendMessage = (
+  chatId: string,
+  content: string,
+  imageUrl?: string,
+) => postJson(`/chat/${chatId}/messages`, { content, imageUrl });
 
 export const deleteChat = (chatId: string) =>
-  request(`/chat/${chatId}`, { method: 'DELETE' });
+  request(`/chat/${chatId}`, { method: "DELETE" });
 
 export const clearChat = (chatId: string) =>
   postJson(`/chat/${chatId}/clear`, {});
@@ -165,9 +212,11 @@ export const blockChat = (chatId: string) =>
 
 export const leaveChat = deleteChat;
 
-export const toggleBookmark = (postId: string) => postJson(`/bookmarks/${postId}`, {});
+export const toggleBookmark = (postId: string) =>
+  postJson(`/bookmarks/${postId}`, {});
 
-export const fetchBookmarks = (userId: string) => request(`/bookmarks/${userId}`);
+export const fetchBookmarks = (userId: string) =>
+  request(`/bookmarks/${userId}`);
 
 export const fetchBookmarkStatus = (postId: string, userId: string) =>
   request(`/bookmarks/${postId}/status/${userId}`);
@@ -177,14 +226,17 @@ export const toggleLike = (postId: string) => postJson(`/likes/${postId}`, {});
 export const fetchLikeStatus = (postId: string, userId: string) =>
   request(`/likes/${postId}/status/${userId}`);
 
-export const fetchNotifications = (userId: string) => request(`/notifications/${userId}`);
+export const fetchNotifications = (userId: string) =>
+  request(`/notifications/${userId}`);
 
-export const markNotificationRead = (id: string) => postJson(`/notifications/${id}/read`, {});
+export const markNotificationRead = (id: string) =>
+  postJson(`/notifications/${id}/read`, {});
 
 export const markAllNotificationsRead = (userId: string) =>
   postJson(`/notifications/read-all/${userId}`, {});
 
-export const fetchConnections = (userId: string) => request(`/connections/${userId}`);
+export const fetchConnections = (userId: string) =>
+  request(`/connections/${userId}`);
 
 export const fetchConnectionStatus = (userId1: string, userId2: string) =>
   request(`/connections/status/${userId1}/${userId2}`);
@@ -199,7 +251,7 @@ export const fetchGraphDegree = (userId1: string, userId2: string) =>
   request(`/connections/graph/degree/${userId1}/${userId2}`);
 
 export const requestConnection = (recipientId: string) =>
-  postJson('/connections/request', { recipientId });
+  postJson("/connections/request", { recipientId });
 
 export const acceptConnection = (requesterId: string) =>
   postJson(`/connections/${requesterId}/accept`, {});
@@ -208,32 +260,37 @@ export const declineConnection = (requesterId: string) =>
   postJson(`/connections/${requesterId}/decline`, {});
 
 export const disconnectConnection = (userId: string) =>
-  request(`/connections/${userId}`, { method: 'DELETE' });
+  request(`/connections/${userId}`, { method: "DELETE" });
 
 export const fetchComments = (postId: string, userId?: string) => {
-  const queryString = userId ? `?userId=${userId}` : '';
+  const queryString = userId ? `?userId=${userId}` : "";
   return request(`/posts/${postId}/comments${queryString}`);
 };
 
 export const addComment = (postId: string, content: string) =>
   postJson(`/posts/${postId}/comments`, { content });
 
-export const updateComment = (id: string, content: string) => putJson(`/comments/${id}`, { content });
+export const updateComment = (id: string, content: string) =>
+  putJson(`/comments/${id}`, { content });
 
 export const deleteComment = (id: string) => deleteJson(`/comments/${id}`, {});
 
-export const toggleCommentLike = (id: string) => postJson(`/comments/${id}/like`, {});
+export const toggleCommentLike = (id: string) =>
+  postJson(`/comments/${id}/like`, {});
 
 export const donateToPost = (postId: string, amount: number) =>
   postJson(`/posts/${postId}/donate`, { amount });
 
-export const createOrder = (total: number) => postJson('/marketplace/order', { total });
+export const createOrder = (total: number) =>
+  postJson("/marketplace/order", { total });
 
-export const fetchUserOrders = (userId: string) => request(`/marketplace/orders/user/${userId}`);
+export const fetchUserOrders = (userId: string) =>
+  request(`/marketplace/orders/user/${userId}`);
 
-export const touchPresence = (_uid: string) => postJson('/users/presence', {});
+export const touchPresence = (_uid: string) => postJson("/users/presence", {});
 
-export const updateUserProfile = (id: string, data: any) => putJson(`/users/${id}`, data);
+export const updateUserProfile = (id: string, data: any) =>
+  putJson(`/users/${id}`, data);
 
 export const submitVetApplication = (data: {
   fullName: string;
@@ -245,7 +302,12 @@ export const submitVetApplication = (data: {
   docName?: string;
   docMimeType?: string;
   docBase64?: string;
-}) => postJson('/vet-applications', data);
+}) => postJson("/vet-applications", data);
 
-export const fetchVetApplicationStatus = (userId: string) => request(`/vet-applications/${userId}`);
-export const fetchNearbyClinics = (lat?: number, lng?: number, radius?: number) => request(`/clinics/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
+export const fetchVetApplicationStatus = (userId: string) =>
+  request(`/vet-applications/${userId}`);
+export const fetchNearbyClinics = (
+  lat?: number,
+  lng?: number,
+  radius?: number,
+) => request(`/clinics/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);

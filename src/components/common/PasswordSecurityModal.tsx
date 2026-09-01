@@ -1,16 +1,27 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Key, Mail, ShieldCheck, X, Check, Loader2, AlertCircle } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../../firebase';
-import { useAuth } from '../../contexts/AuthContext';
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  Key,
+  Mail,
+  ShieldCheck,
+  X,
+  Check,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebase";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface PasswordSecurityModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecurityModalProps) {
+export default function PasswordSecurityModal({
+  isOpen,
+  onClose,
+}: PasswordSecurityModalProps) {
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -27,7 +38,7 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
       setSent(true);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to send password reset email.');
+      setError(err.message || "Failed to send password reset email.");
     } finally {
       setSending(false);
     }
@@ -35,9 +46,11 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+        onClick={onClose}
+      />
       <div className="relative bg-white rounded-3xl w-full max-w-md overflow-hidden flex flex-col border border-[var(--sc-border)] shadow-2xl animate-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--sc-border)] bg-gray-50/70">
           <div className="flex items-center gap-2">
@@ -60,8 +73,12 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
           <div className="flex items-center gap-3 p-3.5 bg-gray-50 rounded-2xl border border-[var(--sc-border)]">
             <Mail size={20} className="text-gray-400 shrink-0" />
             <div className="min-w-0 flex-1">
-              <span className="text-xs text-gray-500 block">Registered Email</span>
-              <span className="font-bold text-sm text-[var(--sc-text-primary)] truncate block">{user?.email}</span>
+              <span className="text-xs text-gray-500 block">
+                Registered Email
+              </span>
+              <span className="font-bold text-sm text-[var(--sc-text-primary)] truncate block">
+                {user?.email}
+              </span>
             </div>
           </div>
 
@@ -69,7 +86,8 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
             <p className="font-bold text-purple-900 mb-1 flex items-center gap-1.5">
               <ShieldCheck size={15} /> Secure Password Management
             </p>
-            For enhanced security, StrayCare dispatches a cryptographically signed password reset link directly to your verified inbox.
+            For enhanced security, StrayCare dispatches a cryptographically
+            signed password reset link directly to your verified inbox.
           </div>
 
           {error && (
@@ -85,7 +103,10 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
                 <Check size={20} />
               </div>
               <span className="font-bold text-sm">Reset Email Dispatched</span>
-              <span>We sent a password reset link to <strong>{user?.email}</strong>. Please check your inbox or spam folder.</span>
+              <span>
+                We sent a password reset link to <strong>{user?.email}</strong>.
+                Please check your inbox or spam folder.
+              </span>
             </div>
           ) : (
             <button
@@ -114,9 +135,8 @@ export default function PasswordSecurityModal({ isOpen, onClose }: PasswordSecur
             Close
           </button>
         </div>
-
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

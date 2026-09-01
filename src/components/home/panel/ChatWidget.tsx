@@ -1,11 +1,33 @@
 import { useState, useEffect, useRef } from "react";
-import { Bot, MessageSquare, ChevronUp, ChevronDown, Plus, ChevronRight, Sparkles, User, MoreVertical, Trash2, BellOff, Bell, MessageSquareOff, ShieldAlert, Info } from "lucide-react";
+import {
+  Bot,
+  MessageSquare,
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  ChevronRight,
+  Sparkles,
+  User,
+  MoreVertical,
+  Trash2,
+  BellOff,
+  Bell,
+  MessageSquareOff,
+  ShieldAlert,
+  Info,
+} from "lucide-react";
 import ChatConversation from "./ChatConversation";
 import NewChatModal from "./NewChatModal";
 import ChatInfoModal from "./ChatInfoModal";
 import { avatarOnError } from "../../../constants";
 import { useAuth } from "../../../contexts/AuthContext";
-import { fetchChats, createChat, deleteChat, clearChat, blockChat } from "../../../services/api";
+import {
+  fetchChats,
+  createChat,
+  deleteChat,
+  clearChat,
+  blockChat,
+} from "../../../services/api";
 import { presenceText } from "../../../utils/presence";
 
 export type Chat = {
@@ -30,7 +52,9 @@ export default function ChatWidget() {
   const [now, setNow] = useState(Date.now());
   const [menuChatId, setMenuChatId] = useState<string | null>(null);
   const [confirmChat, setConfirmChat] = useState<Chat | null>(null);
-  const [confirmAction, setConfirmAction] = useState<'delete' | 'clear' | 'block' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "delete" | "clear" | "block" | null
+  >(null);
   const [infoChat, setInfoChat] = useState<Chat | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
@@ -42,39 +66,65 @@ export default function ChatWidget() {
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuChatId(null);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node))
+        setMenuChatId(null);
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
   const isMuted = (id: string) => {
-    try { return !!JSON.parse(localStorage.getItem('sc_muted_chats') || '{}')[id]; } catch { return false; }
+    try {
+      return !!JSON.parse(localStorage.getItem("sc_muted_chats") || "{}")[id];
+    } catch {
+      return false;
+    }
   };
   const toggleMute = (c: Chat) => {
-    const m = JSON.parse(localStorage.getItem('sc_muted_chats') || '{}');
-    if (m[c.id]) delete m[c.id]; else m[c.id] = true;
-    localStorage.setItem('sc_muted_chats', JSON.stringify(m));
+    const m = JSON.parse(localStorage.getItem("sc_muted_chats") || "{}");
+    if (m[c.id]) delete m[c.id];
+    else m[c.id] = true;
+    localStorage.setItem("sc_muted_chats", JSON.stringify(m));
     setMenuChatId(null);
   };
   const handleDelete = async () => {
     if (!confirmChat) return;
     try {
       await deleteChat(confirmChat.id);
-      setChats(prev => prev.filter(x => x.id !== confirmChat.id));
+      setChats((prev) => prev.filter((x) => x.id !== confirmChat.id));
       if (activeChat?.id === confirmChat.id) setActiveChat(null);
-    } catch (e) { alert(e instanceof Error ? e.message : 'Delete failed'); }
-    setConfirmChat(null); setConfirmAction(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Delete failed");
+    }
+    setConfirmChat(null);
+    setConfirmAction(null);
   };
   const handleClear = async () => {
     if (!confirmChat) return;
-    try { await clearChat(confirmChat.id); setChats(prev => prev.map(x => x.id === confirmChat.id ? { ...x, message: 'No messages yet.' } : x)); } catch (e) { alert('Clear failed'); }
-    setConfirmChat(null); setConfirmAction(null);
+    try {
+      await clearChat(confirmChat.id);
+      setChats((prev) =>
+        prev.map((x) =>
+          x.id === confirmChat.id ? { ...x, message: "No messages yet." } : x,
+        ),
+      );
+    } catch (e) {
+      alert("Clear failed");
+    }
+    setConfirmChat(null);
+    setConfirmAction(null);
   };
   const handleBlock = async () => {
     if (!confirmChat) return;
-    try { await blockChat(confirmChat.id); setChats(prev => prev.filter(x => x.id !== confirmChat.id)); if (activeChat?.id === confirmChat.id) setActiveChat(null); } catch (e) { alert('Block failed'); }
-    setConfirmChat(null); setConfirmAction(null);
+    try {
+      await blockChat(confirmChat.id);
+      setChats((prev) => prev.filter((x) => x.id !== confirmChat.id));
+      if (activeChat?.id === confirmChat.id) setActiveChat(null);
+    } catch (e) {
+      alert("Block failed");
+    }
+    setConfirmChat(null);
+    setConfirmAction(null);
   };
 
   useEffect(() => {
@@ -89,14 +139,20 @@ export default function ChatWidget() {
 
         const formattedChats = data.map((c: any) => {
           const date = new Date(c.latestMessageTime);
-          let timeString = '';
+          let timeString = "";
           if (!isNaN(date.getTime())) {
             if (date.toDateString() === now.toDateString()) {
-              timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              timeString = date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
             } else if (date.toDateString() === yesterday.toDateString()) {
-              timeString = 'Yesterday';
+              timeString = "Yesterday";
             } else {
-              timeString = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+              timeString = date.toLocaleDateString([], {
+                month: "short",
+                day: "numeric",
+              });
             }
           }
           return {
@@ -105,9 +161,9 @@ export default function ChatWidget() {
             message: c.latestMessage || "No messages yet.",
             time: timeString,
             unread: c.unread,
-            avatar: c.avatar || '',
+            avatar: c.avatar || "",
             isGroup: c.isGroup,
-            isAiBot: c.otherUserId === 'ai-vet-bot-id',
+            isAiBot: c.otherUserId === "ai-vet-bot-id",
             lastSeenAt: c.otherLastSeenAt || null,
           };
         });
@@ -126,10 +182,12 @@ export default function ChatWidget() {
   if (activeChat) {
     return (
       <div className="bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col flex-1 min-h-0 max-h-[800px] relative z-10">
-        <ChatConversation 
-          chat={activeChat} 
+        <ChatConversation
+          chat={activeChat}
           onBack={() => setActiveChat(null)}
-          onChatDeleted={(id) => setChats(prev => prev.filter(c => c.id !== id))}
+          onChatDeleted={(id) =>
+            setChats((prev) => prev.filter((c) => c.id !== id))
+          }
         />
       </div>
     );
@@ -141,15 +199,22 @@ export default function ChatWidget() {
   // Otherwise, render the Chat List view
   return (
     <>
-      <div className={`bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col overflow-hidden transition-all duration-300 relative ${isCollapsed ? 'h-auto flex-none' : 'flex-1 min-h-0 max-h-[800px]'}`}>
+      <div
+        className={`bg-white rounded-2xl border border-[var(--sc-border)] flex flex-col overflow-hidden transition-all duration-300 relative ${isCollapsed ? "h-auto flex-none" : "flex-1 min-h-0 max-h-[800px]"}`}
+      >
         {/* Header */}
-        <div 
+        <div
           className="sticky top-0 p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50/50 transition-colors bg-white z-20 rounded-t-2xl border-b border-[var(--sc-border)]"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-center gap-2">
-            <MessageSquare size={20} className="text-[var(--sc-brand-600)] shrink-0" />
-            <h3 className="font-bold text-[var(--sc-text-primary)] text-xl">Messages</h3>
+            <MessageSquare
+              size={20}
+              className="text-[var(--sc-brand-600)] shrink-0"
+            />
+            <h3 className="font-bold text-[var(--sc-text-primary)] text-xl">
+              Messages
+            </h3>
             {totalUnread > 0 && (
               <span className="bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] text-[11px] font-bold px-2 py-0.5 rounded-full">
                 {totalUnread} new
@@ -157,14 +222,21 @@ export default function ChatWidget() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsNewChatOpen(true); }}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsNewChatOpen(true);
+              }}
               className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors p-1"
             >
               <Plus size={20} />
             </button>
             <button className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors p-1">
-              {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+              {isCollapsed ? (
+                <ChevronDown size={20} />
+              ) : (
+                <ChevronUp size={20} />
+              )}
             </button>
           </div>
         </div>
@@ -173,19 +245,19 @@ export default function ChatWidget() {
           <div className="flex flex-col flex-1 overflow-y-auto">
             {/* AI Vet Bot Banner */}
             <div className="px-5 mb-4 mt-4 shrink-0">
-              <button 
+              <button
                 onClick={async () => {
                   try {
                     if (!user) return;
-                    const conv = await createChat('ai-vet-bot-id');
+                    const conv = await createChat("ai-vet-bot-id");
                     setActiveChat({
                       id: conv.id,
-                      name: 'AI Vet Assistant',
-                      message: '',
-                      time: '',
+                      name: "AI Vet Assistant",
+                      message: "",
+                      time: "",
                       unread: 0,
                       avatar: AI_BOT_AVATAR,
-                      isAiBot: true
+                      isAiBot: true,
                     });
                   } catch (e) {
                     console.error("Failed to start AI chat", e);
@@ -196,20 +268,34 @@ export default function ChatWidget() {
                 <div className="absolute -right-8 -top-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                 <div className="absolute -left-4 -bottom-10 w-20 h-20 bg-[var(--sc-brand-300)]/20 rounded-full blur-xl" />
                 <div className="relative bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-white/25 flex items-center justify-center w-11 h-11 shrink-0 shadow-xs">
-                  <img src="/aivetbot.svg" alt="AI Vet Bot" className="w-7 h-7 object-contain brightness-0 invert drop-shadow-sm" />
+                  <img
+                    src="/aivetbot.svg"
+                    alt="AI Vet Bot"
+                    className="w-7 h-7 object-contain brightness-0 invert drop-shadow-sm"
+                  />
                 </div>
                 <div className="relative flex flex-col text-left flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[15px] tracking-tight whitespace-nowrap">AI Vet Assistant</span>
-                    <span className="bg-white text-[var(--sc-brand-600)] text-[9px] font-extrabold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-full shadow-sm">
+                    <span className="font-bold text-[15px] tracking-tight whitespace-nowrap">
+                      AI Vet Assistant
+                    </span>
+                    <span className="bg-white text-[var(--sc-brand-600)] text-[9px] font-extrabold tracking-[0.12em] px-1.5 py-0.5 rounded-full shadow-sm">
                       Beta
                     </span>
                   </div>
-                  <span className="text-xs text-white/90 mt-0.5">Instant vet advice, anytime</span>
+                  <span className="text-xs text-white/90 mt-0.5">
+                    Instant vet advice, anytime
+                  </span>
                 </div>
                 <div className="relative flex items-center gap-1 text-white/70 group-hover:text-white transition-colors">
-                  <Sparkles size={15} className="group-hover:rotate-12 transition-transform" />
-                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                  <Sparkles
+                    size={15}
+                    className="group-hover:rotate-12 transition-transform"
+                  />
+                  <ChevronRight
+                    size={18}
+                    className="group-hover:translate-x-0.5 transition-transform"
+                  />
                 </div>
               </button>
             </div>
@@ -217,18 +303,30 @@ export default function ChatWidget() {
             {/* Chat List */}
             <div ref={menuRef} className="flex flex-col px-3 pb-2">
               {humanChats.map((chat) => (
-                <div 
-                  key={chat.id} 
+                <div
+                  key={chat.id}
                   onClick={() => setActiveChat(chat)}
-                  onContextMenu={(e) => { e.preventDefault(); setMenuChatId(menuChatId === chat.id ? null : chat.id); }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setMenuChatId(menuChatId === chat.id ? null : chat.id);
+                  }}
                   className="group flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left w-full mb-1 cursor-pointer relative"
                 >
                   <div className="relative flex-shrink-0">
                     {chat.avatar && !chat.isAiBot ? (
-                      <img src={chat.avatar} alt={chat.name} onError={avatarOnError} className="w-10 h-10 rounded-full object-cover" />
+                      <img
+                        src={chat.avatar}
+                        alt={chat.name}
+                        onError={avatarOnError}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                     ) : chat.isAiBot ? (
                       <div className="w-10 h-10 rounded-full bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
-                        <img src={chat.avatar || AI_BOT_AVATAR} alt={chat.name} className="w-full h-full object-contain" />
+                        <img
+                          src={chat.avatar || AI_BOT_AVATAR}
+                          alt={chat.name}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -248,11 +346,20 @@ export default function ChatWidget() {
                   </div>
                   <div className="flex flex-col flex-1 overflow-hidden">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-bold text-[var(--sc-text-primary)] text-[14px] truncate">{chat.name}</span>
+                      <span className="font-bold text-[var(--sc-text-primary)] text-[14px] truncate">
+                        {chat.name}
+                      </span>
                       <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-gray-400 text-[12px]">{chat.time}</span>
+                        <span className="text-gray-400 text-[12px]">
+                          {chat.time}
+                        </span>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setMenuChatId(menuChatId === chat.id ? null : chat.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuChatId(
+                              menuChatId === chat.id ? null : chat.id,
+                            );
+                          }}
                           className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all"
                         >
                           <MoreVertical size={14} />
@@ -260,33 +367,82 @@ export default function ChatWidget() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[13px] truncate ${chat.unread > 0 ? 'text-[var(--sc-text-primary)] font-semibold' : 'text-gray-500'}`}>
+                      <span
+                        className={`text-[13px] truncate ${chat.unread > 0 ? "text-[var(--sc-text-primary)] font-semibold" : "text-gray-500"}`}
+                      >
                         {chat.message}
                       </span>
-                      <span className={`flex items-center gap-1 text-[11px] font-medium shrink-0 ${presenceText(chat.lastSeenAt, now).online ? 'text-green-500' : 'text-gray-400'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${presenceText(chat.lastSeenAt, now).online ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <span
+                        className={`flex items-center gap-1 text-[11px] font-medium shrink-0 ${presenceText(chat.lastSeenAt, now).online ? "text-green-500" : "text-gray-400"}`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${presenceText(chat.lastSeenAt, now).online ? "bg-green-500" : "bg-gray-300"}`}
+                        />
                         {presenceText(chat.lastSeenAt, now).label}
                       </span>
                     </div>
                   </div>
                   {menuChatId === chat.id && (
                     <div className="absolute right-2 top-12 w-48 bg-white border border-[var(--sc-border)] rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-top-1">
-                      <button onClick={(e) => { e.stopPropagation(); setInfoChat(chat); setMenuChatId(null); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoChat(chat);
+                          setMenuChatId(null);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left"
+                      >
                         <Info size={15} className="text-gray-500" /> View Info
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); toggleMute(chat); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
-                        {isMuted(chat.id) ? <Bell size={15} className="text-gray-500" /> : <BellOff size={15} className="text-gray-500" />} {isMuted(chat.id) ? 'Unmute' : 'Mute'}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMute(chat);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left"
+                      >
+                        {isMuted(chat.id) ? (
+                          <Bell size={15} className="text-gray-500" />
+                        ) : (
+                          <BellOff size={15} className="text-gray-500" />
+                        )}{" "}
+                        {isMuted(chat.id) ? "Unmute" : "Mute"}
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('clear'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left">
-                        <MessageSquareOff size={15} className="text-gray-500" /> Clear Chat
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuChatId(null);
+                          setConfirmChat(chat);
+                          setConfirmAction("clear");
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-gray-50 text-left"
+                      >
+                        <MessageSquareOff size={15} className="text-gray-500" />{" "}
+                        Clear Chat
                       </button>
                       {!chat.isAiBot && (
-                        <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('block'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-red-50 text-red-600 text-left">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuChatId(null);
+                            setConfirmChat(chat);
+                            setConfirmAction("block");
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium hover:bg-red-50 text-red-600 text-left"
+                        >
                           <ShieldAlert size={15} /> Block
                         </button>
                       )}
                       <div className="h-px bg-gray-100 my-1" />
-                      <button onClick={(e) => { e.stopPropagation(); setMenuChatId(null); setConfirmChat(chat); setConfirmAction('delete'); }} className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-bold hover:bg-red-50 text-red-600 text-left">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuChatId(null);
+                          setConfirmChat(chat);
+                          setConfirmAction("delete");
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-bold hover:bg-red-50 text-red-600 text-left"
+                      >
                         <Trash2 size={15} /> Delete Chat
                       </button>
                     </div>
@@ -299,10 +455,10 @@ export default function ChatWidget() {
                 </div>
               )}
             </div>
-            
+
             {/* Start new chat */}
             <div className="mt-auto px-5 pb-5 pt-3 border-t border-gray-50 shrink-0">
-              <button 
+              <button
                 onClick={() => setIsNewChatOpen(true)}
                 className="w-full py-3 text-center text-[15px] font-bold text-[var(--sc-brand-500)] bg-[var(--sc-brand-50)] hover:bg-[var(--sc-brand-100)] rounded-xl transition-colors flex items-center justify-center gap-2 border border-[var(--sc-brand-100)]"
               >
@@ -314,9 +470,9 @@ export default function ChatWidget() {
         )}
       </div>
 
-      <NewChatModal 
-        isOpen={isNewChatOpen} 
-        onClose={() => setIsNewChatOpen(false)} 
+      <NewChatModal
+        isOpen={isNewChatOpen}
+        onClose={() => setIsNewChatOpen(false)}
         onChatCreated={(chat) => {
           setIsNewChatOpen(false);
           setActiveChat(chat);
@@ -325,23 +481,75 @@ export default function ChatWidget() {
 
       {confirmChat && confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setConfirmChat(null); setConfirmAction(null); }} />
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => {
+              setConfirmChat(null);
+              setConfirmAction(null);
+            }}
+          />
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm text-center border border-[var(--sc-border)]">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${confirmAction === 'delete' || confirmAction === 'block' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
-              {confirmAction === 'delete' ? <Trash2 size={20} /> : confirmAction === 'block' ? <ShieldAlert size={20} /> : <MessageSquareOff size={20} />}
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${confirmAction === "delete" || confirmAction === "block" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"}`}
+            >
+              {confirmAction === "delete" ? (
+                <Trash2 size={20} />
+              ) : confirmAction === "block" ? (
+                <ShieldAlert size={20} />
+              ) : (
+                <MessageSquareOff size={20} />
+              )}
             </div>
-            <h3 className="font-bold text-[16px]">{confirmAction === 'delete' ? 'Delete chat?' : confirmAction === 'clear' ? 'Clear messages?' : 'Block user?'}</h3>
-            <p className="text-[13px] text-gray-500 mt-1">{confirmAction === 'delete' ? `Delete conversation with ${confirmChat.name}?` : confirmAction === 'clear' ? 'All messages will be removed.' : `Block ${confirmChat.name}?`}</p>
+            <h3 className="font-bold text-[16px]">
+              {confirmAction === "delete"
+                ? "Delete chat?"
+                : confirmAction === "clear"
+                  ? "Clear messages?"
+                  : "Block user?"}
+            </h3>
+            <p className="text-[13px] text-gray-500 mt-1">
+              {confirmAction === "delete"
+                ? `Delete conversation with ${confirmChat.name}?`
+                : confirmAction === "clear"
+                  ? "All messages will be removed."
+                  : `Block ${confirmChat.name}?`}
+            </p>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => { setConfirmChat(null); setConfirmAction(null); }} className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]">Cancel</button>
-              <button onClick={() => { if (confirmAction === 'delete') handleDelete(); else if (confirmAction === 'clear') handleClear(); else handleBlock(); }} className={`flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white ${confirmAction === 'delete' || confirmAction === 'block' ? 'bg-red-600 hover:bg-red-700' : 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)]'}`}>Confirm</button>
+              <button
+                onClick={() => {
+                  setConfirmChat(null);
+                  setConfirmAction(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl border border-[var(--sc-border)] font-bold text-[14px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmAction === "delete") handleDelete();
+                  else if (confirmAction === "clear") handleClear();
+                  else handleBlock();
+                }}
+                className={`flex-1 py-2.5 rounded-xl font-bold text-[14px] text-white ${confirmAction === "delete" || confirmAction === "block" ? "bg-red-600 hover:bg-red-700" : "bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)]"}`}
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {infoChat && (
-        <ChatInfoModal isOpen={!!infoChat} onClose={() => setInfoChat(null)} chat={infoChat} onDeleted={() => { setChats(prev => prev.filter(x => x.id !== infoChat.id)); setInfoChat(null); if (activeChat?.id === infoChat.id) setActiveChat(null); }} />
+        <ChatInfoModal
+          isOpen={!!infoChat}
+          onClose={() => setInfoChat(null)}
+          chat={infoChat}
+          onDeleted={() => {
+            setChats((prev) => prev.filter((x) => x.id !== infoChat.id));
+            setInfoChat(null);
+            if (activeChat?.id === infoChat.id) setActiveChat(null);
+          }}
+        />
       )}
     </>
   );

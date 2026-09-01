@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { ShoppingBag, Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
-import MarketplaceCheckoutModal from '../feed/MarketplaceCheckoutModal';
-import { useCart } from '../../../contexts/CartContext';
+import { useState } from "react";
+import { ShoppingBag, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
+import MarketplaceCheckoutModal from "../feed/MarketplaceCheckoutModal";
+import { useCart } from "../../../contexts/CartContext";
 
 export default function CartPanel() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const { items, updateQuantity, removeFromCart, subtotal, tax, total } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, tax, total } =
+    useCart();
 
   return (
     <>
@@ -14,7 +15,9 @@ export default function CartPanel() {
           {/* Header */}
           <div className="p-5 flex justify-between items-center border-b border-[var(--sc-border)]">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-[var(--sc-text-primary)] text-xl">Your Cart</h3>
+              <h3 className="font-bold text-[var(--sc-text-primary)] text-xl">
+                Your Cart
+              </h3>
               <span className="bg-[var(--sc-brand-100)] text-[var(--sc-brand-600)] text-[11px] font-bold px-2 py-0.5 rounded-full">
                 {items.reduce((acc, item) => acc + item.quantity, 0)} items
               </span>
@@ -24,36 +27,53 @@ export default function CartPanel() {
 
           {/* Cart Items List */}
           <div className="flex flex-col overflow-y-auto flex-1 p-3 gap-3">
-            {items.map(item => (
-              <div key={item.id} className="flex gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
+              >
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-[var(--sc-border)]">
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex flex-col flex-1">
                   <h4 className="font-semibold text-[13px] text-[var(--sc-text-primary)] leading-tight line-clamp-2">
                     {item.title}
                   </h4>
-                  <div className="font-bold text-[14px] text-[var(--sc-brand-600)] mt-1 notranslate" translate="no">
-                    ৳{item.price.toLocaleString()} <span className="text-[10px] text-gray-400">BDT</span>
+                  <div
+                    className="font-bold text-[14px] text-[var(--sc-brand-600)] mt-1 notranslate"
+                    translate="no"
+                  >
+                    ৳{item.price.toLocaleString()}{" "}
+                    <span className="text-[10px] text-gray-400">BDT</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2 bg-white border border-[var(--sc-border)] rounded-full px-2 py-0.5">
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity - 1)
+                        }
                         className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors"
                       >
                         <Minus size={12} strokeWidth={3} />
                       </button>
-                      <span className="text-[12px] font-bold w-4 text-center">{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      <span className="text-[12px] font-bold w-4 text-center">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
                         className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors"
                       >
                         <Plus size={12} strokeWidth={3} />
                       </button>
                     </div>
-                    <button 
+                    <button
                       onClick={() => removeFromCart(item.id)}
                       className="text-gray-300 hover:text-red-500 transition-colors p-1"
                     >
@@ -76,39 +96,59 @@ export default function CartPanel() {
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex justify-between text-[13px] text-gray-500">
                 <span>Subtotal</span>
-                <span className="font-medium text-[var(--sc-text-primary)] notranslate" translate="no">৳{subtotal.toLocaleString()} BDT</span>
+                <span
+                  className="font-medium text-[var(--sc-text-primary)] notranslate"
+                  translate="no"
+                >
+                  ৳{subtotal.toLocaleString()} BDT
+                </span>
               </div>
               <div className="flex justify-between text-[13px] text-gray-500">
                 <span>Tax (5%)</span>
-                <span className="font-medium text-[var(--sc-text-primary)] notranslate" translate="no">৳{tax.toLocaleString()} BDT</span>
+                <span
+                  className="font-medium text-[var(--sc-text-primary)] notranslate"
+                  translate="no"
+                >
+                  ৳{tax.toLocaleString()} BDT
+                </span>
               </div>
               <div className="h-px bg-[var(--sc-border)] my-1"></div>
               <div className="flex justify-between items-center">
-                <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">Total</span>
-                <span className="font-bold text-[18px] text-[var(--sc-brand-600)] notranslate" translate="no">৳{total.toLocaleString()} BDT</span>
+                <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">
+                  Total
+                </span>
+                <span
+                  className="font-bold text-[18px] text-[var(--sc-brand-600)] notranslate"
+                  translate="no"
+                >
+                  ৳{total.toLocaleString()} BDT
+                </span>
               </div>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setIsCheckoutOpen(true)}
               disabled={items.length === 0}
               className={`w-full py-3.5 text-[15px] font-bold rounded-xl transition-all flex items-center justify-center gap-2 group ${
                 items.length > 0
-                  ? 'bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ? "bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >
               Proceed to Checkout
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </button>
           </div>
         </div>
       </div>
 
-      <MarketplaceCheckoutModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
-        total={total} 
+      <MarketplaceCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        total={total}
       />
     </>
   );
