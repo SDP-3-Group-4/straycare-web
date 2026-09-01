@@ -51,7 +51,7 @@ export default function MobileHeader() {
       <header className="md:hidden sticky-glass px-3.5 py-2.5 flex items-center justify-between shadow-xs">
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <HeaderLogo className="w-[125px] h-[40px]" />
+          <HeaderLogo className="w-[160px] h-[36px]" />
         </Link>
 
         {/* Right: Quick Action Controls */}
