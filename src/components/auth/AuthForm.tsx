@@ -197,12 +197,7 @@ export default function AuthForm() {
     <div className="auth-form">
       {/* Brand mark */}
       <HeaderLogo
-        className="auth-form__brand"
-        style={{
-          height: "48px",
-          width: "auto",
-          marginBottom: "var(--sc-space-xs)",
-        }}
+        className="auth-form__brand w-[240px] h-[55px] mb-2 mx-auto"
       />
       <h2 className="auth-form__title">
         {isForgot
