@@ -56,6 +56,7 @@ _agent/
 *.gif
 *.tex
 *.pdf
+!docs/SDP_400_Project_Report.pdf
 opencode.json
 test_large_payload.cjs
 !public/**/*.jpg

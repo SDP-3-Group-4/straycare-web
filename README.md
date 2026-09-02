@@ -1,6 +1,7 @@
 <div align="center">
-  <img src="./src/assets/header_logo.png" alt="StrayCare Logo" width="180" />
+  <img src="./src/assets/headerLogo_revised.png" alt="StrayCare Logo" width="180" />
   <br/>
+  <h1>StrayCare</h1>
   <p><strong>A Social Platform for Animal Welfare</strong></p>
   
   <p>
@@ -17,6 +18,12 @@
 ## 📖 Overview
 
 **StrayCare** is a modern, full-stack social platform dedicated to animal welfare. It bridges the gap between stray animals in need and individuals or organizations willing to help. Whether it's reporting an injured stray, coordinating a local rescue, organizing fundraising campaigns, or facilitating adoptions, StrayCare provides the digital infrastructure to make it happen efficiently.
+
+## 📚 Project Wiki & Documentation
+
+For a comprehensive dive into the architecture, design choices, system models, and research backing this project, please read our official project report:
+
+- 📄 **[Read the StrayCare Project Report (Wiki)](./docs/SDP_400_Project_Report.pdf)**
 
 ## ✨ Key Features
 
