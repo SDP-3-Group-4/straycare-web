@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./src/assets/logo.svg" alt="StrayCare Logo" width="180" />
+  <img src="./src/assets/header_logo.png" alt="StrayCare Logo" width="180" />
   <br/>
   <p><strong>A Social Platform for Animal Welfare</strong></p>
   
