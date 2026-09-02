@@ -34,9 +34,10 @@ straycare-backend/firebase-service-account.json
 
 .vercel
 
-# Hide all markdown files
+# Hide all markdown files except README
 *.md
 **/*.md
+!README.md
 homefeedlayoutskeletonbasicidea.pdf
 
 # Agent and Customization Files
