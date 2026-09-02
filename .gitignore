@@ -55,6 +55,7 @@ _agent/
 *.tex
 *.pdf
 opencode.json
+test_large_payload.cjs
 !public/**/*.jpg
 !public/**/*.jpeg
 !public/**/*.png
