@@ -1,5 +1,7 @@
 <div align="center">
-  <h1>🐾 StrayCare</h1>
+  <img src="./src/assets/logo.svg" alt="StrayCare Logo" width="180" />
+  <br/>
+  <h1>StrayCare</h1>
   <p><strong>A Social Platform for Animal Welfare</strong></p>
   
   <p>
