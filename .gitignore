@@ -15,6 +15,7 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
 *.env.local
 
 # Firebase service account (secret — never commit)
