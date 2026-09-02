@@ -54,6 +54,7 @@ _agent/
 *.gif
 *.tex
 *.pdf
+opencode.json
 !public/**/*.jpg
 !public/**/*.jpeg
 !public/**/*.png
