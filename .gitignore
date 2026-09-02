@@ -39,3 +39,28 @@ straycare-backend/firebase-service-account.json
 !team_onboarding.md
 !**/team_onboarding.md
 homefeedlayoutskeletonbasicidea.pdf
+
+# Agent and Customization Files
+.agents/
+.agent/
+_agents/
+_agent/
+
+# Firebase Cache
+.firebase/
+
+# Test Media and Documentation Artifacts
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.tex
+*.pdf
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.png
+!public/**/*.gif
+!src/**/*.jpg
+!src/**/*.jpeg
+!src/**/*.png
+!src/**/*.gif
