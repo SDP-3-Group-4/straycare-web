@@ -96,6 +96,8 @@ export default function CreatePostBox({
 
   const [hyperidTag, setHyperidTag] = useState<string | null>(null);
   const [isAnalyzingHyperid, setIsAnalyzingHyperid] = useState(false);
+  const [hyperidWarning, setHyperidWarning] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [promptIndex, setPromptIndex] = useState(0);
 
@@ -143,13 +145,20 @@ export default function CreatePostBox({
   }, []);
 
   const analyzeImageWithHyperID = async (file: File) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setIsAnalyzingHyperid(true);
+    setHyperidWarning(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("https://hyperid-ke.onrender.com/predict?top_k=2", {
         method: "POST",
         body: formData,
+        signal: abortControllerRef.current.signal,
       });
       if (res.ok) {
         const data = await res.json();
@@ -171,7 +180,8 @@ export default function CreatePostBox({
         console.warn("HyperID API failed with status: " + res.status);
         alert("HyperID API failed with status: " + res.status);
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
       console.error("HyperID analysis failed", err);
       alert("HyperID API request failed.");
     } finally {
@@ -246,7 +256,7 @@ export default function CreatePostBox({
 
     if (totalImageCount > 1) {
       if (prefs.useHyperID && imageFilesToAdd.length > 0) {
-        alert("HyperID is currently limited to 1 image per post. HyperID analysis will be skipped.");
+        setHyperidWarning("HyperID is currently limited to 1 image per post. HyperID analysis will be skipped.");
       }
       setHyperidTag(null);
     } else if (prefs.useHyperID && imageFilesToAdd.length === 1 && totalImageCount === 1 && !hyperidTag && !isAnalyzingHyperid) {
@@ -382,7 +392,12 @@ export default function CreatePostBox({
                           )}
                           <button
                             onClick={() => {
-                              if (idx === 0) setHyperidTag(null);
+                              if (idx === 0) {
+                                setHyperidTag(null);
+                                setHyperidWarning(null);
+                                if (abortControllerRef.current) abortControllerRef.current.abort();
+                                setIsAnalyzingHyperid(false);
+                              }
                               setMedia((prev) =>
                                 prev.filter((_, i) => i !== idx),
                               );
@@ -403,6 +418,15 @@ export default function CreatePostBox({
                       {media.length}/6 • first image is cover
                     </p>
                   )}
+                  
+                  {/* HyperID Warning */}
+                  {hyperidWarning && (
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs px-3 py-2 rounded-lg flex items-start gap-2 mt-1">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                      <p>{hyperidWarning}</p>
+                    </div>
+                  )}
+
                   {location && (
                     <div className="flex items-center gap-1 text-[12px] text-gray-500 bg-gray-50 w-fit px-2 py-0.5 rounded-md border border-[var(--sc-border)] max-w-full">
                       <MapPin size={11} className="shrink-0" />
