@@ -58,18 +58,47 @@ export class PaymentController {
     </div>
     <script>
       try {
+        const payload = {
+          type: 'PAYMENT_COMPLETE',
+          status: '${status}',
+          tranId: '${body.tran_id || ''}',
+          amount: '${body.amount || ''}',
+          orderId: '${body.value_c || ''}'
+        };
+
+        // 1. Broadcast to all StrayCare tabs on same origin
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('straycare_payment');
+          bc.postMessage(payload);
+        }
+
+        // 2. Storage event fallback
+        try {
+          localStorage.setItem('straycare_payment_event', JSON.stringify({ ...payload, timestamp: Date.now() }));
+        } catch (e) {}
+
+        // 3. Opener postMessage
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage(payload, '*');
+          } catch (e) {}
+        }
+
+        // 4. Parent postMessage (if framed)
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({
-            type: 'PAYMENT_COMPLETE',
-            status: '${status}',
-            tranId: '${body.tran_id || ''}',
-            amount: '${body.amount || ''}',
-            orderId: '${body.value_c || ''}'
-          }, '*');
+          try {
+            window.parent.postMessage(payload, '*');
+          } catch (e) {}
         }
       } catch (e) {}
 
+      // Attempt to close the tab automatically if opened by opener, otherwise redirect to status page
       setTimeout(function() {
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.close();
+          } catch (e) {}
+        }
         window.location.replace('${redirectUrl}');
       }, 600);
     </script>

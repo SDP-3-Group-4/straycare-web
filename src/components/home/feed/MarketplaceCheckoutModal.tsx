@@ -1,20 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
   CreditCard,
   Banknote,
-  Building,
-  Smartphone,
   Truck,
   ShieldCheck,
   CheckCircle2,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { createOrder, initiatePayment } from "../../../services/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useCart } from "../../../contexts/CartContext";
-import PaymentGatewayModal from "../../common/PaymentGatewayModal";
 
 interface MarketplaceCheckoutModalProps {
   isOpen: boolean;
@@ -30,8 +28,8 @@ export default function MarketplaceCheckoutModal({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [paymentMethod, setPaymentMethod] = useState("online");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [gatewayUrl, setGatewayUrl] = useState<string | null>(null);
-  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
+  const [paymentWindowUrl, setPaymentWindowUrl] = useState<string | null>(null);
   const [orderAmount, setOrderAmount] = useState(total);
 
   const { user } = useAuth();
@@ -43,6 +41,60 @@ export default function MarketplaceCheckoutModal({
     deliveryFee,
     platformFee,
   } = useCart();
+
+  // Listen for cross-tab payment completion from SSLCommerz tab
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePaymentComplete = (data: any) => {
+      if (data?.status === "success" || data?.status === "VALID") {
+        clearCart();
+        setIsWaitingForPayment(false);
+        setStep(3);
+      } else if (data?.status === "failed" || data?.status === "cancelled") {
+        setIsWaitingForPayment(false);
+        alert(
+          `Payment was ${data.status}. You can try again or select Cash on Delivery.`
+        );
+      }
+    };
+
+    // 1. BroadcastChannel across all StrayCare tabs
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        channel = new BroadcastChannel("straycare_payment");
+        channel.onmessage = (e) => {
+          if (e.data) handlePaymentComplete(e.data);
+        };
+      } catch (err) {}
+    }
+
+    // 2. Storage event fallback
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "straycare_payment_event" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          handlePaymentComplete(parsed);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    // 3. Window postMessage fallback
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "PAYMENT_COMPLETE") {
+        handlePaymentComplete(e.data);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -77,14 +129,16 @@ export default function MarketplaceCheckoutModal({
         clearCart();
         setStep(3);
       } else {
-        // Launch SSLCommerz Sandbox Payment Gateway directly
+        // Launch SSLCommerz Sandbox in a new tab & wait in original tab
         const res = await initiatePayment({
           amount: finalAmount,
           paymentType: "ORDER",
           orderId: order?.id,
         });
         if (res?.gatewayUrl) {
-          window.location.href = res.gatewayUrl;
+          setPaymentWindowUrl(res.gatewayUrl);
+          setIsWaitingForPayment(true);
+          window.open(res.gatewayUrl, "_blank");
           return;
         }
         clearCart();
@@ -211,32 +265,62 @@ export default function MarketplaceCheckoutModal({
             </div>
           )}
 
-          {step === 2 && (
-            <div className="flex flex-col gap-4">
-              {/* Order Cost Breakdown */}
-              <div className="p-3.5 bg-gray-50 rounded-2xl border border-[var(--sc-border)] flex flex-col gap-1.5 text-[13px]">
-                <div className="flex justify-between text-gray-500">
-                  <span>Items Subtotal</span>
-                  <span className="font-semibold text-gray-900">
-                    ৳{subtotal.toLocaleString()} BDT
-                  </span>
+          {step === 2 && isWaitingForPayment ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center space-y-4 animate-in fade-in duration-300">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center animate-pulse shadow-inner">
+                  <CreditCard size={32} />
                 </div>
-                <div className="flex justify-between text-gray-500">
-                  <span>
-                    Delivery ({deliveryZone === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka"})
-                  </span>
-                  <span className="font-semibold text-gray-900">
-                    ৳{deliveryFee.toLocaleString()} BDT
-                  </span>
+                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+                </span>
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-xl text-gray-900">
+                  Completing Payment in New Tab...
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 max-w-sm mt-1.5 leading-relaxed mx-auto">
+                  We opened the SSLCommerz sandbox gateway in a new tab. Please complete your transaction there.
+                  This screen will automatically confirm your order as soon as payment is verified.
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-2 w-full max-w-xs mx-auto">
+                {paymentWindowUrl && (
+                  <button
+                    onClick={() => window.open(paymentWindowUrl, "_blank")}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[var(--sc-brand-50)] hover:bg-[var(--sc-brand-100)] text-[var(--sc-brand-700)] text-xs font-bold rounded-xl border border-[var(--sc-brand-200)] transition-all cursor-pointer"
+                  >
+                    <ExternalLink size={13} />
+                    <span>Reopen Tab</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsWaitingForPayment(false)}
+                  className="flex-1 py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : step === 2 ? (
+            <div className="space-y-6">
+              <div className="p-4 bg-[var(--sc-brand-50)] rounded-xl border border-[var(--sc-brand-200)] flex flex-col gap-2">
+                <div className="flex justify-between items-center text-[13px] text-gray-600">
+                  <span>Cart Subtotal</span>
+                  <span>৳{subtotal.toLocaleString()} BDT</span>
                 </div>
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between items-center text-[13px] text-gray-600">
+                  <span>Delivery ({deliveryZone === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka"})</span>
+                  <span>৳{deliveryFee} BDT</span>
+                </div>
+                <div className="flex justify-between items-center text-[13px] text-gray-600">
                   <span>Platform Fee</span>
-                  <span className="font-semibold text-gray-900">
-                    ৳{platformFee.toLocaleString()} BDT
-                  </span>
+                  <span>৳{platformFee} BDT</span>
                 </div>
-                <div className="h-px bg-gray-200 my-1"></div>
-                <div className="flex justify-between items-center text-[15px]">
+                <div className="pt-2 border-t border-[var(--sc-brand-200)] flex justify-between items-center text-[15px]">
                   <span className="font-bold text-[var(--sc-text-primary)]">
                     Total to Pay
                   </span>
@@ -287,7 +371,7 @@ export default function MarketplaceCheckoutModal({
                 Secure, encrypted payment processing
               </div>
             </div>
-          )}
+          ) : null}
 
           {step === 3 && (
             <div className="flex flex-col items-center justify-center py-8 text-center gap-4">
@@ -310,25 +394,25 @@ export default function MarketplaceCheckoutModal({
           {step === 1 && (
             <button
               onClick={() => setStep(2)}
-              className="w-full py-3.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[15px] font-bold rounded-xl transition-all border border-[var(--sc-brand-700)]"
+              className="w-full py-3.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[15px] font-bold rounded-xl transition-all border border-[var(--sc-brand-700)] cursor-pointer"
             >
               Continue to Payment
             </button>
           )}
 
-          {step === 2 && (
+          {step === 2 && !isWaitingForPayment && (
             <>
               <button
                 onClick={() => setStep(1)}
                 disabled={isProcessing}
-                className="w-1/3 py-3.5 bg-white border border-[var(--sc-border)] text-[var(--sc-text-primary)] hover:bg-gray-50 text-[15px] font-bold rounded-xl transition-all disabled:opacity-50"
+                className="w-1/3 py-3.5 bg-white border border-[var(--sc-border)] text-[var(--sc-text-primary)] hover:bg-gray-50 text-[15px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer"
               >
                 Back
               </button>
               <button
                 disabled={!paymentMethod || isProcessing}
                 onClick={handlePlaceOrder}
-                className={`w-2/3 py-3.5 text-[15px] font-bold rounded-xl transition-all flex justify-center items-center gap-2 ${
+                className={`w-2/3 py-3.5 text-[15px] font-bold rounded-xl transition-all flex justify-center items-center gap-2 cursor-pointer ${
                   paymentMethod && !isProcessing
                     ? "bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white border border-[var(--sc-brand-700)]"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
@@ -349,7 +433,7 @@ export default function MarketplaceCheckoutModal({
                 onClose();
                 setStep(1); // reset for demo
               }}
-              className="w-full py-3.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[15px] font-bold rounded-xl transition-all border border-[var(--sc-brand-700)]"
+              className="w-full py-3.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-[15px] font-bold rounded-xl transition-all border border-[var(--sc-brand-700)] cursor-pointer"
             >
               Back to Marketplace
             </button>

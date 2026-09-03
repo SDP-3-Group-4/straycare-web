@@ -35,7 +35,6 @@ import PostActions from "./PostActions";
 import DonationModal from "./DonationModal";
 import DeletePostModal from "../../common/DeletePostModal";
 import AuthPromptModal from "../../auth/AuthPromptModal";
-import PaymentGatewayModal from "../../common/PaymentGatewayModal";
 import { Link } from "react-router-dom";
 import { avatarOnError, formatHandle } from "../../../constants";
 
@@ -307,7 +306,7 @@ export default function PostCard({
 
       if (res?.gatewayUrl) {
         setIsDonationModalOpen(false);
-        window.location.href = res.gatewayUrl;
+        window.open(res.gatewayUrl, "_blank");
         return;
       }
       throw new Error(
@@ -324,6 +323,55 @@ export default function PostCard({
       setIsDonating(false);
     }
   };
+
+  // Cross-tab synchronization when donating to fundraiser in new tab
+  useEffect(() => {
+    const handlePaymentComplete = (data: any) => {
+      if (
+        (data?.status === "success" || data?.status === "VALID") &&
+        (data?.postId === id || data?.type === "donation")
+      ) {
+        const addedAmount = parseFloat(data.amount || "0");
+        if (addedAmount > 0) {
+          setRaisedAmount((prev) => prev + addedAmount);
+          setDonorsCount((prev) => prev + 1);
+        }
+      }
+    };
+
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        channel = new BroadcastChannel("straycare_payment");
+        channel.onmessage = (e) => {
+          if (e.data) handlePaymentComplete(e.data);
+        };
+      } catch (err) {}
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "straycare_payment_event" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          handlePaymentComplete(parsed);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "PAYMENT_COMPLETE") {
+        handlePaymentComplete(e.data);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [id]);
 
   return (
     <article

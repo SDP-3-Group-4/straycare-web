@@ -42,7 +42,6 @@ import {
   fetchNetworkSuggestions,
   requestConnection,
 } from "../../../services/api";
-import PaymentGatewayModal from "../../common/PaymentGatewayModal";
 import { avatarOnError, formatHandle } from "../../../constants";
 
 export default function ProfileFeed() {
@@ -141,7 +140,7 @@ export default function ProfileFeed() {
         orderId,
       });
       if (res?.gatewayUrl) {
-        window.location.href = res.gatewayUrl;
+        window.open(res.gatewayUrl, "_blank");
       } else {
         alert("Could not initialize SSLCommerz gateway for this order.");
       }
@@ -150,6 +149,48 @@ export default function ProfileFeed() {
       alert(err?.message || "Failed to launch SSLCommerz gateway.");
     }
   };
+
+  // Cross-tab synchronization when paying order in a new tab
+  useEffect(() => {
+    const handlePaymentComplete = (data: any) => {
+      if (data?.status === "success" || data?.status === "VALID") {
+        loadData();
+      }
+    };
+
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        channel = new BroadcastChannel("straycare_payment");
+        channel.onmessage = (e) => {
+          if (e.data) handlePaymentComplete(e.data);
+        };
+      } catch (err) {}
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "straycare_payment_event" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          handlePaymentComplete(parsed);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "PAYMENT_COMPLETE") {
+        handlePaymentComplete(e.data);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   useEffect(() => {
     if (!merchantToast) return;

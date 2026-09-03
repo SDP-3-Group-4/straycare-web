@@ -27,29 +27,67 @@ export default function PaymentStatusPage() {
     }
   }, [isSuccess, type]);
 
-  const isInIframe = window.self !== window.top;
+  const isOpenedTab = Boolean(window.opener && !window.opener.closed);
 
-  // Signal parent container overlay when loaded inside iframe
   useEffect(() => {
-    if (isInIframe) {
-      window.parent.postMessage(
-        {
-          type: "PAYMENT_COMPLETE",
-          status,
-          tranId,
-          amount,
-          type,
-          postId,
-          orderId,
-        },
-        "*",
-      );
+    const payload = {
+      type: "PAYMENT_COMPLETE",
+      status,
+      tranId,
+      amount,
+      type,
+      postId,
+      orderId,
+    };
+
+    // 1. BroadcastChannel across all StrayCare tabs
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        const bc = new BroadcastChannel("straycare_payment");
+        bc.postMessage(payload);
+      } catch (e) {}
     }
-  }, [isInIframe, status, tranId, amount, type, postId, orderId]);
+
+    // 2. LocalStorage event fallback
+    try {
+      localStorage.setItem(
+        "straycare_payment_event",
+        JSON.stringify({ ...payload, timestamp: Date.now() }),
+      );
+    } catch (e) {}
+
+    // 3. Opener postMessage
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.postMessage(payload, "*");
+      } catch (e) {}
+    }
+
+    // 4. If framed
+    if (window.self !== window.top) {
+      try {
+        window.parent.postMessage(payload, "*");
+      } catch (e) {}
+    }
+
+    // Attempt automatic window close if opened in new tab
+    if (isOpenedTab) {
+      const timer = setTimeout(() => {
+        try {
+          window.close();
+        } catch (e) {}
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, tranId, amount, type, postId, orderId, isOpenedTab]);
 
   const handleCloseFrame = () => {
-    if (isInIframe) {
-      window.parent.postMessage({ type: "CLOSE_PAYMENT_MODAL" }, "*");
+    if (isOpenedTab) {
+      try {
+        window.close();
+      } catch (e) {
+        navigate("/");
+      }
     } else {
       navigate("/");
     }
@@ -82,6 +120,20 @@ export default function PaymentStatusPage() {
       {/* Main Card */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xl text-center animate-scaleUp">
+          {isOpenedTab && (
+            <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-2xl flex items-center justify-between gap-2 text-left">
+              <span className="text-xs text-purple-900 font-semibold">
+                Payment verified! Your original StrayCare tab has been updated.
+              </span>
+              <button
+                onClick={() => window.close()}
+                className="px-3 py-1.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer"
+              >
+                Close Tab
+              </button>
+            </div>
+          )}
+
           {/* Success State */}
           {isSuccess && (
             <div className="space-y-4">
@@ -126,13 +178,13 @@ export default function PaymentStatusPage() {
 
               {/* Action Buttons */}
               <div className="pt-2 space-y-2.5">
-                {isInIframe ? (
+                {isOpenedTab ? (
                   <button
-                    onClick={handleCloseFrame}
-                    className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all cursor-pointer"
+                    onClick={() => window.close()}
+                    className="w-full py-3.5 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all cursor-pointer"
                   >
                     <CheckCircle2 size={16} />
-                    <span>Done & Return to StrayCare</span>
+                    <span>Close Tab & Return to StrayCare</span>
                   </button>
                 ) : (
                   <>
