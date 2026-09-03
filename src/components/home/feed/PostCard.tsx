@@ -307,9 +307,7 @@ export default function PostCard({
 
       if (res?.gatewayUrl) {
         setIsDonationModalOpen(false);
-        setLastDonationAmount(amount);
-        setGatewayUrl(res.gatewayUrl);
-        setIsGatewayOpen(true);
+        window.location.href = res.gatewayUrl;
         return;
       }
       throw new Error(
@@ -611,20 +609,6 @@ export default function PostCard({
         setDonationAmount={setDonationAmount}
         onDonate={handleDonate}
         isDonating={isDonating}
-      />
-
-      <PaymentGatewayModal
-        isOpen={isGatewayOpen}
-        onClose={() => setIsGatewayOpen(false)}
-        gatewayUrl={gatewayUrl}
-        title={`Fundraiser Donation to ${displayAuthorName}`}
-        amount={lastDonationAmount}
-        onSuccess={() => {
-          setRaisedAmount((prev) => prev + lastDonationAmount);
-          setDonorsCount((prev) => prev + 1);
-          setIsGatewayOpen(false);
-          alert("Thank you! Your donation was completed successfully via SSLCommerz.");
-        }}
       />
 
       <DeletePostModal

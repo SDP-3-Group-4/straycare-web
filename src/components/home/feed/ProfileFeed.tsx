@@ -141,9 +141,7 @@ export default function ProfileFeed() {
         orderId,
       });
       if (res?.gatewayUrl) {
-        setGatewayUrl(res.gatewayUrl);
-        setActiveOrderAmount(amount);
-        setIsGatewayOpen(true);
+        window.location.href = res.gatewayUrl;
       } else {
         alert("Could not initialize SSLCommerz gateway for this order.");
       }
@@ -1083,19 +1081,6 @@ export default function ProfileFeed() {
                 : target.requester?.displayName
               : undefined;
           })()}
-        />
-
-        {/* Container Overlay Frame for SSLCommerz Order Payment */}
-        <PaymentGatewayModal
-          isOpen={isGatewayOpen}
-          onClose={() => setIsGatewayOpen(false)}
-          gatewayUrl={gatewayUrl}
-          title="Order Payment via SSLCommerz"
-          amount={activeOrderAmount}
-          onSuccess={() => {
-            setIsGatewayOpen(false);
-            loadData();
-          }}
         />
       </div>
     </div>

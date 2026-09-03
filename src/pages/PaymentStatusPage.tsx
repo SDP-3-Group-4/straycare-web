@@ -1,10 +1,13 @@
+import { useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, AlertTriangle, ArrowRight, Home, HeartHandshake } from "lucide-react";
 import HeaderLogo from "../components/common/HeaderLogo";
+import { useCart } from "../contexts/CartContext";
 
 export default function PaymentStatusPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
   const params = new URLSearchParams(location.search);
 
   const status = params.get("status") || "unknown";
@@ -17,6 +20,12 @@ export default function PaymentStatusPage() {
   const isSuccess = status === "success";
   const isFailed = status === "failed";
   const isCancelled = status === "cancelled";
+
+  useEffect(() => {
+    if (isSuccess && type === "order") {
+      clearCart();
+    }
+  }, [isSuccess, type]);
 
   const isInIframe = window.self !== window.top;
 

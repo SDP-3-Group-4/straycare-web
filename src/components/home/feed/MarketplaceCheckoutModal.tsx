@@ -77,15 +77,14 @@ export default function MarketplaceCheckoutModal({
         clearCart();
         setStep(3);
       } else {
-        // Launch SSLCommerz Sandbox Payment Gateway
+        // Launch SSLCommerz Sandbox Payment Gateway directly
         const res = await initiatePayment({
           amount: finalAmount,
           paymentType: "ORDER",
           orderId: order?.id,
         });
         if (res?.gatewayUrl) {
-          setGatewayUrl(res.gatewayUrl);
-          setIsGatewayOpen(true);
+          window.location.href = res.gatewayUrl;
           return;
         }
         clearCart();
@@ -357,23 +356,6 @@ export default function MarketplaceCheckoutModal({
           )}
         </div>
       </div>
-
-      {/* Container Overlay Frame for SSLCommerz */}
-      <PaymentGatewayModal
-        isOpen={isGatewayOpen}
-        onClose={() => {
-          setIsGatewayOpen(false);
-          setStep(3);
-        }}
-        gatewayUrl={gatewayUrl}
-        title="Marketplace Order Payment"
-        amount={orderAmount > 0 ? orderAmount : total}
-        onSuccess={() => {
-          clearCart();
-          setIsGatewayOpen(false);
-          setStep(3);
-        }}
-      />
     </div>,
     document.body,
   );
