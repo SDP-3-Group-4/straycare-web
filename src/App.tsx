@@ -10,6 +10,9 @@ import SettingsFeed from "./components/home/feed/SettingsFeed";
 import MarketplaceFeed from "./components/home/feed/MarketplaceFeed";
 import ProfileFeed from "./components/home/feed/ProfileFeed";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PublicPostPage from "./pages/PublicPostPage";
+import PaymentStatusPage from "./pages/PaymentStatusPage";
+import { Navigate } from "react-router-dom";
 
 const TITLE_MAP: Record<string, string> = {
   "/auth": "StrayCare — Sign In",
@@ -19,6 +22,7 @@ const TITLE_MAP: Record<string, string> = {
   "/bookmarks": "StrayCare — Bookmarks",
   "/settings": "StrayCare — Settings",
   "/profile": "StrayCare — Profile",
+  "/payment/status": "StrayCare — Payment Status",
 };
 
 function TitleManager() {
@@ -35,6 +39,8 @@ function AppRoutes() {
       <TitleManager />
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/post/:id" element={<PublicPostPage />} />
+        <Route path="/payment/status" element={<PaymentStatusPage />} />
         <Route
           path="/"
           element={
@@ -50,6 +56,7 @@ function AppRoutes() {
           <Route path="settings" element={<SettingsFeed />} />
           <Route path="profile" element={<ProfileFeed />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

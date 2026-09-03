@@ -1,5 +1,5 @@
 import { useState, useCallback, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, toFirebaseError } from "../../contexts/AuthContext";
 
 import {
@@ -52,6 +52,9 @@ export default function AuthForm() {
   const { signInWithEmail, signUp, signInWithGoogle, resetPassword } =
     useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTarget =
+    new URLSearchParams(location.search).get("redirect") || "/";
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
@@ -146,7 +149,7 @@ export default function AuthForm() {
         } else {
           await signInWithEmail(form.email, form.password);
         }
-        navigate("/");
+        navigate(redirectTarget);
       } catch (err: any) {
         console.error(err);
         setFormError(toFirebaseError(err));
@@ -154,7 +157,16 @@ export default function AuthForm() {
         setIsLoading(false);
       }
     },
-    [validate, mode, form, resetPassword, signUp, signInWithEmail, navigate],
+    [
+      validate,
+      mode,
+      form,
+      resetPassword,
+      signUp,
+      signInWithEmail,
+      navigate,
+      redirectTarget,
+    ],
   );
 
   const toggleMode = useCallback(() => {
@@ -171,14 +183,14 @@ export default function AuthForm() {
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-      navigate("/");
+      navigate(redirectTarget);
     } catch (err: any) {
       console.error(err);
       setFormError(toFirebaseError(err));
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [signInWithGoogle, navigate]);
+  }, [signInWithGoogle, navigate, redirectTarget]);
 
   const handleForgotPassword = useCallback(() => {
     setMode("forgot");

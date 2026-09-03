@@ -15,6 +15,7 @@ import { LikesModule } from './likes/likes.module';
 import { CommentsModule } from './comments/comments.module';
 import { AiModule } from './ai/ai.module';
 import { VetApplicationsModule } from './vet-applications/vet-applications.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VetApplicationsModule } from './vet-applications/vet-applications.modul
     CommentsModule,
     AiModule,
     VetApplicationsModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: FirebaseAuthGuard }],

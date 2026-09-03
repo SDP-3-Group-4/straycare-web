@@ -47,6 +47,7 @@ model User {
   connectionsInitiated  Connection[]   @relation("ConnectionsInitiated")
   connectionsReceived   Connection[]   @relation("ConnectionsReceived")
   vetApplications       VetApplication[]
+  payments              Payment[]
 }
 
 model Post {
@@ -164,6 +165,28 @@ model Order {
   total     Float
   status    String   @default("pending") // pending, completed, cancelled
   createdAt DateTime @default(now())
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  tranId      String   @unique
+  valId       String?
+  amount      Float
+  currency    String   @default("BDT")
+  status      String   @default("PENDING") // PENDING, VALID, FAILED, CANCELLED
+  paymentType String   // DONATION, ORDER
+  postId      String?
+  orderId     String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardType    String?
+  bankTranId  String?
+  cardIssuer  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tranId])
 }
 
 model Conversation {

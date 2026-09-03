@@ -166,6 +166,8 @@ export const fetchPosts = async (
 
 export const createPost = (postData: any) => postJson("/posts", postData);
 
+export const fetchPostById = (id: string) => request(`/posts/${id}`);
+
 export const updatePost = (id: string, data: any) =>
   putJson(`/posts/${id}`, data);
 
@@ -280,6 +282,13 @@ export const toggleCommentLike = (id: string) =>
 
 export const donateToPost = (postId: string, amount: number) =>
   postJson(`/posts/${postId}/donate`, { amount });
+
+export const initiatePayment = (data: {
+  amount: number;
+  paymentType: "DONATION" | "ORDER";
+  postId?: string;
+  orderId?: string;
+}) => postJson("/payment/initiate", data);
 
 export const createOrder = (total: number) =>
   postJson("/marketplace/order", { total });
