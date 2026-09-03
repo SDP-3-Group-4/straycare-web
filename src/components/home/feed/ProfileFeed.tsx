@@ -523,45 +523,10 @@ export default function ProfileFeed() {
         </div>
       )}
 
-      {/* Sticky Header & Tabs */}
-      <div className="sticky-glass mb-4 sm:mb-6 shadow-xs sm:rounded-2xl mt-1 -mx-2 sm:mx-0 flex flex-col">
-        {/* Compact User Info (Sticks to top) */}
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--sc-border)]/50">
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 shrink-0 border-2 border-white shadow-sm flex items-center justify-center">
-            {profileData.avatar ? (
-              <img
-                src={profileData.avatar}
-                onError={avatarOnError}
-                alt={profileData.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <User size={18} className="text-gray-400" />
-            )}
-          </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span
-              className="font-bold text-[15px] leading-tight text-[var(--sc-text-primary)] truncate notranslate"
-              translate="no"
-            >
-              {profileData.name}
-            </span>
-            <span
-              className="text-[12px] text-[var(--sc-text-secondary)] leading-tight truncate notranslate"
-              translate="no"
-            >
-              {formatHandle(profileData.handle)}
-            </span>
-          </div>
-          {isOwnProfile && (
-            <span className="px-2 py-1 bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] text-[10px] font-bold rounded-lg shrink-0">
-              You
-            </span>
-          )}
-        </div>
-
+      {/* Sticky Tabs */}
+      <div className="sticky-glass mb-4 sm:mb-6 shadow-xs sm:rounded-2xl mt-1 -mx-2 sm:mx-0 flex items-center p-1.5">
         {/* Tabs */}
-        <div className="flex items-center gap-1 w-full p-1.5">
+        <div className="flex items-center gap-1 w-full">
           <button
             onClick={() => setActiveTab("posts")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-[12px] sm:text-[14px] transition-all ${
