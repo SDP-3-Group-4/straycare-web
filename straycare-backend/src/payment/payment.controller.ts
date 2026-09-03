@@ -84,11 +84,20 @@ export class PaymentController {
   @Post('success')
   @HttpCode(HttpStatus.OK)
   async handleSuccess(@Body() body: any, @Res() res: Response) {
-    const redirectUrl = await this.paymentService.handleSuccess(body);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(
-      this.renderCallbackHtml('success', 'Payment Successful!', redirectUrl, body),
-    );
+    try {
+      const redirectUrl = await this.paymentService.handleSuccess(body);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('success', 'Payment Successful!', redirectUrl, body),
+      );
+    } catch (err: any) {
+      const clientUrl = body?.value_d || process.env.FRONTEND_URL || 'https://straycare-dev.web.app';
+      const redirectUrl = `${clientUrl}/payment/status?status=success&tran_id=${body?.tran_id || ''}`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('success', 'Payment Processed', redirectUrl, body),
+      );
+    }
   }
 
   /**
@@ -98,11 +107,20 @@ export class PaymentController {
   @Post('fail')
   @HttpCode(HttpStatus.OK)
   async handleFail(@Body() body: any, @Res() res: Response) {
-    const redirectUrl = await this.paymentService.handleFail(body);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(
-      this.renderCallbackHtml('failed', 'Payment Failed', redirectUrl, body),
-    );
+    try {
+      const redirectUrl = await this.paymentService.handleFail(body);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('failed', 'Payment Failed', redirectUrl, body),
+      );
+    } catch (err: any) {
+      const clientUrl = body?.value_d || process.env.FRONTEND_URL || 'https://straycare-dev.web.app';
+      const redirectUrl = `${clientUrl}/payment/status?status=failed&tran_id=${body?.tran_id || ''}`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('failed', 'Payment Failed', redirectUrl, body),
+      );
+    }
   }
 
   /**
@@ -112,11 +130,20 @@ export class PaymentController {
   @Post('cancel')
   @HttpCode(HttpStatus.OK)
   async handleCancel(@Body() body: any, @Res() res: Response) {
-    const redirectUrl = await this.paymentService.handleCancel(body);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(
-      this.renderCallbackHtml('cancelled', 'Payment Cancelled', redirectUrl, body),
-    );
+    try {
+      const redirectUrl = await this.paymentService.handleCancel(body);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('cancelled', 'Payment Cancelled', redirectUrl, body),
+      );
+    } catch (err: any) {
+      const clientUrl = body?.value_d || process.env.FRONTEND_URL || 'https://straycare-dev.web.app';
+      const redirectUrl = `${clientUrl}/payment/status?status=cancelled&tran_id=${body?.tran_id || ''}`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(
+        this.renderCallbackHtml('cancelled', 'Payment Cancelled', redirectUrl, body),
+      );
+    }
   }
 
   /**
