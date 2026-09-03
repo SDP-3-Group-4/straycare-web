@@ -60,7 +60,7 @@ export default function MarketplaceCheckoutModal({
       const order = await createOrder(total);
       clearCart();
 
-      if (selectedPayment === "cod") {
+      if (paymentMethod === "cod") {
         setStep(3);
       } else {
         // Launch SSLCommerz Sandbox Payment Gateway
