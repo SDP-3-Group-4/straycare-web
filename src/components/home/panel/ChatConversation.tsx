@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowLeft, Info, Send, Paperclip, Smile, X, User } from "lucide-react";
+import { ArrowLeft, Info, Send, Paperclip, Smile, X, User, WifiOff, Zap } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import ChatBubble from "./ChatBubble";
 import type { Message } from "./ChatBubble";
@@ -7,6 +7,11 @@ import ChatInfoModal from "./ChatInfoModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import { fetchMessages, sendMessage } from "../../../services/api";
 import { presenceText } from "../../../utils/presence";
+import { getStoredPreferences } from "../../../services/preferences";
+import {
+  generateOfflineTriage,
+  getWebLLMStatus,
+} from "../../../services/webllm.service";
 
 interface ChatConversationProps {
   chat: {
@@ -36,6 +41,10 @@ export default function ChatConversation({
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
+  // ── Offline / WebLLM state ──────────────────────────────────────────────
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [offlineGenError, setOfflineGenError] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
@@ -47,6 +56,18 @@ export default function ChatConversation({
   useEffect(() => {
     const tick = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(tick);
+  }, []);
+
+  // ── Network online / offline listener ──────────────────────────────────
+  useEffect(() => {
+    const goOnline = () => setIsOffline(false);
+    const goOffline = () => setIsOffline(true);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
   }, []);
 
   const botAvatar = chat.avatar || AI_BOT_AVATAR;
@@ -110,9 +131,10 @@ export default function ChatConversation({
     };
   }, []);
 
-  // Load and poll messages
+  // Load and poll messages — skip network poll when offline + AI bot
   useEffect(() => {
     if (!user) return;
+    if (isOffline && chat.isAiBot) return; // local-only when offline
 
     const loadMsgs = async () => {
       try {
@@ -139,7 +161,7 @@ export default function ChatConversation({
     loadMsgs();
     const interval = setInterval(loadMsgs, 3000);
     return () => clearInterval(interval);
-  }, [user, chat.id, chat.name, chat.isAiBot, formatMessages]);
+  }, [user, chat.id, chat.name, chat.isAiBot, formatMessages, isOffline]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -148,6 +170,66 @@ export default function ChatConversation({
     }
   }, [messages]);
 
+  // ── Offline triage via WebLLM (client-side) ────────────────────────────
+  const handleOfflineSend = async (text: string) => {
+    if (!text.trim()) return;
+    setOfflineGenError(null);
+
+    const nowTime = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const today = dayLabel(new Date());
+
+    const userMsg: Message = {
+      id: `local-${Date.now()}-user`,
+      senderId: "me",
+      senderName: "You",
+      senderAvatar: "",
+      content: text,
+      timestamp: nowTime,
+      day: today,
+      isMine: true,
+      status: "read",
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setIsBotTyping(true);
+
+    try {
+      const history = messages
+        .slice(-8)
+        .map((m) => ({ role: m.isMine ? "user" : "assistant", content: m.content || "" }));
+      history.push({ role: "user", content: text });
+
+      const reply = await generateOfflineTriage(history);
+
+      const botMsg: Message = {
+        id: `local-${Date.now()}-bot`,
+        senderId: "other",
+        senderName: chat.name,
+        senderAvatar: botAvatar,
+        content: reply,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        day: today,
+        isMine: false,
+        status: "read",
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (err: any) {
+      setOfflineGenError(
+        err?.message?.includes("download")
+          ? "Model not ready — activate Anvil-2-PAW in Settings first."
+          : err?.message || "Offline inference failed.",
+      );
+    } finally {
+      setIsBotTyping(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || !user) return;
 
@@ -155,7 +237,29 @@ export default function ChatConversation({
     setInputValue("");
     setIsEmojiOpen(false);
 
-    // Show the typing indicator until the AI reply arrives (safety fallback only)
+    // ── Route to offline WebLLM when network is down + AI bot ──
+    if (chat.isAiBot && isOffline) {
+      const prefs = getStoredPreferences();
+      if (prefs.useOfflineTriage) {
+        const webllmStatus = getWebLLMStatus();
+        if (webllmStatus.status === "ready") {
+          await handleOfflineSend(tempText);
+        } else {
+          setOfflineGenError(
+            "Anvil-2-PAW model is not yet loaded. Go to Settings → Experimental to download it first.",
+          );
+          setInputValue(tempText);
+        }
+      } else {
+        setOfflineGenError(
+          "You are offline. Enable Anvil-2-PAW in Settings → Experimental to triage without internet.",
+        );
+        setInputValue(tempText);
+      }
+      return;
+    }
+
+    // ── Standard NIM cloud path (unchanged) ─────────────────────────────
     if (chat.isAiBot) {
       botRepliesAtSendRef.current = messages.filter((m) => !m.isMine).length;
       setIsBotTyping(true);
@@ -230,6 +334,17 @@ export default function ChatConversation({
     }
   };
 
+  // Offline banner state
+  const prefs = getStoredPreferences();
+  const showOfflineBanner = isAi && isOffline;
+  const offlineReady =
+    showOfflineBanner &&
+    prefs.useOfflineTriage &&
+    getWebLLMStatus().status === "ready";
+  const offlineEnabled =
+    showOfflineBanner && prefs.useOfflineTriage && !offlineReady;
+  const offlineDisabled = showOfflineBanner && !prefs.useOfflineTriage;
+
   return (
     <div className="flex flex-col h-full bg-white relative rounded-2xl">
       {/* Header */}
@@ -270,9 +385,23 @@ export default function ChatConversation({
                 {chat.name}
               </span>
               <span
-                className={`text-[12px] font-medium leading-tight ${isAi ? "text-gray-500" : presence.online ? "text-green-500" : "text-gray-400"}`}
+                className={`text-[12px] font-medium leading-tight ${
+                  isAi
+                    ? isOffline
+                      ? "text-amber-500"
+                      : "text-gray-500"
+                    : presence.online
+                      ? "text-green-500"
+                      : "text-gray-400"
+                }`}
               >
-                {isAi ? "Always available" : presence.label}
+                {isAi
+                  ? isOffline
+                    ? offlineReady
+                      ? "\u26a1 Anvil-2-PAW Active"
+                      : "Offline"
+                    : "Always available"
+                  : presence.label}
               </span>
             </div>
           </div>
@@ -288,10 +417,49 @@ export default function ChatConversation({
         </div>
       </div>
 
+      {/* ── Offline Mode Banner ─────────────────────────────────────────── */}
+      {showOfflineBanner && (
+        <div
+          className={`absolute top-[73px] left-0 right-0 z-10 px-4 py-2 flex items-center gap-2 text-[12px] font-semibold ${
+            offlineReady
+              ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
+              : offlineEnabled
+                ? "bg-amber-50 border-b border-amber-200 text-amber-700"
+                : "bg-gray-50 border-b border-gray-200 text-gray-500"
+          }`}
+        >
+          {offlineReady ? (
+            <>
+              <Zap size={13} className="shrink-0" />
+              <span>
+                Offline Mode — Anvil-2-PAW in-browser AI is active. Responses run entirely on your device.
+              </span>
+            </>
+          ) : offlineEnabled ? (
+            <>
+              <WifiOff size={13} className="shrink-0" />
+              <span>
+                You are offline. Anvil-2-PAW is enabled but not yet loaded.
+                Open Settings → Experimental to finish downloading.
+              </span>
+            </>
+          ) : (
+            <>
+              <WifiOff size={13} className="shrink-0" />
+              <span>
+                You are offline. Enable{" "}
+                <strong>Offline AI Vet Triage (Anvil-2-PAW)</strong> in
+                Settings → Experimental to triage without internet.
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Message List */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 pt-20 flex flex-col gap-1 bg-[#f8f9fa]"
+        className={`flex-1 overflow-y-auto p-4 flex flex-col gap-1 bg-[#f8f9fa] ${showOfflineBanner ? "pt-28" : "pt-20"}`}
       >
         {messages.map((msg, index) => {
           // Day divider before the first message of each day
@@ -333,7 +501,7 @@ export default function ChatConversation({
             </div>
             <div className="flex flex-col items-start">
               <span className="text-[12px] font-bold text-gray-500 mb-1 ml-1">
-                AI Vet Assistant
+                {offlineReady ? "Anvil-2-PAW" : "AI Vet Assistant"}
               </span>
               <div className="bg-[var(--sc-brand-50)] border border-[var(--sc-brand-200)] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1">
                 <span
@@ -361,11 +529,11 @@ export default function ChatConversation({
 
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-[var(--sc-border)] shrink-0 rounded-b-2xl relative">
-        {sendError && (
+        {(sendError || offlineGenError) && (
           <div className="mb-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-[13px] font-medium flex items-center gap-2">
-            <span className="flex-1">{sendError}</span>
+            <span className="flex-1">{sendError || offlineGenError}</span>
             <button
-              onClick={() => setSendError(null)}
+              onClick={() => { setSendError(null); setOfflineGenError(null); }}
               className="text-red-400 hover:text-red-600 transition-colors shrink-0"
             >
               <X size={14} strokeWidth={3} />
@@ -407,7 +575,7 @@ export default function ChatConversation({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={offlineReady ? "Describe the animal's symptoms..." : "Type a message..."}
             className="flex-1 min-w-0 bg-transparent py-3 px-2 text-[15px] focus:outline-none focus:ring-0 border-none ring-0 outline-none"
           />
 
@@ -426,13 +594,28 @@ export default function ChatConversation({
             disabled={!inputValue.trim()}
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
               inputValue.trim()
-                ? "bg-[var(--sc-brand-600)] text-white hover:bg-[var(--sc-brand-700)]"
+                ? offlineReady
+                  ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white hover:opacity-90"
+                  : "bg-[var(--sc-brand-600)] text-white hover:bg-[var(--sc-brand-700)]"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
             <Send size={18} className={inputValue.trim() ? "ml-0.5" : ""} />
           </button>
         </div>
+
+        {/* Offline mode footer label */}
+        {offlineReady && (
+          <p className="text-center text-[11px] text-violet-500 font-semibold mt-1.5 flex items-center justify-center gap-1">
+            <Zap size={10} />
+            Running on-device via Anvil-2-PAW WebLLM
+          </p>
+        )}
+        {offlineDisabled && (
+          <p className="text-center text-[11px] text-gray-400 mt-1.5">
+            Enable offline AI in Settings → Experimental
+          </p>
+        )}
       </div>
 
       <ChatInfoModal

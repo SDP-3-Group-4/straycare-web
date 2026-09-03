@@ -30,6 +30,12 @@ import {
   Sliders,
   Type,
   ExternalLink,
+  Cpu,
+  Zap,
+  WifiOff,
+  Database,
+  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { avatarOnError, formatHandle } from "../../../constants";
@@ -38,6 +44,14 @@ import {
   savePreferences,
   type UserPreferences,
 } from "../../../services/preferences";
+import {
+  subscribeWebLLMStatus,
+  downloadAndInitModel,
+  clearWebLLMCache,
+  checkModelCached,
+  isWebGPUSupported,
+  type WebLLMStatus,
+} from "../../../services/webllm.service";
 import EditProfileModal from "./EditProfileModal";
 import VetVerificationModal from "./VetVerificationModal";
 import PasswordSecurityModal from "../../common/PasswordSecurityModal";
@@ -81,6 +95,34 @@ export default function SettingsFeed() {
   const isVerifiedVet = Boolean(user?.isVet || user?.verifiedStatus);
   const primaryMethod =
     savedMethods.find((m) => m.isDefault) || savedMethods[0];
+
+  const [webllmStatus, setWebllmStatus] = useState<WebLLMStatus>({
+    status: "idle",
+    progress: 0,
+    progressText: "",
+    isCached: false,
+    modelId: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+  });
+
+  useEffect(() => {
+    checkModelCached();
+    const unsub = subscribeWebLLMStatus((st) => setWebllmStatus(st));
+    return () => unsub();
+  }, []);
+
+  const handleToggleOfflineTriage = async () => {
+    const nextState = !prefs.useOfflineTriage;
+    const updated = savePreferences({ useOfflineTriage: nextState });
+    setPrefs(updated);
+
+    if (nextState && !webllmStatus.isCached && webllmStatus.status !== "ready" && webllmStatus.status !== "downloading") {
+      try {
+        await downloadAndInitModel();
+      } catch (e) {
+        console.error("Failed to start WebLLM download:", e);
+      }
+    }
+  };
 
   useEffect(() => {
     const handlePrefsChange = (e: any) => {
@@ -464,13 +506,17 @@ export default function SettingsFeed() {
           </div>
         </div>
 
-        {/* 3.5 AI Features */}
+        {/* 3.5 AI & Emergency Triage Settings */}
         <div className="flex flex-col gap-2.5">
           <h3 className="text-[12px] sm:text-[13px] font-bold text-[var(--sc-text-secondary)] pl-2 flex items-center gap-2">
-            HyperID Settings <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-bold">BETA</span>
+            AI & Emergency Triage Settings{" "}
+            <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
+              EXPERIMENTAL
+            </span>
           </h3>
 
           <div className="bg-white rounded-2xl border border-[var(--sc-border)] overflow-hidden shadow-xs divide-y divide-[var(--sc-border)]">
+            {/* HyperID Vision AI */}
             <button
               onClick={() => {
                 const updated = savePreferences({ useHyperID: !prefs.useHyperID });
@@ -505,6 +551,135 @@ export default function SettingsFeed() {
                 />
               </div>
             </button>
+
+            {/* Anvil-2-PAW Offline AI Triage Toggle */}
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+                    <Cpu size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[14px] text-[var(--sc-text-primary)] block">
+                        Offline AI Vet Triage (Anvil-2-PAW)
+                      </span>
+                      <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                        WebGPU
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 block max-w-md">
+                      Pulls and caches 4-bit weights into your browser (IndexedDB). AI Vet Chat will automatically switch to this local engine when offline.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleOfflineTriage}
+                  className={`w-12 h-6 rounded-full relative transition-colors shrink-0 ${
+                    prefs.useOfflineTriage
+                      ? "bg-[var(--sc-brand-600)]"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                      prefs.useOfflineTriage ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Offline Triage Subpanel when Enabled */}
+              {prefs.useOfflineTriage && (
+                <div className="mt-2 pt-3 border-t border-gray-100 flex flex-col gap-2.5">
+                  {/* Live Downloading State */}
+                  {webllmStatus.status === "downloading" && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-blue-900">
+                        <span className="flex items-center gap-2">
+                          <RefreshCw size={14} className="animate-spin text-blue-600" />
+                          Pulling Anvil-2-PAW from Hugging Face...
+                        </span>
+                        <span className="font-bold">{webllmStatus.progress}%</span>
+                      </div>
+                      <div className="w-full bg-blue-200/60 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                          style={{ width: `${webllmStatus.progress}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-blue-700 font-mono truncate">
+                        {webllmStatus.progressText}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Ready & Cached State */}
+                  {(webllmStatus.isCached || webllmStatus.status === "ready") && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-emerald-800 font-medium">
+                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                        <span>Model Cached in IndexedDB (Ready for Offline Rescues)</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm("Clear local offline model cache to free ~350 MB disk space?")) {
+                            await clearWebLLMCache();
+                          }
+                        }}
+                        className="text-[11px] text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50 transition-colors shrink-0"
+                      >
+                        Clear Cache
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {webllmStatus.status === "error" && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex flex-col gap-2 text-xs text-red-800">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle size={15} className="text-red-600 shrink-0" />
+                        <span>{webllmStatus.error || "Failed to load WebLLM weights"}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => downloadAndInitModel()}
+                        className="self-start text-[11px] bg-red-600 text-white font-bold px-2.5 py-1 rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Retry Download
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Idle with Model Not Yet Downloaded */}
+                  {!webllmStatus.isCached && webllmStatus.status === "idle" && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between">
+                      <span className="text-xs text-amber-900 font-medium">
+                        Model weights not yet cached locally (~350 MB required).
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => downloadAndInitModel()}
+                        className="text-[11px] bg-[var(--sc-brand-600)] text-white font-bold px-3 py-1.5 rounded-lg hover:bg-[var(--sc-brand-700)] transition-colors shrink-0 flex items-center gap-1.5"
+                      >
+                        <Download size={13} />
+                        Download Now
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Routing Explanation Note */}
+                  <div className="text-[11px] text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-100 flex items-start gap-2">
+                    <Zap size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Hybrid Routing:</strong> When online, AI Vet Chat continues routing to the primary NVIDIA NIM cloud endpoint. When your device loses internet connectivity, it switches seamlessly to this in-browser Anvil-2-PAW engine.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

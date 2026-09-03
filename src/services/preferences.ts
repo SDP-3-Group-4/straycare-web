@@ -11,6 +11,7 @@ export type UserPreferences = {
   whoCanMessage: "anyone" | "connections";
   defaultFeedTab: "explore" | "nearby";
   useHyperID: boolean;
+  useOfflineTriage: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -26,6 +27,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   whoCanMessage: "anyone",
   defaultFeedTab: "explore",
   useHyperID: true,
+  useOfflineTriage: false,
 };
 
 export const applyThemeDOM = (theme: "light" | "dark" | "system") => {
