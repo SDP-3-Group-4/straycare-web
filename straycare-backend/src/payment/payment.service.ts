@@ -17,6 +17,7 @@ export interface InitiatePaymentDto {
   customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
+  frontendUrl?: string;
 }
 
 @Injectable()
@@ -28,9 +29,9 @@ export class PaymentService {
     process.env.SSLCOMMERZ_STORE_PASSWORD || 'qwerty';
   private readonly isSandbox = process.env.SSLCOMMERZ_IS_SANDBOX !== 'false';
   private readonly backendUrl =
-    process.env.BACKEND_URL || 'http://localhost:3000';
+    process.env.BACKEND_URL || 'https://straycare-backend-se6q.onrender.com';
   private readonly frontendUrl =
-    process.env.FRONTEND_URL || 'http://localhost:5173';
+    process.env.FRONTEND_URL || 'https://straycare-dev.web.app';
 
   private readonly sslSessionUrl = this.isSandbox
     ? 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
@@ -123,6 +124,7 @@ export class PaymentService {
       value_a: userId,
       value_b: paymentType,
       value_c: postId || orderId || '',
+      value_d: dto.frontendUrl || this.frontendUrl,
     });
 
     this.logger.log(`Initiating SSLCommerz payment for ${tranId} (${amount} BDT)`);
@@ -231,7 +233,8 @@ export class PaymentService {
             }
           }
 
-          return `${this.frontendUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}&type=donation&postId=${payment.postId}`;
+          const clientUrl = body.value_d || this.frontendUrl;
+          return `${clientUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}&type=donation&postId=${payment.postId}`;
         }
 
         // Process Marketplace Order
@@ -241,20 +244,24 @@ export class PaymentService {
             data: { status: 'completed' },
           });
 
-          return `${this.frontendUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}&type=order&orderId=${payment.orderId}`;
+          const clientUrl = body.value_d || this.frontendUrl;
+          return `${clientUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}&type=order&orderId=${payment.orderId}`;
         }
 
-        return `${this.frontendUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}`;
+        const clientUrl = body.value_d || this.frontendUrl;
+        return `${clientUrl}/payment/status?status=success&tran_id=${tran_id}&amount=${paidAmount}`;
       } else {
         await this.prisma.payment.update({
           where: { tranId: tran_id },
           data: { status: 'FAILED' },
         });
-        return `${this.frontendUrl}/payment/status?status=failed&tran_id=${tran_id}`;
+        const clientUrl = body.value_d || this.frontendUrl;
+        return `${clientUrl}/payment/status?status=failed&tran_id=${tran_id}`;
       }
     } catch (err: any) {
       this.logger.error(`Error validating transaction ${tran_id}: ${err.message}`);
-      return `${this.frontendUrl}/payment/status?status=failed&tran_id=${tran_id}`;
+      const clientUrl = body.value_d || this.frontendUrl;
+      return `${clientUrl}/payment/status?status=failed&tran_id=${tran_id}`;
     }
   }
 
@@ -272,7 +279,8 @@ export class PaymentService {
       });
     }
 
-    return `${this.frontendUrl}/payment/status?status=failed&tran_id=${tran_id || ''}`;
+    const clientUrl = body.value_d || this.frontendUrl;
+    return `${clientUrl}/payment/status?status=failed&tran_id=${tran_id || ''}`;
   }
 
   /**
@@ -289,7 +297,8 @@ export class PaymentService {
       });
     }
 
-    return `${this.frontendUrl}/payment/status?status=cancelled&tran_id=${tran_id || ''}`;
+    const clientUrl = body.value_d || this.frontendUrl;
+    return `${clientUrl}/payment/status?status=cancelled&tran_id=${tran_id || ''}`;
   }
 
   /**

@@ -18,23 +18,57 @@ export default function PaymentStatusPage() {
   const isFailed = status === "failed";
   const isCancelled = status === "cancelled";
 
+  const isInIframe = window.self !== window.top;
+
+  // Signal parent container overlay when loaded inside iframe
+  useEffect(() => {
+    if (isInIframe) {
+      window.parent.postMessage(
+        {
+          type: "PAYMENT_COMPLETE",
+          status,
+          tranId,
+          amount,
+          type,
+          postId,
+          orderId,
+        },
+        "*",
+      );
+    }
+  }, [isInIframe, status, tranId, amount, type, postId, orderId]);
+
+  const handleCloseFrame = () => {
+    if (isInIframe) {
+      window.parent.postMessage({ type: "CLOSE_PAYMENT_MODAL" }, "*");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[var(--sc-bg,#f8fafc)] flex flex-col justify-between">
-      {/* Top Header */}
-      <header className="w-full bg-white border-b border-gray-200/80 shadow-xs">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <HeaderLogo className="w-[150px] h-[36px]" />
-          </Link>
-          <Link
-            to="/"
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3.5 py-1.5 rounded-full transition-all"
-          >
-            <Home size={14} />
-            <span>Feed</span>
-          </Link>
-        </div>
-      </header>
+    <div
+      className={`min-h-screen bg-[var(--sc-bg,#f8fafc)] flex flex-col justify-between ${
+        isInIframe ? "p-2 bg-transparent" : ""
+      }`}
+    >
+      {/* Top Header - Hidden when inside iframe modal */}
+      {!isInIframe && (
+        <header className="w-full bg-white border-b border-gray-200/80 shadow-xs">
+          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <HeaderLogo className="w-[150px] h-[36px]" />
+            </Link>
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3.5 py-1.5 rounded-full transition-all"
+            >
+              <Home size={14} />
+              <span>Feed</span>
+            </Link>
+          </div>
+        </header>
+      )}
 
       {/* Main Card */}
       <main className="flex-1 flex items-center justify-center p-4">
@@ -83,22 +117,34 @@ export default function PaymentStatusPage() {
 
               {/* Action Buttons */}
               <div className="pt-2 space-y-2.5">
-                {postId && (
-                  <Link
-                    to={`/post/${postId}`}
-                    className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all"
+                {isInIframe ? (
+                  <button
+                    onClick={handleCloseFrame}
+                    className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all cursor-pointer"
                   >
-                    <span>View Fundraiser Post</span>
-                    <ArrowRight size={16} />
-                  </Link>
+                    <CheckCircle2 size={16} />
+                    <span>Done & Return to StrayCare</span>
+                  </button>
+                ) : (
+                  <>
+                    {postId && (
+                      <Link
+                        to={`/post/${postId}`}
+                        className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all"
+                      >
+                        <span>View Fundraiser Post</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                    )}
+                    <Link
+                      to="/"
+                      className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all"
+                    >
+                      <Home size={16} />
+                      <span>Return to Home Feed</span>
+                    </Link>
+                  </>
                 )}
-                <Link
-                  to="/"
-                  className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all"
-                >
-                  <Home size={16} />
-                  <span>Return to Home Feed</span>
-                </Link>
               </div>
             </div>
           )}
@@ -127,19 +173,30 @@ export default function PaymentStatusPage() {
               )}
 
               <div className="pt-2 space-y-2.5">
-                <button
-                  onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-                  className="w-full py-3 px-4 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all cursor-pointer"
-                >
-                  Try Again
-                </button>
-                <Link
-                  to="/"
-                  className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all"
-                >
-                  <Home size={16} />
-                  <span>Return to Feed</span>
-                </Link>
+                {isInIframe ? (
+                  <button
+                    onClick={handleCloseFrame}
+                    className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all cursor-pointer"
+                  >
+                    Close Window & Return
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+                      className="w-full py-3 px-4 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all cursor-pointer"
+                    >
+                      Try Again
+                    </button>
+                    <Link
+                      to="/"
+                      className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all"
+                    >
+                      <Home size={16} />
+                      <span>Return to Feed</span>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -161,13 +218,22 @@ export default function PaymentStatusPage() {
               </div>
 
               <div className="pt-2">
-                <Link
-                  to="/"
-                  className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all"
-                >
-                  <Home size={16} />
-                  <span>Return to Home Feed</span>
-                </Link>
+                {isInIframe ? (
+                  <button
+                    onClick={handleCloseFrame}
+                    className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-2xl transition-all cursor-pointer"
+                  >
+                    Close Window
+                  </button>
+                ) : (
+                  <Link
+                    to="/"
+                    className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white font-bold text-sm rounded-2xl shadow-sm transition-all"
+                  >
+                    <Home size={16} />
+                    <span>Return to Home Feed</span>
+                  </Link>
+                )}
               </div>
             </div>
           )}

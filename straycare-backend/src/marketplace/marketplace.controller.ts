@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Req,
@@ -55,6 +56,11 @@ export class MarketplaceController {
       throw new ForbiddenException('You can only view your own orders');
     }
     return this.marketplaceService.getOrdersByUserId(userId);
+  }
+
+  @Delete('orders/:id')
+  async deleteOrder(@Param('id') id: string, @Req() req: Request) {
+    return this.marketplaceService.deleteOrder(id, req.user!.uid);
   }
 
   @Public()

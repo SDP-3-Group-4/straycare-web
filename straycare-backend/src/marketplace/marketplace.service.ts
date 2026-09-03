@@ -64,6 +64,12 @@ export class MarketplaceService {
     });
   }
 
+  async deleteOrder(id: string, userId: string) {
+    return this.prisma.order.deleteMany({
+      where: { id, userId },
+    });
+  }
+
   async deleteAllOrders() {
     return this.prisma.order.deleteMany({});
   }

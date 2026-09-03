@@ -288,7 +288,12 @@ export const initiatePayment = (data: {
   paymentType: "DONATION" | "ORDER";
   postId?: string;
   orderId?: string;
-}) => postJson("/payment/initiate", data);
+  frontendUrl?: string;
+}) =>
+  postJson("/payment/initiate", {
+    ...data,
+    frontendUrl: data.frontendUrl || window.location.origin,
+  });
 
 export const createOrder = (total: number) =>
   postJson("/marketplace/order", { total });
@@ -298,6 +303,9 @@ export const cleanupAllOrders = () =>
 
 export const fetchUserOrders = (userId: string) =>
   request(`/marketplace/orders/user/${userId}`);
+
+export const deleteOrder = (orderId: string) =>
+  request(`/marketplace/orders/${orderId}`, { method: "DELETE" });
 
 export const touchPresence = (_uid: string) => postJson("/users/presence", {});
 

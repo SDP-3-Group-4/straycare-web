@@ -14,6 +14,7 @@ import {
 import { createOrder, initiatePayment } from "../../../services/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useCart } from "../../../contexts/CartContext";
+import PaymentGatewayModal from "../../common/PaymentGatewayModal";
 
 interface MarketplaceCheckoutModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export default function MarketplaceCheckoutModal({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [gatewayUrl, setGatewayUrl] = useState<string | null>(null);
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
 
   const { user } = useAuth();
   const {
@@ -70,7 +73,8 @@ export default function MarketplaceCheckoutModal({
           orderId: order?.id,
         });
         if (res?.gatewayUrl) {
-          window.location.href = res.gatewayUrl;
+          setGatewayUrl(res.gatewayUrl);
+          setIsGatewayOpen(true);
           return;
         }
         setStep(3);
@@ -338,6 +342,22 @@ export default function MarketplaceCheckoutModal({
           )}
         </div>
       </div>
+
+      {/* Container Overlay Frame for SSLCommerz */}
+      <PaymentGatewayModal
+        isOpen={isGatewayOpen}
+        onClose={() => {
+          setIsGatewayOpen(false);
+          setStep(3);
+        }}
+        gatewayUrl={gatewayUrl}
+        title="Marketplace Order Payment"
+        amount={total}
+        onSuccess={() => {
+          setIsGatewayOpen(false);
+          setStep(3);
+        }}
+      />
     </div>,
     document.body,
   );

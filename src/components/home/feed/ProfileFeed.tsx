@@ -33,6 +33,7 @@ import {
   fetchPosts,
   fetchConnections,
   fetchUserOrders,
+  deleteOrder,
   cleanupAllOrders,
   initiatePayment,
   fetchVetApplicationStatus,
@@ -41,6 +42,7 @@ import {
   fetchNetworkSuggestions,
   requestConnection,
 } from "../../../services/api";
+import PaymentGatewayModal from "../../common/PaymentGatewayModal";
 import { avatarOnError, formatHandle } from "../../../constants";
 
 export default function ProfileFeed() {
@@ -88,6 +90,10 @@ export default function ProfileFeed() {
   }, [isOwnProfile, user?.uid]);
 
   const [isClearingOrders, setIsClearingOrders] = useState(false);
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [gatewayUrl, setGatewayUrl] = useState<string | null>(null);
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [activeOrderAmount, setActiveOrderAmount] = useState(0);
 
   const handleClearAllOrders = async () => {
     if (
@@ -109,7 +115,25 @@ export default function ProfileFeed() {
     }
   };
 
+  const handleDeleteSingleOrder = async (orderId: string) => {
+    if (!window.confirm("Remove this order record?")) return;
+    setDeletingOrderId(orderId);
+    try {
+      await deleteOrder(orderId);
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    } catch (err: any) {
+      console.error("Failed to delete order:", err);
+      alert(err?.message || "Failed to delete order.");
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
+
   const handlePayOrder = async (orderId: string, amount: number) => {
+    if (amount <= 0) {
+      alert("Order amount must be greater than 0 to proceed with payment.");
+      return;
+    }
     try {
       const res = await initiatePayment({
         amount,
@@ -117,7 +141,9 @@ export default function ProfileFeed() {
         orderId,
       });
       if (res?.gatewayUrl) {
-        window.location.href = res.gatewayUrl;
+        setGatewayUrl(res.gatewayUrl);
+        setActiveOrderAmount(amount);
+        setIsGatewayOpen(true);
       } else {
         alert("Could not initialize SSLCommerz gateway for this order.");
       }
@@ -222,7 +248,7 @@ export default function ProfileFeed() {
         setUserPosts(filtered);
 
         setConnections(userConns || []);
-        setOrders(userOrders || []);
+        setOrders((userOrders || []).filter((o: any) => o && o.total > 0));
         setNetworkSuggestions(netSuggestions || []);
 
         const fundraiserPosts = filtered.filter(
@@ -633,7 +659,7 @@ export default function ProfileFeed() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-[14px] text-[var(--sc-text-primary)]">
+                            <span className="font-display font-extrabold text-[15px] text-gray-900 tracking-tight">
                               #SC-{order.id.slice(-6).toUpperCase()}
                             </span>
                             {/* Status Badge */}
@@ -644,7 +670,7 @@ export default function ProfileFeed() {
                               </span>
                             )}
                             {isPending && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold rounded-full">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-bold rounded-full">
                                 <Clock size={12} />
                                 <span>Awaiting Payment / Verification</span>
                               </span>
@@ -669,13 +695,26 @@ export default function ProfileFeed() {
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <p className="font-extrabold text-[16px] text-gray-900">
-                          ৳{order.total.toFixed(2)}
-                        </p>
-                        <span className="text-[11px] text-gray-400 font-medium">
-                          Total BDT
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right shrink-0">
+                          <p className="font-extrabold text-[16px] text-gray-900">
+                            <span className="font-['Noto_Sans_Bengali',sans-serif]">৳</span>
+                            {order.total.toFixed(2)}
+                          </p>
+                          <span className="text-[11px] text-gray-400 font-medium">
+                            Total BDT
+                          </span>
+                        </div>
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => handleDeleteSingleOrder(order.id)}
+                            disabled={deletingOrderId === order.id}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            title="Delete this order"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -743,14 +782,14 @@ export default function ProfileFeed() {
                         <span>Standard Courier: 2-3 business days</span>
                       </span>
 
-                      {isPending && (
+                      {isPending && order.total > 0 && (
                         <button
                           onClick={() => handlePayOrder(order.id, order.total)}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--sc-brand-600)] hover:bg-[var(--sc-brand-700)] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                         >
                           <CreditCard size={13} />
                           <span>
-                            Pay ৳{order.total.toFixed(2)} via SSLCommerz
+                            Pay <span className="font-['Noto_Sans_Bengali',sans-serif]">৳</span>{order.total.toFixed(2)} via SSLCommerz
                           </span>
                         </button>
                       )}
@@ -1044,6 +1083,19 @@ export default function ProfileFeed() {
                 : target.requester?.displayName
               : undefined;
           })()}
+        />
+
+        {/* Container Overlay Frame for SSLCommerz Order Payment */}
+        <PaymentGatewayModal
+          isOpen={isGatewayOpen}
+          onClose={() => setIsGatewayOpen(false)}
+          gatewayUrl={gatewayUrl}
+          title="Order Payment via SSLCommerz"
+          amount={activeOrderAmount}
+          onSuccess={() => {
+            setIsGatewayOpen(false);
+            loadData();
+          }}
         />
       </div>
     </div>
