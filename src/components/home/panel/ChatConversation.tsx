@@ -237,22 +237,27 @@ export default function ChatConversation({
     setInputValue("");
     setIsEmojiOpen(false);
 
+    // Use navigator.onLine directly — React state can lag the actual network event
+    const actuallyOffline = !navigator.onLine;
+    if (actuallyOffline && !isOffline) setIsOffline(true); // sync state if needed
+
     // ── Route to offline WebLLM when network is down + AI bot ──
-    if (chat.isAiBot && isOffline) {
+    if (chat.isAiBot && actuallyOffline) {
       const prefs = getStoredPreferences();
       if (prefs.useOfflineTriage) {
         const webllmStatus = getWebLLMStatus();
-        if (webllmStatus.status === "ready") {
+        // Accept ready OR cached (engine may need re-init after page refresh, but weights exist)
+        if (webllmStatus.status === "ready" || webllmStatus.isCached) {
           await handleOfflineSend(tempText);
         } else {
           setOfflineGenError(
-            "Anvil-2-PAW model is not yet loaded. Go to Settings → Experimental to download it first.",
+            "Anvil-2-PAW model is not yet loaded. Go to Settings \u2192 Experimental to download it first.",
           );
           setInputValue(tempText);
         }
       } else {
         setOfflineGenError(
-          "You are offline. Enable Anvil-2-PAW in Settings → Experimental to triage without internet.",
+          "You are offline. Enable Anvil-2-PAW in Settings \u2192 Experimental to triage without internet.",
         );
         setInputValue(tempText);
       }
@@ -277,6 +282,15 @@ export default function ChatConversation({
       const data = await fetchMessages(user.uid, chat.id.toString());
       setMessages(formatMessages(data));
     } catch (err) {
+      // If this is an AI chat and we're actually offline now, silently re-route
+      if (chat.isAiBot && !navigator.onLine) {
+        setIsOffline(true);
+        setIsBotTyping(false);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        // Restore input so user can retry via offline path
+        setInputValue(tempText);
+        return;
+      }
       console.error("Failed to send message:", err);
       setSendError(
         err instanceof Error
@@ -340,7 +354,7 @@ export default function ChatConversation({
   const offlineReady =
     showOfflineBanner &&
     prefs.useOfflineTriage &&
-    getWebLLMStatus().status === "ready";
+    (getWebLLMStatus().status === "ready" || getWebLLMStatus().isCached);
   const offlineEnabled =
     showOfflineBanner && prefs.useOfflineTriage && !offlineReady;
   const offlineDisabled = showOfflineBanner && !prefs.useOfflineTriage;
