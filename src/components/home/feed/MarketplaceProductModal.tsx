@@ -101,7 +101,7 @@ export default function MarketplaceProductModal({
                   className="flex items-baseline gap-1 mb-4 notranslate"
                   translate="no"
                 >
-                  <span className="text-xl font-bold text-[var(--sc-brand-700)]">
+                  <span className="font-['Noto_Sans_Bengali',sans-serif] text-2xl font-bold text-[var(--sc-brand-700)]">
                     {item.currency || "৳"}
                   </span>
                   <span className="text-3xl font-extrabold text-[var(--sc-brand-700)]">

@@ -58,8 +58,8 @@
   --sc-space-3xl: 64px;
 
   /* Typography */
-  --sc-font-display: "Google Sans Flex", sans-serif;
-  --sc-font-body:    "Google Sans Flex", system-ui, -apple-system, sans-serif;
+  --sc-font-display: "Google Sans Flex", "Noto Sans Bengali", sans-serif;
+  --sc-font-body:    "Google Sans Flex", "Noto Sans Bengali", system-ui, -apple-system, sans-serif;
   --sc-font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
   /* Transitions */

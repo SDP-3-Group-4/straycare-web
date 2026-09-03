@@ -95,10 +95,10 @@ export default function MarketItemCard({
               className="font-extrabold text-[18px] text-[var(--sc-brand-700)] leading-none mt-0.5 notranslate"
               translate="no"
             >
-              <span className="text-[14px] font-bold mr-0.5">
+              <span className="font-['Noto_Sans_Bengali',sans-serif] text-[16px] font-bold mr-0.5 inline-block">
                 {item.currency || "৳"}
               </span>
-              {item.price.toLocaleString()}{" "}
+              <span>{item.price.toLocaleString()}</span>{" "}
               <span className="text-[11px] font-semibold text-gray-400 ml-0.5">
                 BDT
               </span>
