@@ -38,7 +38,7 @@ export default function PublicPostPage() {
           setPost(data);
           document.title = data.content
             ? `${data.content.substring(0, 40)}... — StrayCare`
-            : "Animal Welfare Post — StrayCare";
+            : "Post — StrayCare";
         }
       })
       .catch((err) => {
@@ -112,7 +112,7 @@ export default function PublicPostPage() {
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <BrandedLoader />
             <p className="text-xs font-semibold text-gray-500 mt-4 animate-pulse">
-              Loading rescue post details...
+              Loading post details...
             </p>
           </div>
         )}
@@ -206,7 +206,7 @@ export default function PublicPostPage() {
             <div className="p-4 sm:p-5 bg-white rounded-2xl border border-gray-100 text-center space-y-2">
               <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-500">
                 <ShieldCheck size={15} className="text-emerald-500" />
-                <span>Verified Public Animal Welfare Post</span>
+                <span>Verified Public Post</span>
               </div>
               <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
                 StrayCare connects rescuers, donors, and veterinary caretakers across Bangladesh to provide medical care, shelters, and adoptions for street animals.
