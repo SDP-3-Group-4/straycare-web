@@ -33,8 +33,6 @@ import {
   fetchPosts,
   fetchConnections,
   fetchUserOrders,
-  deleteOrder,
-  cleanupAllOrders,
   initiatePayment,
   fetchVetApplicationStatus,
   CONNECTIONS_UPDATED_EVENT,
@@ -87,46 +85,6 @@ export default function ProfileFeed() {
       setVetStatus(null);
     }
   }, [isOwnProfile, user?.uid]);
-
-  const [isClearingOrders, setIsClearingOrders] = useState(false);
-  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
-  const [gatewayUrl, setGatewayUrl] = useState<string | null>(null);
-  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
-  const [activeOrderAmount, setActiveOrderAmount] = useState(0);
-
-  const handleClearAllOrders = async () => {
-    if (
-      !window.confirm(
-        "Clear all stale orders across the system? This will delete old test records so you can start fresh.",
-      )
-    )
-      return;
-    setIsClearingOrders(true);
-    try {
-      await cleanupAllOrders();
-      setOrders([]);
-      alert("All stale orders cleared successfully!");
-    } catch (err: any) {
-      console.error("Failed to clear orders:", err);
-      alert(err?.message || "Failed to clear orders.");
-    } finally {
-      setIsClearingOrders(false);
-    }
-  };
-
-  const handleDeleteSingleOrder = async (orderId: string) => {
-    if (!window.confirm("Remove this order record?")) return;
-    setDeletingOrderId(orderId);
-    try {
-      await deleteOrder(orderId);
-      setOrders((prev) => prev.filter((o) => o.id !== orderId));
-    } catch (err: any) {
-      console.error("Failed to delete order:", err);
-      alert(err?.message || "Failed to delete order.");
-    } finally {
-      setDeletingOrderId(null);
-    }
-  };
 
   const handlePayOrder = async (orderId: string, amount: number) => {
     if (amount <= 0) {
@@ -629,18 +587,6 @@ export default function ProfileFeed() {
                   Track care supply orders, payment status, and dispatch progress
                 </p>
               </div>
-
-              {orders.length > 0 && isOwnProfile && (
-                <button
-                  onClick={handleClearAllOrders}
-                  disabled={isClearingOrders}
-                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80 px-3 py-1.5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                  title="Clear all stale orders"
-                >
-                  <Trash2 size={13} />
-                  <span>{isClearingOrders ? "Clearing..." : "Clear Stale Orders"}</span>
-                </button>
-              )}
             </div>
 
             {orders.length > 0 ? (
@@ -709,16 +655,6 @@ export default function ProfileFeed() {
                             Total BDT
                           </span>
                         </div>
-                        {isOwnProfile && (
-                          <button
-                            onClick={() => handleDeleteSingleOrder(order.id)}
-                            disabled={deletingOrderId === order.id}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                            title="Delete this order"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        )}
                       </div>
                     </div>
 
