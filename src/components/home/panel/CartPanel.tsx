@@ -5,8 +5,17 @@ import { useCart } from "../../../contexts/CartContext";
 
 export default function CartPanel() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const { items, updateQuantity, removeFromCart, subtotal, tax, total } =
-    useCart();
+  const {
+    items,
+    updateQuantity,
+    removeFromCart,
+    subtotal,
+    deliveryZone,
+    setDeliveryZone,
+    deliveryFee,
+    platformFee,
+    total,
+  } = useCart();
 
   return (
     <>
@@ -25,74 +34,120 @@ export default function CartPanel() {
             <ShoppingBag size={20} className="text-gray-400" />
           </div>
 
-          {/* Cart Items List */}
-          <div className="flex flex-col overflow-y-auto flex-1 p-3 gap-3">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
-              >
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-[var(--sc-border)]">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
+          {/* Items List */}
+          <div className="flex-1 overflow-y-auto p-5">
+            {items.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 border border-[var(--sc-border)]">
+                  <ShoppingBag size={24} className="text-gray-400" />
                 </div>
-                <div className="flex flex-col flex-1">
-                  <h4 className="font-semibold text-[13px] text-[var(--sc-text-primary)] leading-tight line-clamp-2">
-                    {item.title}
-                  </h4>
-                  <div
-                    className="font-bold text-[14px] text-[var(--sc-brand-600)] mt-1 notranslate"
-                    translate="no"
-                  >
-                    ৳{item.price.toLocaleString()}{" "}
-                    <span className="text-[10px] text-gray-400">BDT</span>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2 bg-white border border-[var(--sc-border)] rounded-full px-2 py-0.5">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors"
-                      >
-                        <Minus size={12} strokeWidth={3} />
-                      </button>
-                      <span className="text-[12px] font-bold w-4 text-center">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className="text-gray-400 hover:text-[var(--sc-brand-500)] transition-colors"
-                      >
-                        <Plus size={12} strokeWidth={3} />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-gray-300 hover:text-red-500 transition-colors p-1"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
+                <h4 className="font-bold text-gray-900 mb-1">
+                  Your cart is empty
+                </h4>
+                <p className="text-sm text-gray-500 max-w-[200px]">
+                  Add pet supplies or care packages to support animals.
+                </p>
               </div>
-            ))}
-            {items.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 py-10">
-                <ShoppingBag size={48} className="mb-4 opacity-20" />
-                <p className="text-[14px] font-medium">Your cart is empty</p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex gap-4 p-3 rounded-xl border border-[var(--sc-border)] hover:border-gray-300 transition-colors"
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-16 h-16 rounded-lg object-cover bg-gray-50 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="font-bold text-sm text-[var(--sc-text-primary)] truncate">
+                          {item.title}
+                        </h4>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span
+                          className="font-bold text-[15px] text-[var(--sc-brand-600)] notranslate"
+                          translate="no"
+                        >
+                          ৳{item.price.toLocaleString()} BDT
+                        </span>
+                        <div className="flex items-center gap-2 border border-[var(--sc-border)] rounded-lg p-0.5">
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                            className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="text-xs font-bold w-4 text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           {/* Summary Footer */}
           <div className="p-5 border-t border-[var(--sc-border)] bg-gray-50/50">
+            {/* Delivery Location Selector */}
+            {items.length > 0 && (
+              <div className="mb-3.5 p-2.5 bg-white border border-[var(--sc-border)] rounded-xl shadow-xs">
+                <div className="flex items-center justify-between text-[12px] font-bold text-gray-700 mb-1.5">
+                  <span>Delivery Destination</span>
+                  <span className="text-[11px] font-bold text-[var(--sc-brand-600)]">
+                    {deliveryZone === "inside_dhaka"
+                      ? "Inside Dhaka (৳80)"
+                      : "Outside Dhaka (৳120)"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("inside_dhaka")}
+                    className={`py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      deliveryZone === "inside_dhaka"
+                        ? "bg-white text-[var(--sc-brand-700)] shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Inside Dhaka (৳80)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("outside_dhaka")}
+                    className={`py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      deliveryZone === "outside_dhaka"
+                        ? "bg-white text-[var(--sc-brand-700)] shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Outside Dhaka (৳120)
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex justify-between text-[13px] text-gray-500">
                 <span>Subtotal</span>
@@ -104,12 +159,23 @@ export default function CartPanel() {
                 </span>
               </div>
               <div className="flex justify-between text-[13px] text-gray-500">
-                <span>Tax (5%)</span>
+                <span>
+                  Delivery Fee ({deliveryZone === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka"})
+                </span>
                 <span
                   className="font-medium text-[var(--sc-text-primary)] notranslate"
                   translate="no"
                 >
-                  ৳{tax.toLocaleString()} BDT
+                  ৳{deliveryFee.toLocaleString()} BDT
+                </span>
+              </div>
+              <div className="flex justify-between text-[13px] text-gray-500">
+                <span>Platform Fee</span>
+                <span
+                  className="font-medium text-[var(--sc-text-primary)] notranslate"
+                  translate="no"
+                >
+                  ৳{platformFee.toLocaleString()} BDT
                 </span>
               </div>
               <div className="h-px bg-[var(--sc-border)] my-1"></div>

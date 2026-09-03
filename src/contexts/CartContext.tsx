@@ -11,6 +11,8 @@ export interface CartItem extends MarketItem {
   quantity: number;
 }
 
+export type DeliveryZone = "inside_dhaka" | "outside_dhaka";
+
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: MarketItem) => void;
@@ -18,7 +20,11 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   subtotal: number;
-  tax: number;
+  deliveryZone: DeliveryZone;
+  setDeliveryZone: (zone: DeliveryZone) => void;
+  deliveryFee: number;
+  platformFee: number;
+  tax: number; // deprecated: always 0 (tax removed)
   total: number;
 }
 
@@ -37,9 +43,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return [];
   });
 
+  const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>(() => {
+    return (localStorage.getItem("sc_delivery_zone") as DeliveryZone) || "inside_dhaka";
+  });
+
   useEffect(() => {
     localStorage.setItem("sc_cart", JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem("sc_delivery_zone", deliveryZone);
+  }, [deliveryZone]);
 
   const addToCart = (item: MarketItem) => {
     setItems((current) => {
@@ -75,8 +89,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const tax = subtotal * 0.05; // 5% tax
-  const total = subtotal + tax;
+
+  // Delivery fee: ৳80 inside Dhaka, ৳120 outside Dhaka (৳0 if cart is empty)
+  const deliveryFee = items.length > 0 ? (deliveryZone === "inside_dhaka" ? 80 : 120) : 0;
+
+  // Platform operational fee: flat ৳15 (৳0 if cart is empty)
+  const platformFee = items.length > 0 ? 15 : 0;
+
+  // Zero tax
+  const tax = 0;
+
+  // Total calculation
+  const total = subtotal + deliveryFee + platformFee;
 
   return (
     <CartContext.Provider
@@ -87,6 +111,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         clearCart,
         subtotal,
+        deliveryZone,
+        setDeliveryZone,
+        deliveryFee,
+        platformFee,
         tax,
         total,
       }}

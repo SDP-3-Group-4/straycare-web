@@ -31,7 +31,14 @@ export default function MarketplaceCheckoutModal({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { user } = useAuth();
-  const { clearCart } = useCart();
+  const {
+    clearCart,
+    subtotal,
+    deliveryZone,
+    setDeliveryZone,
+    deliveryFee,
+    platformFee,
+  } = useCart();
 
   if (!isOpen) return null;
 
@@ -149,21 +156,82 @@ export default function MarketplaceCheckoutModal({
                   className="w-full bg-white border border-[var(--sc-border)] px-4 py-3 rounded-xl focus:outline-none focus:border-[var(--sc-brand-500)] text-[15px] resize-none"
                 />
               </div>
+
+              {/* Delivery Zone Selector */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-bold text-[var(--sc-text-secondary)] ml-1">
+                  Delivery Destination
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("inside_dhaka")}
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all cursor-pointer ${
+                      deliveryZone === "inside_dhaka"
+                        ? "border-[var(--sc-brand-500)] bg-[var(--sc-brand-50)] text-[var(--sc-brand-700)] font-bold shadow-xs"
+                        : "border-[var(--sc-border)] bg-white hover:bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    <span className="text-[13px]">Inside Dhaka</span>
+                    <span className="text-[12px] font-bold text-[var(--sc-brand-600)]">
+                      ৳80 BDT
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("outside_dhaka")}
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all cursor-pointer ${
+                      deliveryZone === "outside_dhaka"
+                        ? "border-[var(--sc-brand-500)] bg-[var(--sc-brand-50)] text-[var(--sc-brand-700)] font-bold shadow-xs"
+                        : "border-[var(--sc-border)] bg-white hover:bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    <span className="text-[13px]">Outside Dhaka</span>
+                    <span className="text-[12px] font-bold text-[var(--sc-brand-600)]">
+                      ৳120 BDT
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
           {step === 2 && (
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-[15px] text-[var(--sc-text-primary)]">
-                  Total to Pay
-                </span>
-                <span
-                  className="font-bold text-[20px] text-[var(--sc-brand-600)] notranslate"
-                  translate="no"
-                >
-                  ৳{total.toLocaleString()} BDT
-                </span>
+              {/* Order Cost Breakdown */}
+              <div className="p-3.5 bg-gray-50 rounded-2xl border border-[var(--sc-border)] flex flex-col gap-1.5 text-[13px]">
+                <div className="flex justify-between text-gray-500">
+                  <span>Items Subtotal</span>
+                  <span className="font-semibold text-gray-900">
+                    ৳{subtotal.toLocaleString()} BDT
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>
+                    Delivery ({deliveryZone === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka"})
+                  </span>
+                  <span className="font-semibold text-gray-900">
+                    ৳{deliveryFee.toLocaleString()} BDT
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Platform Fee</span>
+                  <span className="font-semibold text-gray-900">
+                    ৳{platformFee.toLocaleString()} BDT
+                  </span>
+                </div>
+                <div className="h-px bg-gray-200 my-1"></div>
+                <div className="flex justify-between items-center text-[15px]">
+                  <span className="font-bold text-[var(--sc-text-primary)]">
+                    Total to Pay
+                  </span>
+                  <span
+                    className="font-extrabold text-[20px] text-[var(--sc-brand-600)] notranslate"
+                    translate="no"
+                  >
+                    ৳{total.toLocaleString()} BDT
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3">

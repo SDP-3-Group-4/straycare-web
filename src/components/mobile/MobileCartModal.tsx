@@ -22,8 +22,17 @@ export default function MobileCartModal({
   onClose,
 }: MobileCartModalProps) {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const { items, updateQuantity, removeFromCart, subtotal, tax, total } =
-    useCart();
+  const {
+    items,
+    updateQuantity,
+    removeFromCart,
+    subtotal,
+    deliveryZone,
+    setDeliveryZone,
+    deliveryFee,
+    platformFee,
+    total,
+  } = useCart();
   const totalCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   if (!isOpen) return null;
@@ -160,6 +169,42 @@ export default function MobileCartModal({
           {/* Summary & Checkout Footer */}
           {items.length > 0 && (
             <div className="p-5 border-t border-[var(--sc-border)] bg-gray-50/80 dark:bg-white/[0.02] shrink-0">
+              {/* Delivery Destination Selector */}
+              <div className="mb-3 p-2.5 bg-white border border-[var(--sc-border)] rounded-xl shadow-xs">
+                <div className="flex items-center justify-between text-[12px] font-bold text-gray-700 mb-1.5">
+                  <span>Delivery Destination</span>
+                  <span className="text-[11px] font-bold text-[var(--sc-brand-600)]">
+                    {deliveryZone === "inside_dhaka"
+                      ? "Inside Dhaka (৳80)"
+                      : "Outside Dhaka (৳120)"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("inside_dhaka")}
+                    className={`py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      deliveryZone === "inside_dhaka"
+                        ? "bg-white text-[var(--sc-brand-700)] shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Inside Dhaka (৳80)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryZone("outside_dhaka")}
+                    className={`py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      deliveryZone === "outside_dhaka"
+                        ? "bg-white text-[var(--sc-brand-700)] shadow-xs"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Outside Dhaka (৳120)
+                  </button>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-1.5 mb-4 text-[13px]">
                 <div className="flex justify-between text-gray-500">
                   <span>Subtotal</span>
@@ -171,12 +216,23 @@ export default function MobileCartModal({
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
-                  <span>Tax (5%)</span>
+                  <span>
+                    Delivery ({deliveryZone === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka"})
+                  </span>
                   <span
                     className="font-bold text-[var(--sc-text-primary)] notranslate"
                     translate="no"
                   >
-                    ৳{tax.toLocaleString()} BDT
+                    ৳{deliveryFee.toLocaleString()} BDT
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Platform Fee</span>
+                  <span
+                    className="font-bold text-[var(--sc-text-primary)] notranslate"
+                    translate="no"
+                  >
+                    ৳{platformFee.toLocaleString()} BDT
                   </span>
                 </div>
                 <div className="h-px bg-[var(--sc-border)] my-1"></div>
