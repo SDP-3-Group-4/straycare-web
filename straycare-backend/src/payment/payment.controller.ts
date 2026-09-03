@@ -16,14 +16,15 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   /**
-   * Initiate payment for Donation or Marketplace order (Authenticated).
+   * Initiate payment for Donation or Marketplace order (Public / Authenticated).
    */
+  @Public()
   @Post('initiate')
   async initiatePayment(
-    @Body() body: Omit<InitiatePaymentDto, 'userId'>,
+    @Body() body: any,
     @Req() req: Request,
   ) {
-    const userId = req.user!.uid;
+    const userId = req.user?.uid || body.userId || 'guest_supporter';
     return this.paymentService.initiatePayment({
       ...body,
       userId,

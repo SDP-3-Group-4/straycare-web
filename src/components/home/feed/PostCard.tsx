@@ -304,27 +304,18 @@ export default function PostCard({
       if (res?.gatewayUrl) {
         setIsDonationModalOpen(false);
         window.location.href = res.gatewayUrl;
-      } else {
-        await donateToPost(id, amount);
-        setRaisedAmount((prev) => prev + amount);
-        setDonorsCount((prev) => prev + 1);
-        setIsDonationModalOpen(false);
-        setDonationAmount("");
-        alert("Thank you for your donation!");
+        return;
       }
+      throw new Error(
+        res?.message ||
+          "SSLCommerz payment gateway URL could not be generated.",
+      );
     } catch (e: any) {
-      console.error("Donation gateway error:", e);
-      // Resilient fallback for offline / mock testing
-      try {
-        await donateToPost(id, amount);
-        setRaisedAmount((prev) => prev + amount);
-        setDonorsCount((prev) => prev + 1);
-        setIsDonationModalOpen(false);
-        setDonationAmount("");
-        alert("Thank you for your donation!");
-      } catch (fallbackErr) {
-        alert(e?.message || "Failed to process donation.");
-      }
+      console.error("SSLCommerz initiation error:", e);
+      alert(
+        e?.message ||
+          "Failed to launch SSLCommerz payment gateway. Please try again.",
+      );
     } finally {
       setIsDonating(false);
     }

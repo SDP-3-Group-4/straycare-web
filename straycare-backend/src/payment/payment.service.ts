@@ -72,19 +72,25 @@ export class PaymentService {
     // Generate unique transaction ID
     const tranId = `SC_${Date.now()}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    // Record initial pending payment in database
-    await this.prisma.payment.create({
-      data: {
-        tranId,
-        amount,
-        currency: 'BDT',
-        status: 'PENDING',
-        paymentType,
-        postId,
-        orderId,
-        userId,
-      },
-    });
+    // Record initial pending payment in database safely
+    try {
+      if (user) {
+        await this.prisma.payment.create({
+          data: {
+            tranId,
+            amount,
+            currency: 'BDT',
+            status: 'PENDING',
+            paymentType,
+            postId,
+            orderId,
+            userId: user.id,
+          },
+        });
+      }
+    } catch (dbErr: any) {
+      this.logger.warn(`Could not save payment record to DB: ${dbErr.message}`);
+    }
 
     const cusName = dto.customerName || user?.displayName || 'StrayCare Supporter';
     const cusEmail = dto.customerEmail || user?.email || 'donor@straycare.org';
