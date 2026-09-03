@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ShieldCheck, Loader2, RefreshCw } from "lucide-react";
+import { X, ShieldCheck, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 
 interface PaymentGatewayModalProps {
   isOpen: boolean;
@@ -93,16 +93,26 @@ export default function PaymentGatewayModal({
           </div>
 
           <div className="flex items-center gap-1">
+            <a
+              href={gatewayUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-[var(--sc-brand-700)] bg-[var(--sc-brand-50)] hover:bg-[var(--sc-brand-100)] rounded-xl border border-[var(--sc-brand-200)] transition-colors mr-1"
+              title="Open SSLCommerz in a dedicated secure tab"
+            >
+              <ExternalLink size={13} />
+              <span className="hidden sm:inline">New Tab</span>
+            </a>
             <button
               onClick={() => setIsLoading(true)}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/60 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/60 transition-colors cursor-pointer"
               title="Reload gateway"
             >
               <RefreshCw size={16} />
             </button>
             <button
               onClick={handleCloseAttempt}
-              className="p-2 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-200/60 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-200/60 transition-colors cursor-pointer"
               title="Close payment frame"
             >
               <X size={20} />

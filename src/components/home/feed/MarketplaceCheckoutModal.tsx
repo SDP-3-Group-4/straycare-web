@@ -28,10 +28,11 @@ export default function MarketplaceCheckoutModal({
   total,
 }: MarketplaceCheckoutModalProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const [isProcessing, setIsProcessing] = useState(false);
   const [gatewayUrl, setGatewayUrl] = useState<string | null>(null);
   const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [orderAmount, setOrderAmount] = useState(total);
 
   const { user } = useAuth();
   const {
@@ -46,29 +47,39 @@ export default function MarketplaceCheckoutModal({
   if (!isOpen) return null;
 
   const paymentMethods = [
-    { id: "card", name: "Credit / Debit Card", icon: <CreditCard size={20} /> },
     {
-      id: "mobile",
-      name: "Mobile Money (bKash/Nagad)",
-      icon: <Smartphone size={20} />,
+      id: "online",
+      name: "Online Payment (bKash / Nagad / Cards / Bank)",
+      subtitle: "Instant & secured checkout via SSLCommerz Sandbox",
+      icon: <CreditCard size={20} className="text-[var(--sc-brand-600)]" />,
     },
-    { id: "bank", name: "Bank Transfer", icon: <Building size={20} /> },
-    { id: "cod", name: "Cash on Delivery", icon: <Banknote size={20} /> },
+    {
+      id: "cod",
+      name: "Cash on Delivery (COD)",
+      subtitle: "Pay in cash when your order arrives at your address",
+      icon: <Banknote size={20} className="text-emerald-600" />,
+    },
   ];
 
   const handlePlaceOrder = async () => {
     if (!user) return;
+    const finalAmount = orderAmount > 0 ? orderAmount : total;
+    if (finalAmount <= 0) {
+      alert("Order total must be greater than 0");
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const order = await createOrder(total);
-      clearCart();
+      const order = await createOrder(finalAmount);
 
       if (paymentMethod === "cod") {
+        clearCart();
         setStep(3);
       } else {
         // Launch SSLCommerz Sandbox Payment Gateway
         const res = await initiatePayment({
-          amount: total,
+          amount: finalAmount,
           paymentType: "ORDER",
           orderId: order?.id,
         });
@@ -77,6 +88,7 @@ export default function MarketplaceCheckoutModal({
           setIsGatewayOpen(true);
           return;
         }
+        clearCart();
         setStep(3);
       }
     } catch (error: any) {
@@ -258,7 +270,10 @@ export default function MarketplaceCheckoutModal({
                     >
                       {method.icon}
                     </div>
-                    <span className="font-bold text-[14px]">{method.name}</span>
+                    <div className="flex flex-col text-left">
+                      <span className="font-bold text-[14px] text-gray-900">{method.name}</span>
+                      <span className="text-[12px] text-gray-500 font-normal">{method.subtitle}</span>
+                    </div>
                     <div className="ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0">
                       {paymentMethod === method.id ? (
                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--sc-brand-500)]" />
@@ -352,8 +367,9 @@ export default function MarketplaceCheckoutModal({
         }}
         gatewayUrl={gatewayUrl}
         title="Marketplace Order Payment"
-        amount={total}
+        amount={orderAmount > 0 ? orderAmount : total}
         onSuccess={() => {
+          clearCart();
           setIsGatewayOpen(false);
           setStep(3);
         }}
