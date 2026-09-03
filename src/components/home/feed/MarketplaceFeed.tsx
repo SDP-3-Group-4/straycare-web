@@ -36,6 +36,7 @@ export default function MarketplaceFeed() {
           id: item.id,
           title: item.title,
           description: item.description,
+          price: Number(item.price) || 0,
           currency:
             !item.currency ||
             item.currency.includes("α") ||

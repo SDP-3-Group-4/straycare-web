@@ -103,7 +103,7 @@ export default function MarketItemCard({
                   ? "৳"
                   : item.currency}
               </span>
-              <span>{item.price.toLocaleString()}</span>{" "}
+              <span>{(item.price ?? 0).toLocaleString()}</span>{" "}
               <span className="text-[11px] font-semibold text-gray-400 ml-0.5">
                 BDT
               </span>

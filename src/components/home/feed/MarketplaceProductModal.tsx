@@ -110,7 +110,7 @@ export default function MarketplaceProductModal({
                       : item.currency}
                   </span>
                   <span className="text-3xl font-extrabold text-[var(--sc-brand-700)]">
-                    {item.price.toLocaleString()}
+                    {(item.price ?? 0).toLocaleString()}
                   </span>
                   <span className="text-xs font-semibold text-gray-400 ml-1">
                     BDT
