@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
-import { createOrder } from "../../../services/api";
+import { createOrder, initiatePayment } from "../../../services/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useCart } from "../../../contexts/CartContext";
 
@@ -50,12 +50,27 @@ export default function MarketplaceCheckoutModal({
     if (!user) return;
     setIsProcessing(true);
     try {
-      await createOrder(total);
-      setStep(3);
+      const order = await createOrder(total);
       clearCart();
-    } catch (error) {
-      console.error("Failed to create order", error);
-      alert("Failed to place order. Please try again.");
+
+      if (selectedPayment === "cod") {
+        setStep(3);
+      } else {
+        // Launch SSLCommerz Sandbox Payment Gateway
+        const res = await initiatePayment({
+          amount: total,
+          paymentType: "ORDER",
+          orderId: order?.id,
+        });
+        if (res?.gatewayUrl) {
+          window.location.href = res.gatewayUrl;
+          return;
+        }
+        setStep(3);
+      }
+    } catch (error: any) {
+      console.error("Failed to place order", error);
+      alert(error?.message || "Failed to place order. Please try again.");
     } finally {
       setIsProcessing(false);
     }

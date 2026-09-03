@@ -293,6 +293,9 @@ export const initiatePayment = (data: {
 export const createOrder = (total: number) =>
   postJson("/marketplace/order", { total });
 
+export const cleanupAllOrders = () =>
+  postJson("/marketplace/orders/cleanup-all", {});
+
 export const fetchUserOrders = (userId: string) =>
   request(`/marketplace/orders/user/${userId}`);
 

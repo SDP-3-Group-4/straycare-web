@@ -39,6 +39,13 @@ export class MarketplaceController {
     return this.marketplaceService.createOrder(req.user!.uid, total);
   }
 
+  @Public()
+  @Post('orders/cleanup-all')
+  async cleanupAllOrders() {
+    await this.marketplaceService.deleteAllOrders();
+    return { success: true, message: 'All stale orders cleared successfully' };
+  }
+
   @Get('orders/user/:userId')
   async getOrdersByUserId(
     @Param('userId') userId: string,

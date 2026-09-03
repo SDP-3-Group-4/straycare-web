@@ -20,6 +20,12 @@ import {
   UserPlus,
   Compass,
   Share2,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Truck,
+  AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
@@ -27,6 +33,8 @@ import {
   fetchPosts,
   fetchConnections,
   fetchUserOrders,
+  cleanupAllOrders,
+  initiatePayment,
   fetchVetApplicationStatus,
   CONNECTIONS_UPDATED_EVENT,
   disconnectConnection,
@@ -78,6 +86,46 @@ export default function ProfileFeed() {
       setVetStatus(null);
     }
   }, [isOwnProfile, user?.uid]);
+
+  const [isClearingOrders, setIsClearingOrders] = useState(false);
+
+  const handleClearAllOrders = async () => {
+    if (
+      !window.confirm(
+        "Clear all stale orders across the system? This will delete old test records so you can start fresh.",
+      )
+    )
+      return;
+    setIsClearingOrders(true);
+    try {
+      await cleanupAllOrders();
+      setOrders([]);
+      alert("All stale orders cleared successfully!");
+    } catch (err: any) {
+      console.error("Failed to clear orders:", err);
+      alert(err?.message || "Failed to clear orders.");
+    } finally {
+      setIsClearingOrders(false);
+    }
+  };
+
+  const handlePayOrder = async (orderId: string, amount: number) => {
+    try {
+      const res = await initiatePayment({
+        amount,
+        paymentType: "ORDER",
+        orderId,
+      });
+      if (res?.gatewayUrl) {
+        window.location.href = res.gatewayUrl;
+      } else {
+        alert("Could not initialize SSLCommerz gateway for this order.");
+      }
+    } catch (err: any) {
+      console.error("Order payment error:", err);
+      alert(err?.message || "Failed to launch SSLCommerz gateway.");
+    }
+  };
 
   useEffect(() => {
     if (!merchantToast) return;
@@ -539,33 +587,177 @@ export default function ProfileFeed() {
         )}
 
         {activeTab === "orders" && (
-          <div className="flex flex-col gap-3">
-            {orders.length > 0 ? (
-              orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 flex items-center justify-between shadow-xs"
+          <div className="flex flex-col gap-4">
+            {/* Tab Controls Bar */}
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <h3 className="text-[14px] sm:text-[15px] font-bold text-[var(--sc-text-primary)] flex items-center gap-1.5">
+                  <Package size={16} className="text-[var(--sc-brand-600)]" />
+                  <span>Marketplace Orders & Tracking ({orders.length})</span>
+                </h3>
+                <p className="text-xs text-[var(--sc-text-secondary)] mt-0.5">
+                  Track care supply orders, payment status, and dispatch progress
+                </p>
+              </div>
+
+              {orders.length > 0 && isOwnProfile && (
+                <button
+                  onClick={handleClearAllOrders}
+                  disabled={isClearingOrders}
+                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80 px-3 py-1.5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                  title="Clear all stale orders"
                 >
-                  <div className="min-w-0 pr-2">
-                    <p className="font-bold text-[14px] text-[var(--sc-text-primary)] truncate">
-                      Order #{order.id.slice(-8)}
-                    </p>
-                    <p className="text-xs text-[var(--sc-text-secondary)]">
-                      {new Date(
-                        order.createdAt || Date.now(),
-                      ).toLocaleDateString()}
-                    </p>
+                  <Trash2 size={13} />
+                  <span>{isClearingOrders ? "Clearing..." : "Clear Stale Orders"}</span>
+                </button>
+              )}
+            </div>
+
+            {orders.length > 0 ? (
+              orders.map((order) => {
+                const isPaid =
+                  order.status === "completed" || order.status === "paid";
+                const isCancelled = order.status === "cancelled";
+                const isPending = !isPaid && !isCancelled;
+
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-white border border-[var(--sc-border)] rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 shadow-xs transition-all hover:shadow-sm"
+                  >
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--sc-brand-50)] text-[var(--sc-brand-600)] flex items-center justify-center shrink-0 border border-[var(--sc-brand-100)]">
+                          <Package size={20} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-[14px] text-[var(--sc-text-primary)]">
+                              #SC-{order.id.slice(-6).toUpperCase()}
+                            </span>
+                            {/* Status Badge */}
+                            {isPaid && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold rounded-full">
+                                <CheckCircle2 size={12} />
+                                <span>Paid via SSLCommerz</span>
+                              </span>
+                            )}
+                            {isPending && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold rounded-full">
+                                <Clock size={12} />
+                                <span>Awaiting Payment / Verification</span>
+                              </span>
+                            )}
+                            {isCancelled && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold rounded-full">
+                                <AlertCircle size={12} />
+                                <span>Cancelled</span>
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--sc-text-secondary)] mt-0.5">
+                            Placed on{" "}
+                            {new Date(
+                              order.createdAt || Date.now(),
+                            ).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="font-extrabold text-[16px] text-gray-900">
+                          ৳{order.total.toFixed(2)}
+                        </p>
+                        <span className="text-[11px] text-gray-400 font-medium">
+                          Total BDT
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Visual Progress Pipeline */}
+                    <div className="pt-2 pb-1 border-t border-gray-100">
+                      <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">
+                            ✓
+                          </div>
+                          <span className="font-semibold text-emerald-700">
+                            Order Placed
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isPaid
+                                ? "bg-emerald-500 text-white"
+                                : isPending
+                                  ? "bg-amber-400 text-white animate-pulse"
+                                  : "bg-gray-200 text-gray-400"
+                            }`}
+                          >
+                            {isPaid ? "✓" : "2"}
+                          </div>
+                          <span
+                            className={`font-semibold ${
+                              isPaid
+                                ? "text-emerald-700"
+                                : isPending
+                                  ? "text-amber-800"
+                                  : "text-gray-400"
+                            }`}
+                          >
+                            {isPaid ? "Payment Verified" : "Verification"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isPaid
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-400"
+                            }`}
+                          >
+                            <Truck size={11} />
+                          </div>
+                          <span
+                            className={`font-semibold ${
+                              isPaid ? "text-blue-700" : "text-gray-400"
+                            }`}
+                          >
+                            {isPaid ? "Out for Delivery" : "Dispatch"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Action / Info Bar */}
+                    <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                        <span>Standard Courier: 2-3 business days</span>
+                      </span>
+
+                      {isPending && (
+                        <button
+                          onClick={() => handlePayOrder(order.id, order.total)}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--sc-brand-500)] hover:bg-[var(--sc-brand-600)] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                        >
+                          <CreditCard size={13} />
+                          <span>
+                            Pay ৳{order.total.toFixed(2)} via SSLCommerz
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-[15px] text-[var(--sc-brand-600)]">
-                      ৳{order.total.toFixed(2)}
-                    </p>
-                    <span className="inline-block px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-lg mt-1">
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="bg-white border border-[var(--sc-border)] rounded-2xl p-10 flex flex-col items-center justify-center text-center">
                 <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -575,7 +767,7 @@ export default function ProfileFeed() {
                   No orders yet
                 </h3>
                 <p className="text-xs text-[var(--sc-text-secondary)]">
-                  Items purchased in the marketplace will show up here.
+                  Items purchased in the marketplace will show up here with live SSLCommerz payment tracking.
                 </p>
               </div>
             )}

@@ -40,4 +40,8 @@ export class MarketplaceService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async deleteAllOrders() {
+    return this.prisma.order.deleteMany({});
+  }
 }
