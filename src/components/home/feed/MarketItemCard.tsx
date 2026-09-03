@@ -96,7 +96,12 @@ export default function MarketItemCard({
               translate="no"
             >
               <span className="font-['Noto_Sans_Bengali',sans-serif] text-[16px] font-bold mr-0.5 inline-block">
-                {item.currency || "৳"}
+                {!item.currency ||
+                item.currency.includes("α") ||
+                item.currency.includes("│") ||
+                item.currency.includes("º")
+                  ? "৳"
+                  : item.currency}
               </span>
               <span>{item.price.toLocaleString()}</span>{" "}
               <span className="text-[11px] font-semibold text-gray-400 ml-0.5">

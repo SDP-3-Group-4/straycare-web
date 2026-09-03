@@ -102,7 +102,12 @@ export default function MarketplaceProductModal({
                   translate="no"
                 >
                   <span className="font-['Noto_Sans_Bengali',sans-serif] text-2xl font-bold text-[var(--sc-brand-700)]">
-                    {item.currency || "৳"}
+                    {!item.currency ||
+                    item.currency.includes("α") ||
+                    item.currency.includes("│") ||
+                    item.currency.includes("º")
+                      ? "৳"
+                      : item.currency}
                   </span>
                   <span className="text-3xl font-extrabold text-[var(--sc-brand-700)]">
                     {item.price.toLocaleString()}

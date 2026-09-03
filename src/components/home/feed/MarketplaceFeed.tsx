@@ -36,8 +36,14 @@ export default function MarketplaceFeed() {
           id: item.id,
           title: item.title,
           description: item.description,
-          price: item.price,
-          currency: item.currency || "৳",
+          currency:
+            !item.currency ||
+            item.currency.includes("α") ||
+            item.currency.includes("│") ||
+            item.currency.includes("º") ||
+            item.currency === "USD"
+              ? "৳"
+              : item.currency,
           imageUrl: item.imageUrl || undefined,
           seller: item.seller?.displayName || "Unknown Seller",
           category: item.category,

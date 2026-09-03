@@ -11,17 +11,40 @@ export class MarketplaceService {
   }
 
   async getItems() {
-    return this.prisma.marketplaceItem.findMany({
+    const items = await this.prisma.marketplaceItem.findMany({
       orderBy: { createdAt: 'desc' },
       include: { seller: true },
     });
+    return items.map((item) => ({
+      ...item,
+      currency:
+        !item.currency ||
+        item.currency.includes('α') ||
+        item.currency.includes('│') ||
+        item.currency.includes('º') ||
+        item.currency === 'USD'
+          ? '৳'
+          : item.currency,
+    }));
   }
 
   async getItemById(id: string) {
-    return this.prisma.marketplaceItem.findUnique({
+    const item = await this.prisma.marketplaceItem.findUnique({
       where: { id },
       include: { seller: true },
     });
+    if (!item) return null;
+    return {
+      ...item,
+      currency:
+        !item.currency ||
+        item.currency.includes('α') ||
+        item.currency.includes('│') ||
+        item.currency.includes('º') ||
+        item.currency === 'USD'
+          ? '৳'
+          : item.currency,
+    };
   }
 
   async createOrder(userId: string, total: number) {
