@@ -50,6 +50,8 @@ export default function ChatConversation({
   const emojiRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const botRepliesAtSendRef = useRef<number>(0);
+  // Tracks messages generated locally while offline so they persist on reconnect
+  const localOfflineMsgsRef = useRef<Message[]>([]);
   const { user } = useAuth();
   const [now, setNow] = useState(Date.now());
 
@@ -60,7 +62,19 @@ export default function ChatConversation({
 
   // ── Network online / offline listener ──────────────────────────────────
   useEffect(() => {
-    const goOnline = () => setIsOffline(false);
+    const goOnline = () => {
+      setIsOffline(false);
+      // Silently sync any offline user messages to the backend
+      // Bot (Anvil-2-PAW) responses are local-only and stay visible via merge
+      if (!user || !chat.isAiBot) return;
+      const unsynced = localOfflineMsgsRef.current.filter((m) => m.isMine);
+      if (unsynced.length === 0) return;
+      unsynced.forEach((m) => {
+        sendMessage(chat.id.toString(), m.content || "").catch(() => {
+          // Silent — messages are already visible locally
+        });
+      });
+    };
     const goOffline = () => setIsOffline(true);
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
@@ -68,7 +82,7 @@ export default function ChatConversation({
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
-  }, []);
+  }, [user, chat.id, chat.isAiBot]);
 
   const botAvatar = chat.avatar || AI_BOT_AVATAR;
   const isAi = chat.isAiBot;
@@ -132,6 +146,7 @@ export default function ChatConversation({
   }, []);
 
   // Load and poll messages — skip network poll when offline + AI bot
+  // On reconnect: merge server messages with local offline messages so they persist
   useEffect(() => {
     if (!user) return;
     if (isOffline && chat.isAiBot) return; // local-only when offline
@@ -141,16 +156,21 @@ export default function ChatConversation({
         const data = await fetchMessages(user.uid, chat.id.toString());
         const formatted = formatMessages(data);
 
-        setMessages(formatted);
+        // Merge: keep local-only offline messages that aren't on the server yet
+        setMessages((prev) => {
+          const localOnly = localOfflineMsgsRef.current.filter(
+            (local) => !formatted.some((srv) => srv.content === local.content && !local.isMine === !srv.isMine),
+          );
+          // Once server has the messages, clear the offline ref
+          if (localOnly.length === 0) localOfflineMsgsRef.current = [];
+          return [...formatted, ...localOnly];
+        });
 
-        // Only clear the typing indicator when a NEW bot message arrives
-        // (past the count that existed when the user sent)
         if (chat.isAiBot) {
           const botCount = formatted.filter((m) => !m.isMine).length;
           if (botCount > botRepliesAtSendRef.current) {
             setIsBotTyping(false);
-            if (typingTimeoutRef.current)
-              clearTimeout(typingTimeoutRef.current);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           }
         }
       } catch (err) {
@@ -196,6 +216,9 @@ export default function ChatConversation({
     setMessages((prev) => [...prev, userMsg]);
     setIsBotTyping(true);
 
+    // Track for sync-on-reconnect
+    localOfflineMsgsRef.current = [...localOfflineMsgsRef.current, userMsg];
+
     // Insert a streaming placeholder bot message
     const botMsgId = `local-${Date.now()}-bot`;
     const botMsgBase: Message = {
@@ -226,6 +249,11 @@ export default function ChatConversation({
             m.id === botMsgId ? { ...m, content: accumulated } : m,
           ),
         );
+        // Track bot response for local persistence
+        localOfflineMsgsRef.current = [
+          ...localOfflineMsgsRef.current.filter((m) => m.id !== botMsgId),
+          { ...botMsgBase, content: accumulated },
+        ];
       });
     } catch (err: any) {
       // Remove placeholder on error
@@ -428,9 +456,9 @@ export default function ChatConversation({
                 {isAi
                   ? isOffline
                     ? offlineReady
-                      ? "\u26a1 Anvil-2-PAW Active"
+                      ? "\u26a1 Anvil-2-PAW (Local)"
                       : "Offline"
-                    : "Always available"
+                    : "Anvil-2-Flash"
                   : presence.label}
               </span>
             </div>
