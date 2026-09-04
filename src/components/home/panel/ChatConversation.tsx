@@ -237,16 +237,15 @@ export default function ChatConversation({
     setInputValue("");
     setIsEmojiOpen(false);
 
-    // Use navigator.onLine directly — React state can lag the actual network event
+    // Sync React offline state with actual network state (navigator.onLine is advisory only)
     const actuallyOffline = !navigator.onLine;
-    if (actuallyOffline && !isOffline) setIsOffline(true); // sync state if needed
+    if (actuallyOffline && !isOffline) setIsOffline(true);
 
-    // ── Route to offline WebLLM when network is down + AI bot ──
+    // ── Pre-emptive offline route when navigator.onLine is definitively false ──
     if (chat.isAiBot && actuallyOffline) {
       const prefs = getStoredPreferences();
       if (prefs.useOfflineTriage) {
         const webllmStatus = getWebLLMStatus();
-        // Accept ready OR cached (engine may need re-init after page refresh, but weights exist)
         if (webllmStatus.status === "ready" || webllmStatus.isCached) {
           await handleOfflineSend(tempText);
         } else {
@@ -264,7 +263,7 @@ export default function ChatConversation({
       return;
     }
 
-    // ── Standard NIM cloud path (unchanged) ─────────────────────────────
+    // ── Standard NIM cloud path ─────────────────────────────────────────
     if (chat.isAiBot) {
       botRepliesAtSendRef.current = messages.filter((m) => !m.isMine).length;
       setIsBotTyping(true);
@@ -278,19 +277,28 @@ export default function ChatConversation({
     try {
       await sendMessage(chat.id.toString(), tempText);
       setSendError(null);
-      // Immediately fetch new messages
       const data = await fetchMessages(user.uid, chat.id.toString());
       setMessages(formatMessages(data));
     } catch (err) {
-      // If this is an AI chat and we're actually offline now, silently re-route
-      if (chat.isAiBot && !navigator.onLine) {
-        setIsOffline(true);
-        setIsBotTyping(false);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        // Restore input so user can retry via offline path
-        setInputValue(tempText);
-        return;
+      // ── Auto-fallback to WebLLM on ANY network failure for the AI bot ──
+      // navigator.onLine is unreliable (true on LAN-with-no-internet), so we
+      // gate on whether the request actually failed, not on the online flag.
+      if (chat.isAiBot) {
+        const prefs = getStoredPreferences();
+        const webllmStatus = getWebLLMStatus();
+        if (
+          prefs.useOfflineTriage &&
+          (webllmStatus.status === "ready" || webllmStatus.isCached)
+        ) {
+          // Silently switch to offline mode — no error shown to user
+          setIsBotTyping(false);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          setIsOffline(true);
+          await handleOfflineSend(tempText);
+          return;
+        }
       }
+
       console.error("Failed to send message:", err);
       setSendError(
         err instanceof Error
