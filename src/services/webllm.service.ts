@@ -10,19 +10,25 @@ import type { MLCEngine, InitProgressReport } from "@mlc-ai/web-llm";
 
 export const ANVIL_2_MODEL_ID = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
 
-export const ANVIL_2_SYSTEM_PROMPT = `You are Anvil 2, the specialized veterinary triage AI engineered by Edgeventures for the StrayCare platform.
-You provide immediate, life-saving first-aid guidance, symptom evaluation, and emergency triage for pet owners and stray animal rescuers.
+export const ANVIL_2_SYSTEM_PROMPT = `You are Anvil 2, a specialized veterinary triage AI engineered by Edgeventures for the StrayCare platform.
+You assist pet owners and stray animal rescuers with emergency guidance, symptom evaluation, and first-aid advice.
 
-CRITICAL PROTOCOLS & GUARDRAILS:
-1. You are NOT a licensed veterinarian and you NEVER pose as one. Always emphasize that your advice is emergency stabilization until professional veterinary examination is reached.
-2. NEVER prescribe prescription-only medications, antibiotics, or systemic NSAIDs without veterinary supervision.
-3. Explicitly warn against common fatal errors (e.g., Paracetamol/Tylenol is lethal to cats; never induce vomiting if caustic chemicals or sharp objects were ingested).
-4. Maintain a calm, authoritative, compassionate tone.
-5. Strictly structure emergency responses with the following triage schema:
-   [URGENCY LEVEL]: CRITICAL | URGENT | MONITOR | SAFE
-   [INITIAL ASSESSMENT]: Concise clinical breakdown of what is likely occurring.
-   [IMMEDIATE SAFE FIRST-AID]: Step-by-step actions for the rescuer.
-   [WHAT TO TELL THE VET]: Critical vital signs and observations to report to the clinic.`;
+CORE GUARDRAILS (always apply):
+- You are NOT a licensed veterinarian. Always clarify advice is emergency stabilization only.
+- NEVER prescribe prescription medications, antibiotics, or NSAIDs without vet supervision.
+- Warn against fatal errors: Paracetamol/Tylenol is lethal to cats; never induce vomiting after caustic ingestion or if sharp objects were swallowed.
+- Maintain a calm, warm, authoritative, and compassionate tone.
+
+RESPONSE FORMAT GUIDELINES:
+- If the user presents NEW symptoms or describes a potential emergency for the first time, structure your response using:
+    URGENCY: [CRITICAL / URGENT / MONITOR / SAFE]
+    ASSESSMENT: <brief clinical explanation>
+    FIRST-AID: <numbered step-by-step actions>
+    TELL YOUR VET: <key observations to report>
+- For FOLLOW-UP questions (e.g. "what does that mean?", "what should I do next?", "is this serious?"), respond conversationally and directly without repeating the full schema. Answer the specific question clearly.
+- For general veterinary questions or advice not tied to an ongoing emergency, respond naturally and helpfully.
+- Keep responses focused and practical. Avoid unnecessary repetition of prior advice already given in the conversation.`;
+
 
 export interface WebLLMStatus {
   status: "idle" | "checking" | "downloading" | "ready" | "error";
@@ -177,14 +183,13 @@ export async function downloadAndInitModel(
 }
 
 /**
- * Generates an offline clinical emergency triage response using the client-side engine
+ * Generates an offline clinical triage response using the client-side engine (non-streaming)
  */
 export async function generateOfflineTriage(
   chatHistory: Array<{ role: string; content: string }>,
 ): Promise<string> {
   const engine = await downloadAndInitModel();
 
-  // Ensure Anvil 2 system prompt is prepended
   const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
   const hasSystem = chatHistory.some((m) => m.role === "system");
   if (!hasSystem) {
@@ -199,14 +204,55 @@ export async function generateOfflineTriage(
 
   const reply = await engine.chat.completions.create({
     messages,
-    temperature: 0.3,
-    max_tokens: 512,
+    temperature: 0.65,
+    max_tokens: 1024,
   });
 
   return (
     reply.choices[0]?.message?.content ||
-    "[URGENCY LEVEL]: MONITOR\n[INITIAL ASSESSMENT]: Unable to generate full clinical report."
+    "I wasn't able to generate a response. Please try again."
   );
+}
+
+/**
+ * Streaming version — calls onChunk with each token as it arrives.
+ * Returns the full accumulated response string when done.
+ */
+export async function generateOfflineTriageStream(
+  chatHistory: Array<{ role: string; content: string }>,
+  onChunk: (token: string, accumulated: string) => void,
+): Promise<string> {
+  const engine = await downloadAndInitModel();
+
+  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+  const hasSystem = chatHistory.some((m) => m.role === "system");
+  if (!hasSystem) {
+    messages.push({ role: "system", content: ANVIL_2_SYSTEM_PROMPT });
+  }
+
+  for (const m of chatHistory) {
+    if (m.role === "system" || m.role === "user" || m.role === "assistant") {
+      messages.push({ role: m.role, content: m.content });
+    }
+  }
+
+  const stream = await engine.chat.completions.create({
+    messages,
+    temperature: 0.65,
+    max_tokens: 1024,
+    stream: true,
+  });
+
+  let accumulated = "";
+  for await (const chunk of stream) {
+    const token = chunk.choices[0]?.delta?.content || "";
+    if (token) {
+      accumulated += token;
+      onChunk(token, accumulated);
+    }
+  }
+
+  return accumulated || "I wasn't able to generate a response. Please try again.";
 }
 
 /**

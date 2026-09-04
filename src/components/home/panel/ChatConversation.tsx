@@ -9,7 +9,7 @@ import { fetchMessages, sendMessage } from "../../../services/api";
 import { presenceText } from "../../../utils/presence";
 import { getStoredPreferences } from "../../../services/preferences";
 import {
-  generateOfflineTriage,
+  generateOfflineTriageStream,
   getWebLLMStatus,
 } from "../../../services/webllm.service";
 
@@ -170,7 +170,7 @@ export default function ChatConversation({
     }
   }, [messages]);
 
-  // ── Offline triage via WebLLM (client-side) ────────────────────────────
+  // ── Offline triage via WebLLM with streaming ───────────────────────────
   const handleOfflineSend = async (text: string) => {
     if (!text.trim()) return;
     setOfflineGenError(null);
@@ -196,37 +196,45 @@ export default function ChatConversation({
     setMessages((prev) => [...prev, userMsg]);
     setIsBotTyping(true);
 
+    // Insert a streaming placeholder bot message
+    const botMsgId = `local-${Date.now()}-bot`;
+    const botMsgBase: Message = {
+      id: botMsgId,
+      senderId: "other",
+      senderName: chat.name,
+      senderAvatar: botAvatar,
+      content: "",
+      timestamp: nowTime,
+      day: today,
+      isMine: false,
+      status: "read",
+    };
+    // Add empty placeholder so the bubble appears immediately
+    setMessages((prev) => [...prev, botMsgBase]);
+    setIsBotTyping(false);
+
     try {
       const history = messages
-        .slice(-8)
+        .slice(-12)
         .map((m) => ({ role: m.isMine ? "user" : "assistant", content: m.content || "" }));
       history.push({ role: "user", content: text });
 
-      const reply = await generateOfflineTriage(history);
-
-      const botMsg: Message = {
-        id: `local-${Date.now()}-bot`,
-        senderId: "other",
-        senderName: chat.name,
-        senderAvatar: botAvatar,
-        content: reply,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        day: today,
-        isMine: false,
-        status: "read",
-      };
-      setMessages((prev) => [...prev, botMsg]);
+      await generateOfflineTriageStream(history, (_token, accumulated) => {
+        // Update the placeholder bubble with streamed content
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsgId ? { ...m, content: accumulated } : m,
+          ),
+        );
+      });
     } catch (err: any) {
+      // Remove placeholder on error
+      setMessages((prev) => prev.filter((m) => m.id !== botMsgId));
       setOfflineGenError(
-        err?.message?.includes("download")
-          ? "Model not ready — activate Anvil-2-PAW in Settings first."
+        err?.message?.includes("fetch") || err?.message?.includes("network")
+          ? "Model needs internet to initialize for the first time. Download it while online in Settings."
           : err?.message || "Offline inference failed.",
       );
-    } finally {
-      setIsBotTyping(false);
     }
   };
 
@@ -290,10 +298,10 @@ export default function ChatConversation({
           prefs.useOfflineTriage &&
           (webllmStatus.status === "ready" || webllmStatus.isCached)
         ) {
-          // Silently switch to offline mode — no error shown to user
+          // Silently switch to offline mode — do NOT setIsOffline so online
+          // event can still recover naturally via the browser listener
           setIsBotTyping(false);
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          setIsOffline(true);
           await handleOfflineSend(tempText);
           return;
         }
